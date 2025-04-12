@@ -1,15 +1,18 @@
 [package]
-name = "technicalysis"
 version = "0.1.0"
-edition = "2021"
+name = "technicalysis"
 description = "Technical analysis library for financial market trading applications"
-repository = "https://github.com/Guitheg/technicalysis.git"
+edition = "2021"
+rust-version = "1.84"
 license = "BSD-3-Clause"
+repository = "https://github.com/Guitheg/technicalysis.git"
+authors = ["Guillaume GOBIN <gthgobin@gmail.com>"]
+
 
 [lib]
+name = "technicalysis_rs"
+path = "core/lib.rs"
 crate-type = ["cdylib"]
 
 [dependencies]
 pyo3 = { version = "0.18", features = ["extension-module"] }
-
-[dev-dependencies]
