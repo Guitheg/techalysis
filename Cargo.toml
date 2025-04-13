@@ -16,11 +16,19 @@ license = "BSD-3-Clause"
 repository = "https://github.com/Guitheg/technicalysis.git"
 authors = ["Guillaume GOBIN <gthgobin@gmail.com>"]
 
-
 [lib]
 name = "technicalysis"
 path = "core/lib.rs"
-crate-type = ["cdylib"]
+crate-type = ["cdylib", "rlib"]
 
 [dependencies]
+numpy = "0.24.0"
 pyo3 = { version = "0.24.1", features = ["extension-module"] }
+
+[dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
+rand = "0.8"
+
+[[bench]]
+name = "sma_bench"
+harness = false
