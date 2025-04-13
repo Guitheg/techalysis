@@ -1,3 +1,5 @@
+use std::f64;
+
 #[derive(Debug)]
 pub enum SmaError {
     OutOfRangeStartIndex,
@@ -19,7 +21,7 @@ pub fn lookback(period: usize) -> Result<usize, SmaError> {
     }
 }
 
-pub fn sma(data_array: &[f64], period: usize) -> Result<(usize, Vec<f64>), SmaError> {
+pub fn sma(data_array: &[f64], period: usize) -> Result<Vec<f64>, SmaError> {
     let lookback_result = lookback(period)?;
     if data_array.len() < period {
         return Err(SmaError::InsufficientData);
@@ -31,9 +33,8 @@ pub fn sma(data_array: &[f64], period: usize) -> Result<(usize, Vec<f64>), SmaEr
         0
     };
 
-    let capacity = data_array.len() - start_idx;
     let period_as_double = period as f64;
-    let mut data_out = Vec::with_capacity(capacity);
+    let mut data_out = Vec::with_capacity(data_array.len());
 
     let mut trailing_idx = start_idx - lookback_result;
     let mut total_in_period = 0.0;
@@ -41,6 +42,7 @@ pub fn sma(data_array: &[f64], period: usize) -> Result<(usize, Vec<f64>), SmaEr
     if period > 1 {
         for data in data_array[trailing_idx..start_idx].iter() {
             total_in_period += data;
+            data_out.push(f64::NAN);
         }
     }
 
@@ -52,12 +54,29 @@ pub fn sma(data_array: &[f64], period: usize) -> Result<(usize, Vec<f64>), SmaEr
         trailing_idx += 1;
     }
 
-    Ok((start_idx, data_out))
+    Ok(data_out)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    macro_rules! assert_vec_float_eq {
+        ($a:expr, $b:expr) => {{
+            for (i, (x, y)) in $a.iter().zip($b.iter()).enumerate() {
+                if x.is_nan() && y.is_nan() {
+                    continue;
+                }
+                assert!(
+                    (x - y).abs() < std::f64::EPSILON,
+                    "Failed at index {} -> {} != {}",
+                    i,
+                    x,
+                    y
+                );
+            }
+        }};
+    }
 
     #[test]
     fn lookback_failure_too_low() {
@@ -93,9 +112,11 @@ mod tests {
     fn test_sma_basic() {
         let data = vec![1.0, 2.0, 3.0, 4.0, 5.0, 3.0, 4.0, 2.0];
         let opt_in_time_period = 3;
-        let (out_beg_idx, result) = sma(&data, opt_in_time_period).unwrap();
-        assert_eq!(out_beg_idx, 2);
-        assert_eq!(result, vec![2.0, 3.0, 4.0, 4.0, 4.0, 3.0]);
+        let result = sma(&data, opt_in_time_period).unwrap();
+        assert_vec_float_eq!(
+            result,
+            vec![f64::NAN, f64::NAN, 2.0, 3.0, 4.0, 4.0, 4.0, 3.0]
+        );
     }
 
     #[test]
