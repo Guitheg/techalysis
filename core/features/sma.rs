@@ -19,31 +19,19 @@ pub fn lookback(period: usize) -> Result<usize, SmaError> {
     }
 }
 
-pub fn sma(
-    start_idx: usize,
-    end_idx: usize,
-    data: &[f64],
-    period: usize,
-) -> Result<(usize, Vec<f64>), SmaError> {
-    if start_idx > end_idx || end_idx >= data.len() {
-        return Err(SmaError::OutOfRangeEndIndex);
-    }
-
+pub fn sma(data_array: &[f64], period: usize) -> Result<(usize, Vec<f64>), SmaError> {
     let lookback_result = lookback(period)?;
-    if data.len() < period {
+    if data_array.len() < period {
         return Err(SmaError::InsufficientData);
     }
 
-    let start_idx = if start_idx < lookback_result {
+    let start_idx = if lookback_result > 0 {
         lookback_result
     } else {
-        start_idx
+        0
     };
-    if start_idx > end_idx {
-        return Ok((start_idx, Vec::new()));
-    }
 
-    let capacity = end_idx - start_idx + 1;
+    let capacity = data_array.len() - start_idx;
     let period_as_double = period as f64;
     let mut data_out = Vec::with_capacity(capacity);
 
@@ -51,16 +39,16 @@ pub fn sma(
     let mut total_in_period = 0.0;
 
     if period > 1 {
-        for i in trailing_idx..start_idx {
-            total_in_period += data[i];
+        for data in data_array[trailing_idx..start_idx].iter() {
+            total_in_period += data;
         }
     }
 
-    for i in start_idx..=end_idx {
-        total_in_period += data[i];
-        let average = total_in_period / period_as_double;
-        data_out.push(average);
-        total_in_period -= data[trailing_idx];
+    for data in data_array[start_idx..].iter() {
+        total_in_period += data;
+        data_out.push(total_in_period / period_as_double);
+
+        total_in_period -= data_array[trailing_idx];
         trailing_idx += 1;
     }
 
@@ -105,7 +93,7 @@ mod tests {
     fn test_sma_basic() {
         let data = vec![1.0, 2.0, 3.0, 4.0, 5.0, 3.0, 4.0, 2.0];
         let opt_in_time_period = 3;
-        let (out_beg_idx, result) = sma(0, data.len() - 1, &data, opt_in_time_period).unwrap();
+        let (out_beg_idx, result) = sma(&data, opt_in_time_period).unwrap();
         assert_eq!(out_beg_idx, 2);
         assert_eq!(result, vec![2.0, 3.0, 4.0, 4.0, 4.0, 3.0]);
     }
@@ -113,7 +101,7 @@ mod tests {
     #[test]
     fn test_invalid_period() {
         let data = vec![1.0, 2.0, 3.0];
-        let result = sma(0, data.len() - 1, &data, 1);
+        let result = sma(&data, 1);
         assert!(result.is_err());
         if let Err(SmaError::BadParam(msg)) = result {
             assert!(msg.contains("between 2 and 100000"));
@@ -123,7 +111,7 @@ mod tests {
     #[test]
     fn test_insufficient_data() {
         let data = vec![1.0, 2.0];
-        let result = sma(0, data.len() - 1, &data, 3);
+        let result = sma(&data, 3);
         assert!(matches!(result, Err(SmaError::InsufficientData)));
     }
 }

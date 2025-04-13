@@ -1,2 +1,5 @@
 maturin
 pytest
+
+# for benchmark comparaison
+ta-lib
