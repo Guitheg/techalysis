@@ -5,3 +5,6 @@ build-backend = "maturin"
 [tool.maturin]
 python-source = "python"
 module-name = "technicalysis.core"
+
+[tool.pytest.ini_options]
+testpaths = ["python/technicalysis/tests"]

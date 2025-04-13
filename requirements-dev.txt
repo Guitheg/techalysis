@@ -3,3 +3,7 @@ pytest
 
 # for benchmark comparaison
 ta-lib
+
+# for testing
+numpy
+pandas
