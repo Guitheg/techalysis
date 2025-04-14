@@ -21,9 +21,9 @@ pub fn lookback(period: usize) -> Result<usize, SmaError> {
     }
 }
 
-pub fn sma(data_array: &[f64], period: usize) -> Result<Vec<f64>, SmaError> {
-    let lookback_result = lookback(period)?;
-    if data_array.len() < period {
+pub fn sma(data_array: &[f64], window_size: usize) -> Result<Vec<f64>, SmaError> {
+    let lookback_result = lookback(window_size)?;
+    if data_array.len() < window_size {
         return Err(SmaError::InsufficientData);
     }
 
@@ -33,27 +33,48 @@ pub fn sma(data_array: &[f64], period: usize) -> Result<Vec<f64>, SmaError> {
         0
     };
 
-    let period_as_double = period as f64;
+    let period_as_double = window_size as f64;
     let mut data_out = Vec::with_capacity(data_array.len());
 
     let mut trailing_idx = start_idx - lookback_result;
     let mut total_in_period = 0.0;
+    let mut nan_counter = 0;
 
-    if period > 1 {
+    if window_size > 1 {
         for data in data_array[trailing_idx..start_idx].iter() {
-            total_in_period += data;
+            if (*data).is_nan() {
+                nan_counter = window_size;
+                total_in_period = 0.0;
+            } else {
+                total_in_period += data;
+            }
+
+            if nan_counter != 0 {
+                nan_counter = nan_counter.saturating_sub(1);
+            }
             data_out.push(f64::NAN);
         }
     }
 
     for data in data_array[start_idx..].iter() {
-        total_in_period += data;
-        data_out.push(total_in_period / period_as_double);
-
-        total_in_period -= data_array[trailing_idx];
+        if (*data).is_nan() {
+            nan_counter = window_size;
+            total_in_period = 0.0;
+        } else {
+            total_in_period += data;
+        }
+        let trailing_value = data_array[trailing_idx];
+        if nan_counter == 0 {
+            data_out.push(total_in_period / period_as_double);
+            if !trailing_value.is_nan() {
+                total_in_period -= trailing_value;
+            }
+        } else {
+            data_out.push(f64::NAN);
+            nan_counter = nan_counter.saturating_sub(1);
+        }
         trailing_idx += 1;
     }
-
     Ok(data_out)
 }
 
@@ -116,6 +137,147 @@ mod tests {
         assert_vec_float_eq!(
             result,
             vec![f64::NAN, f64::NAN, 2.0, 3.0, 4.0, 4.0, 4.0, 3.0]
+        );
+    }
+
+    #[test]
+    fn test_sma_nan_in_begin() {
+        let data = vec![1.0, f64::NAN, 3.0, 4.0, 5.0, 3.0, 4.0, 2.0];
+        let opt_in_time_period = 3;
+        let result = sma(&data, opt_in_time_period).unwrap();
+        assert_vec_float_eq!(
+            result,
+            vec![f64::NAN, f64::NAN, f64::NAN, f64::NAN, 4.0, 4.0, 4.0, 3.0]
+        );
+    }
+
+    #[test]
+    fn test_sma_with_nan() {
+        let data = vec![1.0, 2.0, 3.0, f64::NAN, 5.0, 3.0, 4.0, 2.0];
+        let opt_in_time_period = 3;
+        let result = sma(&data, opt_in_time_period).unwrap();
+        assert_vec_float_eq!(
+            result,
+            vec![
+                f64::NAN,
+                f64::NAN,
+                2.0,
+                f64::NAN,
+                f64::NAN,
+                f64::NAN,
+                4.0,
+                3.0
+            ]
+        );
+    }
+
+    #[test]
+    fn test_sma_with_two_nans() {
+        let data = vec![1.0, 2.0, 3.0, f64::NAN, 5.0, 3.0, f64::NAN, 2.0, 3.0, 4.0];
+        let opt_in_time_period = 3;
+        let result = sma(&data, opt_in_time_period).unwrap();
+        assert_vec_float_eq!(
+            result,
+            vec![
+                f64::NAN,
+                f64::NAN,
+                2.0,
+                f64::NAN,
+                f64::NAN,
+                f64::NAN,
+                f64::NAN,
+                f64::NAN,
+                f64::NAN,
+                3.0
+            ]
+        );
+    }
+
+    #[test]
+    fn test_sma_with_three_nans() {
+        let data = vec![
+            1.0,
+            2.0,
+            3.0,
+            f64::NAN,
+            4.0,
+            f64::NAN,
+            2.0,
+            3.0,
+            4.0,
+            f64::NAN,
+            2.0,
+            3.0,
+            4.0,
+        ];
+        let opt_in_time_period = 3;
+        let result = sma(&data, opt_in_time_period).unwrap();
+        assert_vec_float_eq!(
+            result,
+            vec![
+                f64::NAN,
+                f64::NAN,
+                2.0,
+                f64::NAN,
+                f64::NAN,
+                f64::NAN,
+                f64::NAN,
+                f64::NAN,
+                3.0,
+                f64::NAN,
+                f64::NAN,
+                f64::NAN,
+                3.0
+            ]
+        );
+    }
+
+    #[test]
+    fn test_sma_with_more_nans() {
+        let data = vec![
+            1.0,
+            2.0,
+            3.0,
+            4.0,
+            5.0,
+            6.0,
+            7.0,
+            8.0,
+            f64::NAN,
+            4.0,
+            f64::NAN,
+            2.0,
+            3.0,
+            4.0,
+            f64::NAN,
+            2.0,
+            3.0,
+            4.0,
+        ];
+        let opt_in_time_period = 3;
+        let result = sma(&data, opt_in_time_period).unwrap();
+        assert_vec_float_eq!(
+            result,
+            vec![
+                f64::NAN,
+                f64::NAN,
+                2.0,
+                3.0,
+                4.0,
+                5.0,
+                6.0,
+                7.0,
+                f64::NAN,
+                f64::NAN,
+                f64::NAN,
+                f64::NAN,
+                f64::NAN,
+                3.0,
+                f64::NAN,
+                f64::NAN,
+                f64::NAN,
+                3.0
+            ]
         );
     }
 
