@@ -1,28 +1,11 @@
 use std::f64;
 
-#[derive(Debug)]
-pub enum SmaError {
-    BadParam(String),
-    InsufficientData,
-}
+use crate::helper::{errors::TechnicalysisError, loopback::lookback};
 
-const MINIMAL_PERIOD_VALUE: usize = 2;
-const MAXIMAL_PERIOD_VALUE: usize = 100_000;
-
-pub fn lookback(period: usize) -> Result<usize, SmaError> {
-    if period < MINIMAL_PERIOD_VALUE || period > MAXIMAL_PERIOD_VALUE {
-        Err(SmaError::BadParam(format!(
-            "period must be between {MINIMAL_PERIOD_VALUE} and {MAXIMAL_PERIOD_VALUE}"
-        )))
-    } else {
-        Ok(period - 1)
-    }
-}
-
-pub fn sma(data_array: &[f64], window_size: usize) -> Result<Vec<f64>, SmaError> {
+pub fn sma(data_array: &[f64], window_size: usize) -> Result<Vec<f64>, TechnicalysisError> {
     let lookback_result = lookback(window_size)?;
     if data_array.len() < window_size {
-        return Err(SmaError::InsufficientData);
+        return Err(TechnicalysisError::InsufficientData);
     }
 
     let start_idx = if lookback_result > 0 {
@@ -78,6 +61,8 @@ pub fn sma(data_array: &[f64], window_size: usize) -> Result<Vec<f64>, SmaError>
 
 #[cfg(test)]
 mod tests {
+    use crate::helper::errors::TechnicalysisError;
+
     use super::*;
 
     macro_rules! assert_vec_float_eq {
@@ -102,7 +87,7 @@ mod tests {
         let period: usize = 1;
         let result = lookback(period);
         assert!(result.is_err());
-        if let Err(SmaError::BadParam(msg)) = result {
+        if let Err(TechnicalysisError::BadParam(msg)) = result {
             assert!(msg.contains("between 2 and 100000"));
         }
     }
@@ -112,7 +97,7 @@ mod tests {
         let period: usize = 100_001;
         let result = lookback(period);
         assert!(result.is_err());
-        if let Err(SmaError::BadParam(msg)) = result {
+        if let Err(TechnicalysisError::BadParam(msg)) = result {
             assert!(msg.contains("between 2 and 100000"));
         }
     }
@@ -284,7 +269,7 @@ mod tests {
         let data = vec![1.0, 2.0, 3.0];
         let result = sma(&data, 1);
         assert!(result.is_err());
-        if let Err(SmaError::BadParam(msg)) = result {
+        if let Err(TechnicalysisError::BadParam(msg)) = result {
             assert!(msg.contains("between 2 and 100000"));
         }
     }
@@ -293,6 +278,6 @@ mod tests {
     fn test_insufficient_data() {
         let data = vec![1.0, 2.0];
         let result = sma(&data, 3);
-        assert!(matches!(result, Err(SmaError::InsufficientData)));
+        assert!(matches!(result, Err(TechnicalysisError::InsufficientData)));
     }
 }
