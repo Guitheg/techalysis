@@ -2,8 +2,6 @@ use std::f64;
 
 #[derive(Debug)]
 pub enum SmaError {
-    OutOfRangeStartIndex,
-    OutOfRangeEndIndex,
     BadParam(String),
     InsufficientData,
 }
