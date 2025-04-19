@@ -1,9 +1,10 @@
 from functools import wraps
 from itertools import chain
-from technicalysis.core import sma # type: ignore
+from technicalysis.core import sma, ema # type: ignore
 
 TECHNICALYSIS_CORE_FCT_NAMES = [
-    "sma"
+    "sma",
+    "ema"
 ]
 
 

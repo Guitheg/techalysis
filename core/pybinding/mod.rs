@@ -1,8 +1,11 @@
+pub mod ema;
 pub mod sma;
 use pyo3::prelude::pymodule;
 
 #[pymodule(gil_used = false)]
 mod core {
+    #[pymodule_export]
+    use crate::pybinding::ema::ema;
     #[pymodule_export]
     use crate::pybinding::sma::sma;
 }
