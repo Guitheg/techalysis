@@ -61,26 +61,10 @@ pub fn sma(data_array: &[f64], window_size: usize) -> Result<Vec<f64>, Technical
 
 #[cfg(test)]
 mod tests {
+    use crate::assert_vec_float_eq;
     use crate::helper::errors::TechnicalysisError;
 
     use super::*;
-
-    macro_rules! assert_vec_float_eq {
-        ($a:expr, $b:expr) => {{
-            for (i, (x, y)) in $a.iter().zip($b.iter()).enumerate() {
-                if x.is_nan() && y.is_nan() {
-                    continue;
-                }
-                assert!(
-                    (x - y).abs() < std::f64::EPSILON,
-                    "Failed at index {} -> {} != {}",
-                    i,
-                    x,
-                    y
-                );
-            }
-        }};
-    }
 
     #[test]
     fn lookback_failure_too_low() {
@@ -119,7 +103,8 @@ mod tests {
         let result = sma(&data, opt_in_time_period).unwrap();
         assert_vec_float_eq!(
             result,
-            vec![f64::NAN, f64::NAN, 2.0, 3.0, 4.0, 4.0, 4.0, 3.0]
+            vec![f64::NAN, f64::NAN, 2.0, 3.0, 4.0, 4.0, 4.0, 3.0],
+            f64::EPSILON
         );
     }
 
@@ -130,7 +115,8 @@ mod tests {
         let result = sma(&data, opt_in_time_period).unwrap();
         assert_vec_float_eq!(
             result,
-            vec![f64::NAN, f64::NAN, f64::NAN, f64::NAN, 4.0, 4.0, 4.0, 3.0]
+            vec![f64::NAN, f64::NAN, f64::NAN, f64::NAN, 4.0, 4.0, 4.0, 3.0],
+            f64::EPSILON
         );
     }
 
@@ -150,7 +136,8 @@ mod tests {
                 f64::NAN,
                 4.0,
                 3.0
-            ]
+            ],
+            f64::EPSILON
         );
     }
 
@@ -172,7 +159,8 @@ mod tests {
                 f64::NAN,
                 f64::NAN,
                 3.0
-            ]
+            ],
+            f64::EPSILON
         );
     }
 
@@ -211,7 +199,8 @@ mod tests {
                 f64::NAN,
                 f64::NAN,
                 3.0
-            ]
+            ],
+            f64::EPSILON
         );
     }
 
@@ -260,7 +249,8 @@ mod tests {
                 f64::NAN,
                 f64::NAN,
                 3.0
-            ]
+            ],
+            f64::EPSILON
         );
     }
 
