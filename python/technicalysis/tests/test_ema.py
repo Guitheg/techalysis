@@ -2,7 +2,7 @@ import technicalysis as ta
 from numpy import array, nan, testing
 import pandas as pd
 
-def _test_sma_numpy_success():
+def test_sma_numpy_success():
     close = array([0.02214153, 0.12513059, 0.43471736, 0.30710576, 0.30897127,
        0.2185392 , 0.63970966, 0.84203737, 0.27740458, 0.46615793,
        0.5480106 , 0.32422   , 0.02775321, 0.5352502 , 0.08539612,
@@ -45,10 +45,10 @@ def _test_sma_numpy_success():
        0.48598777, 0.51173168, 0.51930995, 0.50647697, 0.51825943,
        0.51651077, 0.49425247, 0.46996854, 0.46529673, 0.43642757])
 
-    out = ta.sma(close, 30)
+    out = ta.ema(close, 30, 2)
     testing.assert_allclose(out, expected)
 
-def _test_sma_pandas_success():
+def test_sma_pandas_success():
     close_df = pd.Series(array([0.02214153, 0.12513059, 0.43471736, 0.30710576, 0.30897127,
        0.2185392 , 0.63970966, 0.84203737, 0.27740458, 0.46615793,
        0.5480106 , 0.32422   , 0.02775321, 0.5352502 , 0.08539612,
@@ -91,6 +91,6 @@ def _test_sma_pandas_success():
        0.48598777, 0.51173168, 0.51930995, 0.50647697, 0.51825943,
        0.51651077, 0.49425247, 0.46996854, 0.46529673, 0.43642757]))
 
-    out = ta.sma(close_df, 30)
+    out = ta.ema(close_df, 30, 2)
     assert(type(out) == type(close_df))
     testing.assert_allclose(out, expected)
