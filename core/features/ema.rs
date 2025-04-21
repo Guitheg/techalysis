@@ -1,4 +1,5 @@
-use crate::helper::{errors::TechnicalysisError, loopback::lookback};
+use crate::errors::TechnicalysisError;
+use crate::helper::loopback::lookback;
 
 use super::sma::sma;
 

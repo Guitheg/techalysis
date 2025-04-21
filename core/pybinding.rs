@@ -7,7 +7,7 @@ mod core {
 
     use crate::features::ema::ema as core_ema;
     #[pyfunction(signature = (data, window_size, smoothing = 2.0))]
-    pub fn ema(
+    fn ema(
         py: Python,
         data: PyReadonlyArray1<f64>,
         window_size: usize,
@@ -22,7 +22,7 @@ mod core {
 
     use crate::features::sma::sma as core_sma;
     #[pyfunction(signature = (data, window_size, handle_nan = false))]
-    pub fn sma(
+    fn sma(
         py: Python,
         data: PyReadonlyArray1<f64>,
         window_size: usize,

@@ -1,3 +1,4 @@
+pub mod errors;
 pub mod features;
-pub mod helper;
-pub mod pybinding;
+pub(crate) mod helper;
+mod pybinding;

@@ -1,6 +1,5 @@
+use crate::errors::TechnicalysisError;
 use std::f64;
-
-use crate::helper::errors::TechnicalysisError;
 
 pub fn sma(
     data_array: &[f64],
@@ -90,7 +89,7 @@ fn sma_nan_safe(data_array: &[f64], window_size: usize) -> Result<Vec<f64>, Tech
 #[cfg(test)]
 mod tests {
     use crate::assert_vec_float_eq;
-    use crate::helper::errors::TechnicalysisError;
+    use crate::errors::TechnicalysisError;
 
     use super::*;
 

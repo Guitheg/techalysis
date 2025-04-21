@@ -1,4 +1,4 @@
-use super::errors::TechnicalysisError;
+use crate::errors::TechnicalysisError;
 
 const MINIMAL_PERIOD_VALUE: usize = 2;
 const MAXIMAL_PERIOD_VALUE: usize = 100_000;
