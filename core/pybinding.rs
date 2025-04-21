@@ -6,15 +6,16 @@ mod core {
     use pyo3::{exceptions::PyValueError, prelude::*};
 
     use crate::features::ema::ema as core_ema;
-    #[pyfunction(signature = (data, window_size, smoothing = 2.0))]
+    #[pyfunction(signature = (data, window_size, smoothing = 2.0, handle_nan = false))]
     fn ema(
         py: Python,
         data: PyReadonlyArray1<f64>,
         window_size: usize,
         smoothing: f64,
+        handle_nan: bool,
     ) -> PyResult<Py<PyArray1<f64>>> {
         let data_slice = data.as_slice()?;
-        let result = core_ema(data_slice, window_size, smoothing)
+        let result = core_ema(data_slice, window_size, smoothing, handle_nan)
             .map_err(|e| PyValueError::new_err(format!("Error computing EMA: {:?}", e)))?;
         let result_array = PyArray1::from_vec(py, result).to_owned();
         Ok(result_array.into())

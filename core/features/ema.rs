@@ -1,76 +1,66 @@
 use crate::errors::TechnicalysisError;
-use crate::helper::loopback::lookback;
-
-use super::sma::sma;
 
 pub fn ema(
     data_array: &[f64],
     window_size: usize,
-    smoothing_factor: f64,
+    smoothing: f64,
+    handle_nan: bool,
 ) -> Result<Vec<f64>, TechnicalysisError> {
-    let lookback_result = lookback(window_size)?;
-    if data_array.len() < window_size {
+    if handle_nan {
+        // TODO("To implement")
+        Err(TechnicalysisError::NotImplementedYet)
+    } else {
+        ema_raw(data_array, window_size, smoothing)
+    }
+}
+
+pub fn ema_raw(
+    data_array: &[f64],
+    window_size: usize,
+    smoothing: f64,
+) -> Result<Vec<f64>, TechnicalysisError> {
+    let size = data_array.len();
+    if window_size == 0 || size < window_size {
         return Err(TechnicalysisError::InsufficientData);
     }
-
-    let start_idx = if lookback_result > 0 {
-        lookback_result
-    } else {
-        0
-    };
-
-    let period_as_double = window_size as f64;
-    let mut data_out = Vec::with_capacity(data_array.len());
-
-    let mut trailing_idx = start_idx - lookback_result;
-    let mut total_in_period = 0.0;
-    let mut nan_counter = 0;
-    let mut good_counter: usize = window_size;
-    let multiplier = smoothing_factor / (period_as_double + 1f64);
-
-    let sma_result = sma(&data_array[trailing_idx..start_idx + 1], window_size, false)?;
-    data_out.extend_from_slice(&sma_result);
-
-    for data in data_array[start_idx + 1..].iter() {
-        if (*data).is_nan() {
-            nan_counter = window_size;
-            good_counter = 0;
-            total_in_period = 0.0;
-        } else {
-            good_counter += 1;
-            total_in_period += data;
-        }
-        let trailing_value = data_array[trailing_idx];
-        if nan_counter == 0 {
-            if let Some(previous) = data_out.last() {
-                if good_counter == window_size {
-                    data_out.push(total_in_period / period_as_double)
-                } else {
-                    data_out.push((data * multiplier) + (previous * (1f64 - multiplier)));
-                }
-            }
-
-            if !trailing_value.is_nan() {
-                total_in_period -= trailing_value;
-            }
-        } else {
-            data_out.push(f64::NAN);
-            nan_counter = nan_counter.saturating_sub(1);
-        }
-        trailing_idx += 1;
+    if window_size == 1 {
+        return Ok(data_array.to_vec());
     }
-    Ok(data_out)
+
+    let alpha = smoothing / (window_size as f64 + 1.0);
+    let alpha_c = 1.0 - alpha;
+    let mut result = vec![f64::NAN; size];
+
+    let mut sum = 0.0;
+    for &value in &data_array[..window_size] {
+        if value.is_nan() {
+            return Err(TechnicalysisError::UnexpectedNan);
+        }
+        sum += value;
+    }
+    let mut ema_prev = sum / window_size as f64;
+    result[window_size - 1] = ema_prev;
+
+    for idx in window_size..size {
+        if data_array[idx].is_nan() {
+            return Err(TechnicalysisError::UnexpectedNan);
+        }
+        ema_prev = data_array[idx] * alpha + ema_prev * alpha_c;
+        result[idx] = ema_prev;
+    }
+
+    Ok(result)
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::{assert_vec_float_eq, features::ema::ema};
+    use crate::{assert_vec_float_eq, errors::TechnicalysisError, features::ema::ema};
 
     #[test]
     fn test_ema_basic() {
         let data = vec![1.0, 2.0, 3.0, 4.0, 5.0, 3.0, 4.0, 2.0];
         let opt_in_time_period = 3;
-        let result = ema(&data, opt_in_time_period, 2f64).unwrap();
+        let result = ema(&data, opt_in_time_period, 2f64, false).unwrap();
         assert_vec_float_eq!(
             result,
             vec![f64::NAN, f64::NAN, 2.0, 3.0, 4.0, 3.5, 3.75, 2.875],
@@ -90,7 +80,7 @@ mod tests {
             0.018140, 0.268551,
         ];
         let opt_in_time_period = 10;
-        let result = ema(&data, opt_in_time_period, 2f64).unwrap();
+        let result = ema(&data, opt_in_time_period, 2f64, false).unwrap();
         assert_vec_float_eq!(
             result,
             vec![
@@ -149,24 +139,32 @@ mod tests {
         );
     }
 
+    // #[test]
+    // fn test_ema_with_nan() {
+    //     let data = vec![1.0, 2.0, 3.0, f64::NAN, 5.0, 3.0, 4.0, 2.0];
+    //     let opt_in_time_period = 3;
+    //     let result = ema(&data, opt_in_time_period, 2f64, true).unwrap();
+    //     assert_vec_float_eq!(
+    //         result,
+    //         vec![
+    //             f64::NAN,
+    //             f64::NAN,
+    //             2.0,
+    //             f64::NAN,
+    //             f64::NAN,
+    //             f64::NAN,
+    //             4.0,
+    //             3.0
+    //         ],
+    //         1e-6
+    //     );
+    // }
+
     #[test]
-    fn test_ema_with_nan() {
+    fn test_ema_with_nan_must_fail() {
         let data = vec![1.0, 2.0, 3.0, f64::NAN, 5.0, 3.0, 4.0, 2.0];
         let opt_in_time_period = 3;
-        let result = ema(&data, opt_in_time_period, 2f64).unwrap();
-        assert_vec_float_eq!(
-            result,
-            vec![
-                f64::NAN,
-                f64::NAN,
-                2.0,
-                f64::NAN,
-                f64::NAN,
-                f64::NAN,
-                4.0,
-                3.0
-            ],
-            1e-6
-        );
+        let result = ema(&data, opt_in_time_period, 2f64, false);
+        assert!(matches!(result, Err(TechnicalysisError::UnexpectedNan)))
     }
 }

@@ -26,21 +26,21 @@ fn sma_raw(data_array: &[f64], window_size: usize) -> Result<Vec<f64>, Technical
     let mut result = vec![f64::NAN; size];
 
     let mut running_sum: f64 = 0.0;
-    for &v in &data_array[..window_size] {
-        if v.is_nan() {
+    for &value in &data_array[..window_size] {
+        if value.is_nan() {
             return Err(TechnicalysisError::UnexpectedNan);
         } else {
-            running_sum += v;
+            running_sum += value;
         }
     }
     result[window_size - 1] = running_sum / window_size as f64;
 
-    for i in window_size..size {
-        if data_array[i].is_nan() {
+    for idx in window_size..size {
+        if data_array[idx].is_nan() {
             return Err(TechnicalysisError::UnexpectedNan);
         }
-        running_sum += data_array[i] - data_array[i - window_size];
-        result[i] = running_sum / window_size as f64;
+        running_sum += data_array[idx] - data_array[idx - window_size];
+        result[idx] = running_sum / window_size as f64;
     }
     Ok(result)
 }

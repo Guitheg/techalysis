@@ -14,7 +14,7 @@ fn ema_bench(c: &mut Criterion) {
         data.len(),
         period
     );
-    c.bench_function(&id, |b| b.iter(|| ema(&data, period, 2f64)));
+    c.bench_function(&id, |b| b.iter(|| ema(&data, period, 2f64, false)));
 
     let data: Vec<f64> = (0..50_000).map(|_| rng.gen_range(0.0..100.0)).collect();
     let period = 30;
@@ -24,7 +24,7 @@ fn ema_bench(c: &mut Criterion) {
         data.len(),
         period
     );
-    c.bench_function(&id, |b| b.iter(|| ema(&data, period, 2f64)));
+    c.bench_function(&id, |b| b.iter(|| ema(&data, period, 2f64, false)));
 }
 
 criterion_group!(benches, ema_bench);
