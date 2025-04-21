@@ -36,3 +36,16 @@ harness = false
 [[bench]]
 name = "ema_bench"
 harness = false
+
+[[bin]]
+name = "sma"
+path = "examples/rust/features/bin/sma.rs"
+
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+strip = "symbols"
+debug = false
+panic = "unwind"

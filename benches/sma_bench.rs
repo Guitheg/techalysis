@@ -14,7 +14,7 @@ fn sma_bench(c: &mut Criterion) {
         data.len(),
         period
     );
-    c.bench_function(&id, |b| b.iter(|| sma(&data, period)));
+    c.bench_function(&id, |b| b.iter(|| sma(&data, period, false)));
 
     let data: Vec<f64> = (0..50_000).map(|_| rng.gen_range(0.0..100.0)).collect();
     let period = 30;
@@ -24,7 +24,7 @@ fn sma_bench(c: &mut Criterion) {
         data.len(),
         period
     );
-    c.bench_function(&id, |b| b.iter(|| sma(&data, period)));
+    c.bench_function(&id, |b| b.iter(|| sma(&data, period, false)));
 }
 
 criterion_group!(benches, sma_bench);

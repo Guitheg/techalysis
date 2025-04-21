@@ -1,20 +1,9 @@
-#[derive(Debug)]
-pub enum TestError {
-    Aieaie,
-    MinusFour,
-}
+use technicalysis::features::sma::sma;
+use technicalysis::helper::errors::TechnicalysisError;
 
-fn result_test() -> Result<u32, TestError> {
-    Err(TestError::Aieaie)
-}
-
-fn process() -> Result<(), TestError> {
-    let x = result_test()?;
-    println!("Value: {x:?}");
+fn main() -> Result<(), TechnicalysisError> {
+    let data = [10.0, 11.0, 12.0, 13.0, 12.5, 12.0];
+    let sma3 = sma(&data, 3, true)?;
+    println!("{sma3:?}");
     Ok(())
-}
-
-fn main() {
-    let result = process();
-    println!("Value: {result:?}");
 }

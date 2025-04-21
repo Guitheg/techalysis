@@ -27,7 +27,7 @@ pub fn ema(
     let mut good_counter: usize = window_size;
     let multiplier = smoothing_factor / (period_as_double + 1f64);
 
-    let sma_result = sma(&data_array[trailing_idx..start_idx + 1], window_size)?;
+    let sma_result = sma(&data_array[trailing_idx..start_idx + 1], window_size, false)?;
     data_out.extend_from_slice(&sma_result);
 
     for data in data_array[start_idx + 1..].iter() {

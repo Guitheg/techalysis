@@ -5,4 +5,4 @@ version.workspace = true
 
 [[bin]]
 name = "sma"
-path = "bin/sma.rs"
+path = "sma.rs"
