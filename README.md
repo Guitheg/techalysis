@@ -2,6 +2,9 @@
 Technical analysis library for financial market trading applications written in rust and available in python.
 
 
+### **Available soon on PyPI and Cargo**
+
+
 # Features
 
 | Function      | Description                                                                     | More                                                    | Status   |
