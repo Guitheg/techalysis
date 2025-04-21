@@ -1,4 +1,4 @@
-import technicalysis as ta
+import technicalysis as tx
 from numpy import array, nan, testing
 import pandas as pd
 
@@ -45,7 +45,7 @@ def test_sma_numpy_success():
        0.48598777, 0.51173168, 0.51930995, 0.50647697, 0.51825943,
        0.51651077, 0.49425247, 0.46996854, 0.46529673, 0.43642757])
 
-    out = ta.ema(close, 30, 2)
+    out = tx.ema(close, 30, 2)
     testing.assert_allclose(out, expected)
 
 def test_sma_pandas_success():
@@ -91,6 +91,6 @@ def test_sma_pandas_success():
        0.48598777, 0.51173168, 0.51930995, 0.50647697, 0.51825943,
        0.51651077, 0.49425247, 0.46996854, 0.46529673, 0.43642757]))
 
-    out = ta.ema(close_df, 30, 2)
+    out = tx.ema(close_df, 30, 2)
     assert(type(out) == type(close_df))
     testing.assert_allclose(out, expected)

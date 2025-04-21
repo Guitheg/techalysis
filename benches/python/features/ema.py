@@ -1,7 +1,7 @@
 import numpy as np
 import timeit
 from . import time_as_str
-import technicalysis as ta
+import technicalysis as tx
 import talib
 
 
@@ -10,7 +10,7 @@ def benchmark_ema():
     data = np.random.random(1_000_000)
     window_size = 100
     
-    duration = timeit.timeit(lambda: ta.ema(data, window_size, 2), number=iterations)
+    duration = timeit.timeit(lambda: tx.ema(data, window_size, 2), number=iterations)
     average_time_rs = duration / iterations
 
     duration = timeit.timeit(lambda: talib.EMA(data, window_size), number=iterations)

@@ -1,34 +1,117 @@
 from numpy.typing import NDArray
 
 def sma(
-    data: NDArray, window_size: int, handle_nan: bool = False
+    data: NDArray,
+    window_size: int,
+    handle_nan: bool = False,
 ) -> NDArray:
     """
-    Compute the Simple Moving Average (SMA) of a given data array.
+    Simple Moving Average (SMA).
+
+    Computes a **simple (arithmetic) moving average** over *data* using a
+    fixed length sliding window.  
+    The result has the **same length** as the input.  
+    By convention, the first ``window_size - 1`` values are set to *NaN*
+    because a complete window is not yet available.
 
     Parameters
     ----------
     data : numpy.ndarray[f64]
-        Input array of data points.
+        One dimensional array. Must satisfy
+        ``len(data) >= window_size``.
     window_size : int
-        Window size for computing the moving average.
-    handle_nan : bool, optional (default: False)
-        If True, handle NaN values gracefully; if False, raise an error on NaN values.
+        Size of the rolling window (must be ``> 0``).
+    handle_nan : bool, default ``False``
+        • ``True`` - if any value inside the current window is *NaN*,
+          the corresponding SMA value is *NaN*; computation continues.
+        • ``False`` - (Faster) if *data* contains a *NaN*, a ``ValueError`` is raised.
 
     Returns
     -------
     numpy.ndarray[f64]
-        Array containing the computed SMA.
+        Array of the same length as *data* containing the SMA.
 
     Raises
     ------
     ValueError
-        If an error occurs during computation.
+        If ``window_size`` is not in ``1 .. len(data)``, or if ``handle_nan``
+        is ``False`` and *data* contains at least one *NaN*.
 
     Examples
     --------
-    >>> import numpy as np
-    >>> sma(np.array([1, 2, 3, 4, 5]), 2)
+    >>> import numpy as np, technicalysis as tx
+    >>> tx.sma(np.array([1., 2., 3., 4., 5.]), window_size=2)
     array([nan, 1.5, 2.5, 3.5, 4.5])
+
+    >>> tx.sma(
+    ...     np.array([1., np.nan, 3., 4., 5.]),
+    ...     window_size=3,
+    ...     handle_nan=True,
+    ... )
+    array([nan, nan, nan, nan, 4.0])
+    """
+    ...
+
+
+def ema(
+    data: NDArray,
+    window_size: int,
+    smoothing: float,
+    handle_nan: bool = False,
+) -> NDArray:
+    """
+    Exponential (Weighted) Moving Average (EMA) / (EWMA).
+
+    Computes an **exponential** moving average, also called an exponentially
+    weighted moving average (EWMA) over *data*.  
+    The smoothing factor `alpha` is derived from the conventional
+    formula:
+
+        ```
+        alpha = smoothing / (window_size + 1)
+        ```
+
+    The first ``window_size - 1`` values of the result are set to *NaN*
+    because the EMA is undefined until a full window is available.
+
+    Parameters
+    ----------
+    data : numpy.ndarray[f64]
+        One dimensional array of numeric observations. Must have
+        ``len(data) >= window_size``.
+    window_size : int
+        Size of the rolling window (must be ``> 0``).
+    smoothing : float, default ``2.0``
+        Numerator used to compute the weighting factor *alpha*.
+        A common choice is ``smoothing = 2.0``.
+    handle_nan : bool, default ``False``
+        • ``True`` - any window that contains at least one *NaN* yields
+          a *NaN* in the output, but computation continues.  
+        • ``False`` - (Faster) if data contains a NaN, a ValueError is raised.
+
+    Returns
+    -------
+    numpy.ndarray[f64]
+        Array of the same length as *data* containing the EMA.
+
+    Raises
+    ------
+    ValueError
+        If ``window_size`` is not in ``1 .. len(data)`` or if ``handle_nan`` is
+        ``False`` and *data* contains at least one *NaN*.
+
+    Examples
+    --------
+    >>> import numpy as np, technicalysis as tx
+    >>> tx.ema(np.array([1., 2., 3., 4., 5.]), window_size=2, smoothing=2.)
+    array([nan, 1.5, 2.5, 3.5, 4.5])
+
+    >>> tx.ema(
+    ...     np.array([1., np.nan, 3., 4., 5.]),
+    ...     window_size=3,
+    ...     smoothing=2.,
+    ...     handle_nan=True,
+    ... )
+    array([nan, nan, nan, nan, 4.0])
     """
     ...
