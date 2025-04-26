@@ -1,38 +1,47 @@
 use pyo3::prelude::pymodule;
 
-#[pymodule(gil_used = false)]
-mod core {
-    use numpy::{PyArray1, PyReadonlyArray1};
-    use pyo3::{exceptions::PyValueError, prelude::*};
+use pyo3::prelude::*;
 
-    use crate::features::ema::ema as core_ema;
-    #[pyfunction(signature = (data, window_size, smoothing = 2.0, handle_nan = false))]
-    fn ema(
-        py: Python,
-        data: PyReadonlyArray1<f64>,
-        window_size: usize,
-        smoothing: f64,
-        handle_nan: bool,
-    ) -> PyResult<Py<PyArray1<f64>>> {
-        let data_slice = data.as_slice()?;
-        let result = core_ema(data_slice, window_size, smoothing, handle_nan)
-            .map_err(|e| PyValueError::new_err(format!("Error computing EMA: {:?}", e)))?;
-        let result_array = PyArray1::from_vec(py, result).to_owned();
-        Ok(result_array.into())
-    }
+macro_rules! numpy_wrapper {
+    (
+        $rs_fn:path,
+        $py_name:ident,
+        $( $arg:ident : $typ:ty $(= $default:expr)? ),* $(,)?
+    ) => {
+        #[pyfunction(signature = (data, $( $arg $(= $default)? ),* ))]
+        fn $py_name<'py>(
+            py: pyo3::Python<'py>,
+            data: numpy::PyReadonlyArray1<'py, f64>,
+            $( $arg : $typ ),*
+        ) -> pyo3::PyResult<pyo3::Py<numpy::PyArray1<f64>>> {
+            let slice = data.as_slice()?;
+            let vec = $rs_fn(slice $(, $arg )*)
+                .map_err(|e| pyo3::exceptions::PyValueError::new_err(format!("{:?}", e)))?;
+            Ok(numpy::PyArray1::from_vec(py, vec).to_owned().into())
+        }
+    };
+}
 
-    use crate::features::sma::sma as core_sma;
-    #[pyfunction(signature = (data, window_size, handle_nan = false))]
-    fn sma(
-        py: Python,
-        data: PyReadonlyArray1<f64>,
-        window_size: usize,
-        handle_nan: bool,
-    ) -> PyResult<Py<PyArray1<f64>>> {
-        let data_slice = data.as_slice()?;
-        let result = core_sma(data_slice, window_size, handle_nan)
-            .map_err(|e| PyValueError::new_err(format!("Error computing SMA: {:?}", e)))?;
-        let result_array = PyArray1::from_vec(py, result).to_owned();
-        Ok(result_array.into())
+use crate::features::ema::ema as core_ema;
+numpy_wrapper!(core_ema, ema,
+    window_size: usize,
+    smoothing: f64 = 2.0,
+    handle_nan: bool = false
+);
+
+use crate::features::sma::sma as core_sma;
+numpy_wrapper!(core_sma, sma,
+    window_size: usize,
+    handle_nan: bool = false
+);
+
+#[pymodule]
+fn core(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    macro_rules! export{
+        ($($f:ident),* $(,)?) => {
+            $( m.add_function(wrap_pyfunction!($f, m)?)?; )*
+        };
     }
+    export![ema, sma];
+    Ok(())
 }
