@@ -56,7 +56,7 @@ def sma(
 def ema(
     data: NDArray,
     window_size: int,
-    smoothing: float,
+    smoothing: float = 2.,
     handle_nan: bool = False,
 ) -> NDArray:
     """

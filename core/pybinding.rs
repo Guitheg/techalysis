@@ -36,7 +36,7 @@ numpy_wrapper!(core_sma, sma,
 );
 
 #[pymodule]
-fn core(m: &Bound<'_, PyModule>) -> PyResult<()> {
+fn _core(m: &Bound<'_, PyModule>) -> PyResult<()> {
     macro_rules! export{
         ($($f:ident),* $(,)?) => {
             $( m.add_function(wrap_pyfunction!($f, m)?)?; )*
