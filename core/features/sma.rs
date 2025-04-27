@@ -98,10 +98,12 @@ fn sma_nan_safe(data_array: &[f64], window_size: usize) -> Result<Vec<f64>, Tech
 
 #[cfg(test)]
 mod tests {
-    use crate::assert_vec_float_eq;
     use crate::errors::TechnicalysisError;
+    use crate::{assert_vec_float_eq, oracle_test};
 
     use super::*;
+
+    oracle_test!(sma, |x: &[f64]| sma(x, 30, false));
 
     #[test]
     fn test_sma_basic() {

@@ -54,7 +54,10 @@ pub fn ema_raw(
 
 #[cfg(test)]
 mod tests {
+    use crate::oracle_test;
     use crate::{assert_vec_float_eq, errors::TechnicalysisError, features::ema::ema};
+
+    oracle_test!(ema, |x: &[f64]| ema(x, 30, 2.0, false));
 
     #[test]
     fn test_ema_basic() {
