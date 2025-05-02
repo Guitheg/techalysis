@@ -1,7 +1,7 @@
+use crate::oracle_test;
+use crate::rust::tests_helper::{assert::assert_vec_close, oracle::read_fixture};
 use technicalysis::errors::TechnicalysisError;
 use technicalysis::features::sma::sma;
-use technicalysis::oracle_test;
-use technicalysis::tests_helper::{assert::assert_vec_close, oracle::read_fixture};
 
 oracle_test!(sma, |x: &[f64]| sma(x, 30));
 

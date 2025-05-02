@@ -1,5 +1,5 @@
-use technicalysis::oracle_test;
-use technicalysis::tests_helper::{assert::assert_vec_close, oracle::read_fixture};
+use crate::oracle_test;
+use crate::rust::tests_helper::{assert::assert_vec_close, oracle::read_fixture};
 use technicalysis::{errors::TechnicalysisError, features::ema::ema};
 
 oracle_test!(ema, |x: &[f64]| ema(x, 30, 2.0));
