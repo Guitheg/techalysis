@@ -26,13 +26,11 @@ use crate::features::ema::ema as core_ema;
 numpy_wrapper!(core_ema, ema,
     window_size: usize,
     smoothing: f64 = 2.0,
-    handle_nan: bool = false
 );
 
 use crate::features::sma::sma as core_sma;
 numpy_wrapper!(core_sma, sma,
     window_size: usize,
-    handle_nan: bool = false
 );
 
 #[pymodule]
