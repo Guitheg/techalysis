@@ -17,7 +17,6 @@ macro_rules! assert_vec_float_eq {
     }};
 }
 
-#[allow(dead_code)]
 pub fn assert_vec_close(a: &[f64], b: &[f64]) {
     assert_eq!(a.len(), b.len());
     assert_vec_float_eq!(a, b, 1e-9);

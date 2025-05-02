@@ -1,4 +1,4 @@
 pub mod errors;
 pub mod features;
 mod pybinding;
-pub(crate) mod tests_helper;
+pub mod tests_helper;

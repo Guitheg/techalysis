@@ -1,6 +1,5 @@
 use std::fs::File;
 
-#[allow(dead_code)]
 pub fn read_fixture(name: &str) -> (Vec<f64>, Vec<f64>) {
     let file = File::open(format!("tests/data/oracle/{}.csv", name))
         .unwrap_or_else(|e| panic!("Failed to find {e}"));
@@ -22,7 +21,6 @@ macro_rules! oracle_test {
         paste::paste! {
             #[test]
             fn [<test_ $name _with_oracle>]() {
-                use crate::tests_helper::{assert::assert_vec_close, oracle::read_fixture};
                 let (input, expected) = read_fixture(stringify!($name));
                 let output = $f(&input);
                 assert!(output.is_ok());
