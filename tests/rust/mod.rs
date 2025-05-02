@@ -1,3 +1,3 @@
-mod test_ema;
-mod test_sma;
+mod tests_ema;
 pub(crate) mod tests_helper;
+mod tests_sma;
