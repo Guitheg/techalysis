@@ -4,7 +4,7 @@ import talib
 from pathlib import Path
 import argparse
 
-DATA_DIR = Path(__file__).parent.parent / "core" / "tests" / "data" / "oracle"
+DATA_DIR = Path(__file__).parent.parent / "tests" / "data" / "oracle"
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 RAND = np.random.default_rng(seed=42)  
 CASES = {

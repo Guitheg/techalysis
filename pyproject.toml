@@ -7,4 +7,4 @@ python-source = "python"
 module-name = "technicalysis._core"
 
 [tool.pytest.ini_options]
-testpaths = ["python/tests"]
+testpaths = ["tests/python"]
