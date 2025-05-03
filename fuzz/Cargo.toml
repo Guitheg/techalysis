@@ -1,0 +1,28 @@
+[package]
+name = "technicalysis-fuzz"
+version = "0.1.0"
+publish = false
+edition = "2021"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+technicalysis = { path = "..", default-features = false, features = [
+    "fuzzing",
+] }
+
+[[bin]]
+name = "sma"
+path = "fuzz_targets/fuzz_sma.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "ema"
+path = "fuzz_targets/fuzz_ema.rs"
+test = false
+doc = false
+bench = false
