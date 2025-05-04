@@ -43,10 +43,6 @@ rand = "0.9.1"
 name = "bench"
 harness = false
 
-[[bin]]
-name = "sma"
-path = "examples/rust/features/bin/sma.rs"
-
 [profile.release]
 opt-level = 3
 lto = "fat"

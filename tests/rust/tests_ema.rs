@@ -87,7 +87,6 @@ fn test_insufficient_data() {
 }
 
 proptest! {
-
     #[test]
     fn proptest_ema(
         input  in vec(-1e12f64..1e12, 2..200),
