@@ -20,10 +20,18 @@ Technical analysis library for financial market trading applications written in 
 | ichimoku      | Ichimoku Kinko Hyo: comprehensive indicator that identifies trends, momentum, and support/resistance levels. | [Détails](https://www.investopedia.com/terms/i/ichimoku-cloud.asp)| ⏳ |
 
 
-## Dev requirements
+## For developers
+
+### Build python wheel for CPython with maturin
+
+```
+maturin develop --release --features python
+```
 
 ### Fuzz requirements
 
 Install `cargo-fuzz` (more info [here](https://github.com/rust-fuzz/cargo-fuzz)):
 
-`cargo install cargo-fuzz`
+```
+cargo install cargo-fuzz
+```

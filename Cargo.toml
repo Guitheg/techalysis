@@ -18,9 +18,8 @@ repository = "https://github.com/Guitheg/technicalysis.git"
 authors = ["Guillaume GOBIN <gthgobin@gmail.com>"]
 
 [features]
-default = ["python"]
+default = []
 python = ["pyo3", "numpy"]
-fuzzing = []
 
 [lib]
 name = "technicalysis"

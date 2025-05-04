@@ -9,9 +9,7 @@ cargo-fuzz = true
 
 [dependencies]
 libfuzzer-sys = "0.4"
-technicalysis = { path = "..", default-features = false, features = [
-    "fuzzing",
-] }
+technicalysis = { path = "..", default-features = false }
 
 [[bin]]
 name = "sma"
