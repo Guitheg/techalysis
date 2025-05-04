@@ -16,7 +16,36 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+
+    - name: Set up stable toolchain
+      uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: stable
+        override: true
+
     - name: Build
       run: cargo build --verbose
-    - name: Run tests
+
+    - name: Clippy clippy
+      run: cargo clippy --tests --no-deps -- -D warnings
+
+    - name: Run unit & property tests
       run: cargo test --verbose
+
+    - name: Install nightly toolchain
+      uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: nightly
+        components: llvm-tools-preview
+        override: false
+  
+    - name: Install cargo-fuzz
+      run: cargo +nightly install cargo-fuzz
+
+    - name: Fuzz tests
+      run: |
+        chmod +x fuzz/run_all.sh
+        cargo +nightly --version
+        bash fuzz/run_all.sh
