@@ -1,1 +1,2 @@
-mod rust;
+#[cfg(test)]
+pub(crate) mod rust;

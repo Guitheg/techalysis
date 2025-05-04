@@ -1,5 +1,7 @@
 use crate::oracle_test;
+use crate::rust::tests_helper::assert::approx_eq_f64;
 use crate::rust::tests_helper::{assert::assert_vec_close, oracle::read_fixture};
+use proptest::{collection::vec, prelude::*};
 use technicalysis::{errors::TechnicalysisError, features::ema::ema};
 
 oracle_test!(ema, |x: &[f64]| ema(x, 30, 2.0));
@@ -82,4 +84,41 @@ fn test_insufficient_data() {
     let data = vec![1.0, 2.0, 3.0];
     let result = ema(&data, 4, 2.0);
     assert!(matches!(result, Err(TechnicalysisError::InsufficientData)));
+}
+
+proptest! {
+
+    #[test]
+    fn proptest_ema(
+        input  in vec(-1e12f64..1e12, 2..200),
+        window in 2usize..50
+    ) {
+        prop_assume!(window <= input.len());
+        let has_nan = input.iter().all(|v| v.is_nan());
+        let out = ema(&input, window, 2.0);
+
+        if has_nan {
+            prop_assert!(out.is_err());
+            prop_assert!(matches!(out, Err(TechnicalysisError::UnexpectedNan)));
+        } else {
+            let out = out.unwrap();
+
+            prop_assert_eq!(out.len(), input.len());
+            prop_assert!(out[..window-1].iter().all(|v| v.is_nan()));
+
+            let k = 7.0_f64;
+            let scaled_input: Vec<_> = input.iter().map(|v| v*k).collect();
+            let scaled_fast = ema(&scaled_input, window, 2.0).unwrap();
+
+            for (orig, scaled) in out.iter().zip(&scaled_fast) {
+                if orig.is_nan() {
+                    prop_assert!(scaled.is_nan());
+                } else {
+                    let target = *orig * k;
+                    prop_assert!(approx_eq_f64(target, *scaled),
+                        "scaling fails: ema={}, k*ema={}, got={}", orig, target, scaled);
+                }
+            }
+        }
+    }
 }

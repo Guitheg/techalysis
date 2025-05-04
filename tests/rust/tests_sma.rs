@@ -1,5 +1,7 @@
 use crate::oracle_test;
+use crate::rust::tests_helper::assert::approx_eq_f64;
 use crate::rust::tests_helper::{assert::assert_vec_close, oracle::read_fixture};
+use proptest::{collection::vec, prelude::*};
 use technicalysis::errors::TechnicalysisError;
 use technicalysis::features::sma::sma;
 
@@ -83,4 +85,61 @@ fn test_insufficient_data() {
     let data = vec![1.0, 2.0, 3.0];
     let result = sma(&data, 4);
     assert!(matches!(result, Err(TechnicalysisError::InsufficientData)));
+}
+
+fn slow_sma(data: &[f64], window: usize) -> Vec<f64> {
+    let mut out = vec![f64::NAN; data.len()];
+    if window == 0 || window > data.len() {
+        return out;
+    }
+
+    for i in window - 1..data.len() {
+        let slice = &data[i + 1 - window..=i];
+        out[i] = slice.iter().sum::<f64>() / window as f64;
+    }
+    out
+}
+
+proptest! {
+    #[test]
+    fn proptest_sma(
+        input  in vec(-1e12f64..1e12, 2..200),
+        window in 2usize..50
+    ) {
+        prop_assume!(window <= input.len());
+        let has_nan = input.iter().all(|v| v.is_nan());
+        let out = sma(&input, window);
+
+        if has_nan {
+            prop_assert!(out.is_err());
+            prop_assert!(matches!(out, Err(TechnicalysisError::UnexpectedNan)));
+        } else {
+            let out = out.unwrap();
+            prop_assert_eq!(out.len(), input.len());
+            prop_assert!(out[..window-1].iter().all(|v| v.is_nan()));
+
+            // Definition
+            let slow = slow_sma(&input, window);
+            for (o, expect) in out.iter().zip(slow) {
+                if o.is_nan() || expect.is_nan() {
+                    prop_assert!(o.is_nan() && expect.is_nan());
+                } else {
+                    prop_assert!(approx_eq_f64(*o, expect));
+                }
+            }
+
+            // Linearity
+            let k = 3.14159;
+            let scaled_input: Vec<_> = input.iter().map(|v| v * k).collect();
+            let scaled_fast = sma(&scaled_input, window).unwrap();
+
+            for (o, scaled) in out.iter().zip(scaled_fast) {
+                if o.is_nan() {
+                    prop_assert!(scaled.is_nan());
+                } else {
+                    prop_assert!(approx_eq_f64(scaled, o * k));
+                }
+            }
+        }
+    }
 }
