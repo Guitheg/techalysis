@@ -1,7 +1,7 @@
 maturin
 pytest
 
-# for benchmark comparaison
+# for benchmark comparaison and test data generation (as oracle)
 ta-lib
 
 # for testing

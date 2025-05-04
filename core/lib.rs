@@ -1,4 +1,4 @@
 pub mod errors;
 pub mod features;
-pub(crate) mod helper;
+#[cfg(feature = "python")]
 mod pybinding;

@@ -1,67 +1,66 @@
-from functools import wraps
-from itertools import chain
-from technicalysis.core import sma, ema # type: ignore
+from ._core import *
 
-TECHNICALYSIS_CORE_FCT_NAMES = [
-    "sma",
-    "ema"
-]
+def __init__():
+    from ._core import __all__ as __core_all
+    from importlib import import_module
 
+    core = import_module("._core", __name__)
 
-try:
-    from pandas import Series as _pd_Series
-except ImportError as import_error:
+    __all__ = [
+        name for name in dir(core)
+        if not name.startswith("_")
+        and callable(getattr(core, name))
+    ]
+
     try:
-        if not isinstance(import_error, ModuleNotFoundError) or import_error.name != 'pandas':
-            raise import_error
-    except NameError:
-        pass
+        from pandas import Series as _pd_Series
+    except ModuleNotFoundError:
+        _pd_Series = None
 
-    _pd_Series = None
+    def wrapper(function):
+        from functools import wraps
+        from itertools import chain
+        if _pd_Series is None:
+            return function
+        
+        @wraps(function)
+        def inner_wrapper(*args, **kwargs):
+            use_pd = any(isinstance(a, _pd_Series) for a in chain(args, kwargs.values()))
 
-if _pd_Series is not None:
-    def _wrapper(func):
-        @wraps(func)
-        def wrapper(*args, **kwds):
-            if _pd_Series is not None:
-                use_pd = any(isinstance(arg, _pd_Series) for arg in args) or any(isinstance(v, _pd_Series) for v in kwds.values())
-            else:
-                use_pd = False
-
-            if use_pd:
-                index = next(arg.index
-                             for arg in chain(args, kwds.values())
-                             if isinstance(arg, _pd_Series))
-
-                _args = [arg.to_numpy().astype(float) if isinstance(arg, _pd_Series) else
-                         arg for arg in args]
-                _kwds = {k: v.to_numpy().astype(float) if isinstance(v, _pd_Series) else
-                            v for k, v in kwds.items()}
-
-            else:
-                _args = args
-                _kwds = kwds
-
-            result = func(*_args, **_kwds)
+            _args = args
+            _kwargs = kwargs
 
             if use_pd:
-                if isinstance(result, tuple):
-                    return tuple(_pd_Series(arr, index=index) for arr in result)
-                else:
-                    return _pd_Series(result, index=index)
+                index = next(
+                    arg.index
+                    for arg in chain(args, kwargs.values())
+                    if isinstance(arg, _pd_Series)
+                )
 
-            else:
-                return result
+                _args = [
+                    arg.to_numpy().astype(float)
+                    if isinstance(arg, _pd_Series) else arg
+                    for arg in args
+                ]
 
-        return wrapper
-else:
-    _wrapper = lambda x: x
+                _kwargs = {
+                    k: (v.to_numpy().astype(float) if isinstance(v, _pd_Series) else v)
+                    for k, v in kwargs.items()
+                }
 
-func = __import__("core", globals(), locals(), TECHNICALYSIS_CORE_FCT_NAMES, level=1)
-for func_name in TECHNICALYSIS_CORE_FCT_NAMES:
-    wrapped_func = _wrapper(getattr(func, func_name))
-    setattr(func, func_name, wrapped_func)
-    globals()[func_name] = wrapped_func
+            out = function(*_args, **_kwargs)
+            if use_pd:
+                if isinstance(out, tuple):
+                    return tuple(_pd_Series(o, index=index) for o in out)
+                return _pd_Series(out, index=index)
+            return out
+        return inner_wrapper
 
+    for name in __all__:
+        wrapped = wrapper(getattr(core, name))
+        globals()[name] = wrapped
+        setattr(core, name, wrapped)
 
-__all__ = TECHNICALYSIS_CORE_FCT_NAMES
+    return __all__
+
+__all__ = __init__()

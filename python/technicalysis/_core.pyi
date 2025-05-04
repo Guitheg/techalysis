@@ -3,7 +3,6 @@ from numpy.typing import NDArray
 def sma(
     data: NDArray,
     window_size: int,
-    handle_nan: bool = False,
 ) -> NDArray:
     """
     Simple Moving Average (SMA).
@@ -21,10 +20,6 @@ def sma(
         ``len(data) >= window_size``.
     window_size : int
         Size of the rolling window (must be ``> 0``).
-    handle_nan : bool, default ``False``
-        • ``True`` - if any value inside the current window is *NaN*,
-          the corresponding SMA value is *NaN*; computation continues.
-        • ``False`` - (Faster) if *data* contains a *NaN*, a ``ValueError`` is raised.
 
     Returns
     -------
@@ -34,8 +29,7 @@ def sma(
     Raises
     ------
     ValueError
-        If ``window_size`` is not in ``1 .. len(data)``, or if ``handle_nan``
-        is ``False`` and *data* contains at least one *NaN*.
+        If ``window_size`` is not in ``1 .. len(data)``, or if *data* contains at least one *NaN*.
 
     Examples
     --------
@@ -46,7 +40,6 @@ def sma(
     >>> tx.sma(
     ...     np.array([1., np.nan, 3., 4., 5.]),
     ...     window_size=3,
-    ...     handle_nan=True,
     ... )
     array([nan, nan, nan, nan, 4.0])
     """
@@ -56,8 +49,7 @@ def sma(
 def ema(
     data: NDArray,
     window_size: int,
-    smoothing: float,
-    handle_nan: bool = False,
+    smoothing: float = 2.,
 ) -> NDArray:
     """
     Exponential (Weighted) Moving Average (EMA) / (EWMA).
@@ -84,10 +76,6 @@ def ema(
     smoothing : float, default ``2.0``
         Numerator used to compute the weighting factor *alpha*.
         A common choice is ``smoothing = 2.0``.
-    handle_nan : bool, default ``False``
-        • ``True`` - any window that contains at least one *NaN* yields
-          a *NaN* in the output, but computation continues.  
-        • ``False`` - (Faster) if data contains a NaN, a ValueError is raised.
 
     Returns
     -------
@@ -97,8 +85,7 @@ def ema(
     Raises
     ------
     ValueError
-        If ``window_size`` is not in ``1 .. len(data)`` or if ``handle_nan`` is
-        ``False`` and *data* contains at least one *NaN*.
+        If ``window_size`` is not in ``1 .. len(data)`` or if *data* contains at least one *NaN*.
 
     Examples
     --------
@@ -110,7 +97,6 @@ def ema(
     ...     np.array([1., np.nan, 3., 4., 5.]),
     ...     window_size=3,
     ...     smoothing=2.,
-    ...     handle_nan=True,
     ... )
     array([nan, nan, nan, nan, 4.0])
     """

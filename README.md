@@ -5,7 +5,7 @@ Technical analysis library for financial market trading applications written in 
 ### **Available soon on PyPI and Cargo**
 
 
-# Features
+## Features
 
 | Function      | Description                                                                     | More                                                    | Status   |
 |---------------|---------------------------------------------------------------------------------|---------------------------------------------------------|----------|
@@ -18,3 +18,20 @@ Technical analysis library for financial market trading applications written in 
 | supertrend    | SuperTrend: an indicator that identifies trend direction and provides buy/sell signals based on ATR. | [Détails](https://www.tradingview.com/support/solutions/43000634738-supertrend/)| ⏳     |
 | stochastic    | Stochastic Oscillator: compares the closing price to the price range over a specified period to identify potential reversals. | [Détails](https://www.investopedia.com/terms/s/stochasticoscillator.asp)| ⏳|
 | ichimoku      | Ichimoku Kinko Hyo: comprehensive indicator that identifies trends, momentum, and support/resistance levels. | [Détails](https://www.investopedia.com/terms/i/ichimoku-cloud.asp)| ⏳ |
+
+
+## For developers
+
+### Build python wheel for CPython with maturin
+
+```
+maturin develop --release --features python
+```
+
+### Fuzz requirements
+
+Install `cargo-fuzz` (more info [here](https://github.com/rust-fuzz/cargo-fuzz)):
+
+```
+cargo install cargo-fuzz
+```
