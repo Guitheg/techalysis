@@ -28,7 +28,7 @@ fn test_identity() {
 #[test]
 fn test_linearity() {
     let (input, expected) = read_fixture("oracle/ema");
-    const K: f64 = 3.14159;
+    const K: f64 = 5.3;
     let scaled_input: Vec<f64> = input.iter().map(|v| v * K).collect();
     let scaled_expected: Vec<f64> = expected.iter().map(|v| v * K).collect();
     let output = ema(&scaled_input, 30, 2.0);

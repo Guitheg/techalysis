@@ -29,7 +29,7 @@ fn test_identity() {
 #[test]
 fn test_linearity() {
     let (input, expected) = read_fixture("oracle/sma");
-    const K: f64 = 3.14159;
+    const K: f64 = 9.3;
     let scaled_input: Vec<f64> = input.iter().map(|v| v * K).collect();
     let scaled_expected: Vec<f64> = expected.iter().map(|v| v * K).collect();
     let output = sma(&scaled_input, 30);
@@ -129,7 +129,7 @@ proptest! {
             }
 
             // Linearity
-            let k = 3.14159;
+            let k = 4.3;
             let scaled_input: Vec<_> = input.iter().map(|v| v * k).collect();
             let scaled_fast = sma(&scaled_input, window).unwrap();
 
