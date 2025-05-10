@@ -2,7 +2,7 @@ maturin
 pytest
 
 # for benchmark comparaison and test data generation (as oracle)
-ta-lib
+# ta-lib
 
 # for testing
 numpy

@@ -29,7 +29,7 @@ jobs:
 
     - name: Clippy clippy
       run: cargo clippy --tests --no-deps -- -D warnings
-
+    
     - name: Run unit & property tests
       run: cargo test --verbose
 
@@ -49,3 +49,11 @@ jobs:
         chmod +x fuzz/run_all.sh
         cargo +nightly --version
         bash fuzz/run_all.sh
+
+    - name: Build & test (pytest)
+      run: | 
+        python -m venv .venv
+        source .venv/bin/activate
+        pip install -r requirements-dev.txt
+        maturin develop --release --features python
+        pytest
