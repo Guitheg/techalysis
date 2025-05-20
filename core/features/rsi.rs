@@ -11,7 +11,7 @@ fn calculate_rsi(avg_gain: f64, avg_loss: f64) -> f64 {
 
 pub fn rsi(data_array: &[f64], window_size: usize) -> Result<Vec<f64>, TechnicalysisError> {
     let size = data_array.len();
-    if window_size == 0 || window_size > size {
+    if window_size == 0 || window_size + 1 > size {
         return Err(TechnicalysisError::InsufficientData);
     }
 
