@@ -10,6 +10,7 @@ RAND = np.random.default_rng(seed=42)
 CASES = {
     "EMA":  dict(timeperiod=30),
     "SMA":  dict(timeperiod=30),
+    "RSI":  dict(timeperiod=14),
 }
 
 def generate_test_data(name, **kwargs):
@@ -18,8 +19,12 @@ def generate_test_data(name, **kwargs):
     fn = DATA_DIR / f"{name.lower()}.csv"
     with fn.open("w", newline="") as fp:
         w = csv.writer(fp)
-        w.writerow(["in", "out"])
-        w.writerows(zip(input_data, output_data))
+        if isinstance(output_data, tuple):
+            w.writerow(["in"] + ["out" + str(i) for i in range(len(output_data))])
+            w.writerows(zip(input_data, *output_data))
+        else:
+            w.writerow(["in", "out"])
+            w.writerows(zip(input_data, output_data))
     print("create", fn)
 
 def parse_args():
