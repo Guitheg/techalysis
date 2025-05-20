@@ -53,5 +53,13 @@ bench_feature!(
 use technicalysis::features::sma::sma;
 bench_feature!(basic, sma);
 
-criterion::criterion_group!(benches, bench_ema_smoothing_2, bench_sma_basic);
+use technicalysis::features::rsi::rsi;
+bench_feature!(basic, rsi);
+
+criterion::criterion_group!(
+    benches,
+    bench_ema_smoothing_2,
+    bench_sma_basic,
+    bench_rsi_basic
+);
 criterion::criterion_main!(benches);
