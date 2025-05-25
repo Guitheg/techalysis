@@ -1,3 +1,4 @@
+from typing import Optional
 from numpy.typing import NDArray
 
 def sma(
@@ -43,19 +44,13 @@ def sma(
 def ema(
     data: NDArray,
     window_size: int,
-    smoothing: float = 2.,
+    alpha: Optional[float] = None,
 ) -> NDArray:
     """
     Exponential (Weighted) Moving Average (EMA) / (EWMA).
 
     Computes an **exponential** moving average, also called an exponentially
     weighted moving average (EWMA) over *data*.  
-    The smoothing factor `alpha` is derived from the conventional
-    formula:
-
-        ```
-        alpha = smoothing / (window_size + 1)
-        ```
 
     The first ``window_size - 1`` values of the result are set to *NaN*
     because the EMA is undefined until a full window is available.
@@ -67,9 +62,7 @@ def ema(
         ``len(data) >= window_size``.
     window_size : int
         Size of the rolling window (must be ``> 0``).
-    smoothing : float, default ``2.0``
-        Numerator used to compute the weighting factor *alpha*.
-        A common choice is ``smoothing = 2.0``.
+    alpha : float, default ``2.0 / (window_size + 1)``
 
     Returns
     -------

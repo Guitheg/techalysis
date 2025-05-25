@@ -3,15 +3,14 @@ use crate::rust::tests_helper::assert::approx_eq_f64;
 use crate::rust::tests_helper::{assert::assert_vec_close, oracle::read_fixture};
 use proptest::{collection::vec, prelude::*};
 use technicalysis::{errors::TechnicalysisError, indicators::ema};
-
 oracle_test!(ema, |x: &[f64]| {
-    ema(x, 30, 2.0).map(|result| vec![result])
+    ema(x, 30, None).map(|result| vec![result])
 });
 
 #[test]
 fn test_length_preserved() {
     let (input, _) = read_fixture("oracle/ema");
-    let output = ema(&input, 30, 2.0);
+    let output = ema(&input, 30, None);
     assert!(output.is_ok());
     let out = output.unwrap();
     assert_eq!(out.len(), input.len());
@@ -21,7 +20,7 @@ fn test_length_preserved() {
 #[test]
 fn test_identity() {
     let (input, _) = read_fixture("oracle/ema");
-    let output = ema(&input, 1, 2.0);
+    let output = ema(&input, 1, None);
     assert!(output.is_ok());
     let out = output.unwrap();
     assert_vec_close(&out, &input);
@@ -33,7 +32,7 @@ fn test_linearity() {
     const K: f64 = 5.3;
     let scaled_input: Vec<f64> = input.iter().map(|v| v * K).collect();
     let scaled_expected: Vec<f64> = expected[0].iter().map(|v| v * K).collect();
-    let output = ema(&scaled_input, 30, 2.0);
+    let output = ema(&scaled_input, 30, None);
     assert!(output.is_ok());
     let out = output.unwrap();
     assert_vec_close(&out, &scaled_expected);
@@ -43,7 +42,7 @@ fn test_linearity() {
 fn test_extremum_value_injection_without_panic() {
     use std::f64;
     let data = vec![f64::MAX / 2.0, f64::MAX / 2.0, f64::MIN_POSITIVE, -0.0, 0.0];
-    let out = ema(&data, 2, 2.0).expect("sma must not error on finite extremes");
+    let out = ema(&data, 2, None).expect("sma must not error on finite extremes");
     assert_eq!(out.len(), data.len());
     for (i, v) in out.iter().enumerate() {
         if i < 1 {
@@ -57,7 +56,7 @@ fn test_extremum_value_injection_without_panic() {
 #[test]
 fn test_invalid_period_lower_bound() {
     let data = vec![1.0, 2.0, 3.0];
-    let result = ema(&data, 0, 2.0);
+    let result = ema(&data, 0, None);
     assert!(result.is_err());
     if let Err(TechnicalysisError::BadParam(msg)) = result {
         assert!(msg.contains("between 2 and 100000"));
@@ -67,7 +66,7 @@ fn test_invalid_period_lower_bound() {
 #[test]
 fn test_period_higher_bound() {
     let data = vec![1.0, 2.0, 3.0];
-    let result = ema(&data, 3, 2.0);
+    let result = ema(&data, 3, None);
     assert!(result.is_ok());
     let out = result.unwrap();
     assert!(out[2] == 2.0);
@@ -76,7 +75,7 @@ fn test_period_higher_bound() {
 #[test]
 fn test_unexpected_nan() {
     let data = vec![1.0, 2.0, 3.0, f64::NAN];
-    let result = ema(&data, 3, 2.0);
+    let result = ema(&data, 3, None);
     assert!(result.is_err());
     assert!(matches!(result, Err(TechnicalysisError::UnexpectedNan)));
 }
@@ -84,24 +83,8 @@ fn test_unexpected_nan() {
 #[test]
 fn test_insufficient_data() {
     let data = vec![1.0, 2.0, 3.0];
-    let result = ema(&data, 4, 2.0);
+    let result = ema(&data, 4, None);
     assert!(matches!(result, Err(TechnicalysisError::InsufficientData)));
-}
-
-#[test]
-fn smoothing_equal_0_bad_param() {
-    let data = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0];
-    let result = ema(&data, 3, 0.0);
-    assert!(result.is_err());
-    assert!(matches!(result, Err(TechnicalysisError::BadParam(_))));
-}
-
-#[test]
-fn smoothing_lessthan_0_bad_param() {
-    let data = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0];
-    let result = ema(&data, 3, -2.0);
-    assert!(result.is_err());
-    assert!(matches!(result, Err(TechnicalysisError::BadParam(_))));
 }
 
 proptest! {
@@ -112,7 +95,7 @@ proptest! {
     ) {
         prop_assume!(window <= input.len());
         let has_nan = input.iter().all(|v| v.is_nan());
-        let out = ema(&input, window, 2.0);
+        let out = ema(&input, window, None);
 
         if has_nan {
             prop_assert!(out.is_err());
@@ -125,7 +108,7 @@ proptest! {
 
             let k = 7.0_f64;
             let scaled_input: Vec<_> = input.iter().map(|v| v*k).collect();
-            let scaled_fast = ema(&scaled_input, window, 2.0).unwrap();
+            let scaled_fast = ema(&scaled_input, window, None).unwrap();
 
             for (orig, scaled) in out.iter().zip(&scaled_fast) {
                 if orig.is_nan() {

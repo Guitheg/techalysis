@@ -15,7 +15,7 @@ macro_rules! numpy_wrapper {
             $( $arg : $typ ),*
         ) -> pyo3::PyResult<pyo3::Py<numpy::PyArray1<f64>>> {
             let slice = data.as_slice()?;
-            let vec = $rs_fn(slice $(, $arg )*)
+            let vec = $rs_fn(slice $(, $arg.into() )*)
                 .map_err(|e| pyo3::exceptions::PyValueError::new_err(format!("{:?}", e)))?;
             Ok(numpy::PyArray1::from_vec(py, vec).to_owned().into())
         }
@@ -25,7 +25,7 @@ macro_rules! numpy_wrapper {
 use crate::indicators::ema as core_ema;
 numpy_wrapper!(core_ema, ema,
     window_size: usize,
-    smoothing: f64 = 2.0,
+    alpha: Option<f64> = None,
 );
 
 use crate::indicators::sma as core_sma;

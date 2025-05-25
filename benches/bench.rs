@@ -47,7 +47,7 @@ use technicalysis::indicators::ema;
 bench_feature!(
     smoothing_2,
     ema,
-    smoothing: f64 = 2.0,
+    alpha: Option<f64> = None,
 );
 
 use technicalysis::indicators::sma;
