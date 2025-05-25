@@ -4,7 +4,7 @@ use proptest::{prop_assert, prop_assert_eq, proptest};
 use technicalysis::errors::TechnicalysisError;
 use technicalysis::indicators::rsi;
 
-oracle_test!(rsi, |x: &[f64]| rsi(x, 14));
+oracle_test!(rsi, |x: &[f64]| { rsi(x, 14).map(|result| vec![result]) });
 
 #[test]
 fn test_rsi_empty_input() {

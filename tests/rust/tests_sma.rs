@@ -5,7 +5,7 @@ use proptest::{collection::vec, prelude::*};
 use technicalysis::errors::TechnicalysisError;
 use technicalysis::indicators::sma;
 
-oracle_test!(sma, |x: &[f64]| sma(x, 30));
+oracle_test!(sma, |x: &[f64]| { sma(x, 30).map(|result| vec![result]) });
 
 #[test]
 fn test_length_preserved() {
@@ -31,7 +31,7 @@ fn test_linearity() {
     let (input, expected) = read_fixture("oracle/sma");
     const K: f64 = 9.3;
     let scaled_input: Vec<f64> = input.iter().map(|v| v * K).collect();
-    let scaled_expected: Vec<f64> = expected.iter().map(|v| v * K).collect();
+    let scaled_expected: Vec<f64> = expected[0].iter().map(|v| v * K).collect();
     let output = sma(&scaled_input, 30);
     assert!(output.is_ok());
     let out = output.unwrap();

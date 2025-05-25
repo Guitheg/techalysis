@@ -4,7 +4,9 @@ use crate::rust::tests_helper::{assert::assert_vec_close, oracle::read_fixture};
 use proptest::{collection::vec, prelude::*};
 use technicalysis::{errors::TechnicalysisError, indicators::ema};
 
-oracle_test!(ema, |x: &[f64]| ema(x, 30, 2.0));
+oracle_test!(ema, |x: &[f64]| {
+    ema(x, 30, 2.0).map(|result| vec![result])
+});
 
 #[test]
 fn test_length_preserved() {
@@ -30,7 +32,7 @@ fn test_linearity() {
     let (input, expected) = read_fixture("oracle/ema");
     const K: f64 = 5.3;
     let scaled_input: Vec<f64> = input.iter().map(|v| v * K).collect();
-    let scaled_expected: Vec<f64> = expected.iter().map(|v| v * K).collect();
+    let scaled_expected: Vec<f64> = expected[0].iter().map(|v| v * K).collect();
     let output = ema(&scaled_input, 30, 2.0);
     assert!(output.is_ok());
     let out = output.unwrap();
