@@ -22,18 +22,18 @@ macro_rules! numpy_wrapper {
     };
 }
 
-use crate::indicators::ema::ema as core_ema;
+use crate::indicators::ema as core_ema;
 numpy_wrapper!(core_ema, ema,
     window_size: usize,
     smoothing: f64 = 2.0,
 );
 
-use crate::indicators::sma::sma as core_sma;
+use crate::indicators::sma as core_sma;
 numpy_wrapper!(core_sma, sma,
     window_size: usize,
 );
 
-use crate::indicators::rsi::rsi as core_rsi;
+use crate::indicators::rsi as core_rsi;
 numpy_wrapper!(core_rsi, rsi,
     window_size: usize,
 );

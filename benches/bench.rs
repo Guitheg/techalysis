@@ -43,17 +43,17 @@ macro_rules! bench_feature {
     };
 }
 
-use technicalysis::indicators::ema::ema;
+use technicalysis::indicators::ema;
 bench_feature!(
     smoothing_2,
     ema,
     smoothing: f64 = 2.0,
 );
 
-use technicalysis::indicators::sma::sma;
+use technicalysis::indicators::sma;
 bench_feature!(basic, sma);
 
-use technicalysis::indicators::rsi::rsi;
+use technicalysis::indicators::rsi;
 bench_feature!(basic, rsi);
 
 criterion::criterion_group!(

@@ -2,7 +2,7 @@ use crate::rust::tests_helper::{assert::assert_vec_close, oracle::read_fixture};
 use crate::{assert_vec_float_eq, oracle_test};
 use proptest::{prop_assert, prop_assert_eq, proptest};
 use technicalysis::errors::TechnicalysisError;
-use technicalysis::indicators::rsi::rsi;
+use technicalysis::indicators::rsi;
 
 oracle_test!(rsi, |x: &[f64]| rsi(x, 14));
 
@@ -140,7 +140,7 @@ proptest! {
 
         if data.len() <= period || period <= 1 {
             prop_assert!(result.is_err());
-            if period <= 1 {
+            if period <= 1 && data.len() > 1 {
                 prop_assert!(matches!(result, Err(TechnicalysisError::BadParam(_))));
             } else {
                 prop_assert!(matches!(result, Err(TechnicalysisError::InsufficientData)));
