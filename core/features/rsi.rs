@@ -4,6 +4,9 @@ use std::f64;
 #[inline(always)]
 fn calculate_rsi(avg_gain: f64, avg_loss: f64) -> f64 {
     if avg_loss == 0.0 {
+        if avg_gain == 0.0 {
+            return 50.0;
+        }
         return 100.0;
     }
     let rs = avg_gain / avg_loss;
@@ -18,7 +21,9 @@ pub fn rsi(data_array: &[f64], window_size: usize) -> Result<Vec<f64>, Technical
     }
 
     if window_size == 1 {
-        return Ok(data_array.to_vec());
+        return Err(TechnicalysisError::BadParam(
+            "RSI window size must be greater than 1".to_string(),
+        ));
     }
 
     let k = 1.0 / window_size as f64;
@@ -50,9 +55,12 @@ pub fn rsi(data_array: &[f64], window_size: usize) -> Result<Vec<f64>, Technical
         if delta > 0.0 {
             avg_gain = avg_gain * one_minus_k + delta * k;
             avg_loss *= one_minus_k;
-        } else {
+        } else if delta < 0.0 {
             avg_gain *= one_minus_k;
             avg_loss = avg_loss * one_minus_k - delta * k;
+        } else {
+            avg_gain *= one_minus_k;
+            avg_loss *= one_minus_k;
         }
         result[i] = calculate_rsi(avg_gain, avg_loss);
     }

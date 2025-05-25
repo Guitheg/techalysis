@@ -11,7 +11,7 @@ Technical analysis library for financial market trading applications written in 
 |---------------|---------------------------------------------------------------------------------|---------------------------------------------------------|----------|
 | sma           | Simple Moving Average: calculates the arithmetic mean of prices over N periods. | [Détails](https://www.investopedia.com/terms/s/sma.asp) | ✅       |
 | ema           | Exponential Moving Average: is a type of moving average (MA) that places a greater weight and significance on the most recent data points. | [Détails](https://www.investopedia.com/terms/e/ema.asp) | ✅       |
-| rsi           | Relative Strength Index: a momentum oscillator measuring speed and change of recent price movements. | [Détails](https://www.investopedia.com/terms/r/rsi.asp) | ⏳       |
+| rsi           | Relative Strength Index: a momentum oscillator measuring speed and change of recent price movements. | [Détails](https://www.investopedia.com/terms/r/rsi.asp) | ✅       |
 | macd          | Moving Average Convergence Divergence: shows the relationship between two EMAs to identify momentum shifts. | [Détails](https://www.investopedia.com/terms/m/macd.asp)| ⏳       |
 | bbands        | Bollinger Bands: volatility bands placed above and below a moving average, based on standard deviation. | [Détails](https://www.investopedia.com/terms/b/bollingerbands.asp)| ⏳ |
 | atr           | Average True Range: measures market volatility by calculating the range of price movement. | [Détails](https://www.investopedia.com/terms/a/atr.asp) | ⏳       |
