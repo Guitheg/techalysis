@@ -6,6 +6,7 @@ import talib
 
 
 def benchmark_ema():
+    print("Benchmarking EMA...")
     iterations = 50
     data = np.random.random(1_000_000)
     window_size = 100

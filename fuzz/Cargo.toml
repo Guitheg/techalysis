@@ -24,3 +24,10 @@ path = "fuzz_targets/fuzz_ema.rs"
 test = false
 doc = false
 bench = false
+
+[[bin]]
+name = "rsi"
+path = "fuzz_targets/fuzz_rsi.rs"
+test = false
+doc = false
+bench = false

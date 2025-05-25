@@ -36,12 +36,6 @@ def sma(
     >>> import numpy as np, technicalysis as tx
     >>> tx.sma(np.array([1., 2., 3., 4., 5.]), window_size=2)
     array([nan, 1.5, 2.5, 3.5, 4.5])
-
-    >>> tx.sma(
-    ...     np.array([1., np.nan, 3., 4., 5.]),
-    ...     window_size=3,
-    ... )
-    array([nan, nan, nan, nan, 4.0])
     """
     ...
 
@@ -92,12 +86,41 @@ def ema(
     >>> import numpy as np, technicalysis as tx
     >>> tx.ema(np.array([1., 2., 3., 4., 5.]), window_size=2, smoothing=2.)
     array([nan, 1.5, 2.5, 3.5, 4.5])
+    """
+    ...
 
-    >>> tx.ema(
-    ...     np.array([1., np.nan, 3., 4., 5.]),
-    ...     window_size=3,
-    ...     smoothing=2.,
-    ... )
-    array([nan, nan, nan, nan, 4.0])
+def rsi(
+    data: NDArray,
+    window_size: int,
+) -> NDArray:
+    """
+    Relative Strength Index (RSI).
+
+    Computes the **Relative Strength Index** (RSI) over *data* using a fixed length sliding window.
+    The result has the **same length** as the input.
+    By convention, the first ``window_size - 1`` values are set to *NaN* because a complete window is not yet available.
+
+    Parameters
+    ----------
+    data : numpy.ndarray[f64]
+        One dimensional array.
+    window_size : int
+        Size of the rolling window (must be ``> 0``).
+
+    Returns
+    -------
+    numpy.ndarray[f64]
+        Array of the same length as *data* containing the RSI.
+
+    Raises
+    ------
+    ValueError
+        If ``window_size`` is not in ``1 .. len(data)``, or if *data* contains at least one *NaN*.
+
+    Examples
+    --------
+    >>> import numpy as np, technicalysis as tx
+    >>> tx.rsi(np.array([1., 2., 3., 4., 5.]), window_size=2)
+    array([nan, 1.0, 1.0, 1.0, 1.0])
     """
     ...

@@ -33,6 +33,11 @@ numpy_wrapper!(core_sma, sma,
     window_size: usize,
 );
 
+use crate::features::rsi::rsi as core_rsi;
+numpy_wrapper!(core_rsi, rsi,
+    window_size: usize,
+);
+
 #[pymodule]
 fn _core(m: &Bound<'_, PyModule>) -> PyResult<()> {
     macro_rules! export{
@@ -40,6 +45,6 @@ fn _core(m: &Bound<'_, PyModule>) -> PyResult<()> {
             $( m.add_function(wrap_pyfunction!($f, m)?)?; )*
         };
     }
-    export![ema, sma];
+    export![ema, sma, rsi];
     Ok(())
 }
