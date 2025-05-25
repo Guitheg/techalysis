@@ -7,5 +7,13 @@ version.workspace = true
 name = "sma"
 path = "bin/sma.rs"
 
+[[bin]]
+name = "ema"
+path = "bin/ema.rs"
+
+[[bin]]
+name = "rsi"
+path = "bin/rsi.rs"
+
 [dependencies]
 technicalysis = { path = "../../../" }
