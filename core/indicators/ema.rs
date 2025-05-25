@@ -9,8 +9,15 @@ pub fn ema(
     if window_size == 0 || size < window_size {
         return Err(TechnicalysisError::InsufficientData);
     }
+
     if window_size == 1 {
         return Ok(data_array.to_vec());
+    }
+
+    if smoothing <= 0.0 {
+        return Err(TechnicalysisError::BadParam(
+            "Smoothing must be greater than 0".to_string(),
+        ));
     }
 
     let alpha = smoothing / (window_size as f64 + 1.0);

@@ -86,6 +86,22 @@ fn test_insufficient_data() {
     assert!(matches!(result, Err(TechnicalysisError::InsufficientData)));
 }
 
+#[test]
+fn smoothing_equal_0_bad_param() {
+    let data = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0];
+    let result = ema(&data, 3, 0.0);
+    assert!(result.is_err());
+    assert!(matches!(result, Err(TechnicalysisError::BadParam(_))));
+}
+
+#[test]
+fn smoothing_lessthan_0_bad_param() {
+    let data = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0];
+    let result = ema(&data, 3, -2.0);
+    assert!(result.is_err());
+    assert!(matches!(result, Err(TechnicalysisError::BadParam(_))));
+}
+
 proptest! {
     #[test]
     fn proptest_ema(
