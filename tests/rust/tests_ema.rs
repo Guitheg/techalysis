@@ -2,7 +2,7 @@ use crate::oracle_test;
 use crate::rust::tests_helper::assert::approx_eq_f64;
 use crate::rust::tests_helper::{assert::assert_vec_close, oracle::read_fixture};
 use proptest::{collection::vec, prelude::*};
-use technicalysis::{errors::TechnicalysisError, features::ema::ema};
+use technicalysis::{errors::TechnicalysisError, indicators::ema};
 
 oracle_test!(ema, |x: &[f64]| ema(x, 30, 2.0));
 

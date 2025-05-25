@@ -1,6 +1,6 @@
-from features.rsi import benchmark_rsi
-from features.sma import benchmark_sma
-from features.ema import benchmark_ema
+from indicators.rsi import benchmark_rsi
+from indicators.sma import benchmark_sma
+from indicators.ema import benchmark_ema
 
 if __name__ == '__main__':
     benchmark_sma()

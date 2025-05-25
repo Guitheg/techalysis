@@ -1,4 +1,4 @@
 pub mod errors;
-pub mod features;
+pub mod indicators;
 #[cfg(feature = "python")]
 mod pybinding;
