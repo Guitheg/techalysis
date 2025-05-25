@@ -3,7 +3,7 @@ use crate::rust::tests_helper::assert::approx_eq_f64;
 use crate::rust::tests_helper::{assert::assert_vec_close, oracle::read_fixture};
 use proptest::{collection::vec, prelude::*};
 use technicalysis::errors::TechnicalysisError;
-use technicalysis::features::sma::sma;
+use technicalysis::indicators::sma::sma;
 
 oracle_test!(sma, |x: &[f64]| sma(x, 30));
 
