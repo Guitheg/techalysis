@@ -28,7 +28,7 @@ macro_rules! oracle_test {
             fn [<test_ $name _with_oracle>]() {
                 let (input, expected_channels) = read_fixture(concat!("oracle/", stringify!($name)));
                 let output = $f(&input);
-                assert!(output.is_ok());
+                assert!(output.is_ok(), "Function {} failed: {:?}", stringify!($name), output.err());
                 let output = output.unwrap();
                 assert_eq!(output.len(), expected_channels.len());
                 for (output_channel, expected_channel) in output.iter().zip(expected_channels.iter()) {

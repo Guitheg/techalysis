@@ -42,7 +42,6 @@ pub fn ema(
         Some(alpha) => alpha,
         None => period_to_alpha(window_size, None)?,
     };
-    let alpha_c = 1.0 - alpha;
     let mut result = vec![f64::NAN; size];
 
     let mut sum = 0.0;
@@ -59,11 +58,16 @@ pub fn ema(
         if data_array[idx].is_nan() {
             return Err(TechnicalysisError::UnexpectedNan);
         }
-        ema_prev = data_array[idx] * alpha + ema_prev * alpha_c;
+        ema_prev = ema_next(&data_array[idx], &ema_prev, &alpha);
         result[idx] = ema_prev;
     }
 
     Ok(result)
+}
+
+#[inline(always)]
+pub fn ema_next(new_value: &f64, prev_ema: &f64, alpha: &f64) -> f64 {
+    new_value * alpha + prev_ema * (1.0 - alpha)
 }
 
 #[cfg(test)]
