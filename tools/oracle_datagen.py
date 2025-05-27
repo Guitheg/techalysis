@@ -11,6 +11,7 @@ CASES = {
     "EMA":  dict(timeperiod=30),
     "SMA":  dict(timeperiod=30),
     "RSI":  dict(timeperiod=14),
+    "MACD": dict(fastperiod=12, slowperiod=26, signalperiod=9),
 }
 
 def generate_test_data(name, **kwargs):
