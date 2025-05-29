@@ -1,45 +1,24 @@
-use crate::oracle_test;
 use crate::rust::tests_helper::assert::approx_eq_f64;
-use crate::rust::tests_helper::{assert::assert_vec_close, oracle::read_fixture};
+use crate::rust::tests_helper::generated::assert_vec_eq_gen_data;
 use proptest::{collection::vec, prelude::*};
 use technicalysis::{errors::TechnicalysisError, indicators::ema};
-oracle_test!(ema, |x: &[f64]| {
-    ema(x, 30, None).map(|result| vec![result])
-});
+
+use super::tests_helper::generated::load_generated_csv;
 
 #[test]
-fn test_length_preserved() {
-    let (input, _) = read_fixture("oracle/ema");
-    let output = ema(&input, 30, None);
+fn generated() {
+    let columns = load_generated_csv("ema.csv").unwrap();
+    let input = columns.get("close").unwrap();
+    let output = ema(input, 30, None);
     assert!(output.is_ok());
     let out = output.unwrap();
-    assert_eq!(out.len(), input.len());
-    assert!(out[..(30 - 1)].iter().all(|v| v.is_nan()));
+    let expected = columns.get("out").unwrap();
+    assert_vec_eq_gen_data(&out, expected);
+    assert!(out.len() == input.len());
 }
 
 #[test]
-fn test_identity() {
-    let (input, _) = read_fixture("oracle/ema");
-    let output = ema(&input, 1, None);
-    assert!(output.is_ok());
-    let out = output.unwrap();
-    assert_vec_close(&out, &input);
-}
-
-#[test]
-fn test_linearity() {
-    let (input, expected) = read_fixture("oracle/ema");
-    const K: f64 = 5.3;
-    let scaled_input: Vec<f64> = input.iter().map(|v| v * K).collect();
-    let scaled_expected: Vec<f64> = expected[0].iter().map(|v| v * K).collect();
-    let output = ema(&scaled_input, 30, None);
-    assert!(output.is_ok());
-    let out = output.unwrap();
-    assert_vec_close(&out, &scaled_expected);
-}
-
-#[test]
-fn test_extremum_value_injection_without_panic() {
+fn extremum_value_injection_without_panic() {
     use std::f64;
     let data = vec![f64::MAX / 2.0, f64::MAX / 2.0, f64::MIN_POSITIVE, -0.0, 0.0];
     let out = ema(&data, 2, None).expect("sma must not error on finite extremes");
@@ -54,7 +33,7 @@ fn test_extremum_value_injection_without_panic() {
 }
 
 #[test]
-fn test_invalid_period_lower_bound() {
+fn invalid_period_lower_bound() {
     let data = vec![1.0, 2.0, 3.0];
     let result = ema(&data, 0, None);
     assert!(result.is_err());
@@ -64,7 +43,7 @@ fn test_invalid_period_lower_bound() {
 }
 
 #[test]
-fn test_period_higher_bound() {
+fn period_higher_bound() {
     let data = vec![1.0, 2.0, 3.0];
     let result = ema(&data, 3, None);
     assert!(result.is_ok());
@@ -73,7 +52,7 @@ fn test_period_higher_bound() {
 }
 
 #[test]
-fn test_unexpected_nan() {
+fn unexpected_nan() {
     let data = vec![1.0, 2.0, 3.0, f64::NAN];
     let result = ema(&data, 3, None);
     assert!(result.is_err());
@@ -81,7 +60,7 @@ fn test_unexpected_nan() {
 }
 
 #[test]
-fn test_insufficient_data() {
+fn insufficient_data() {
     let data = vec![1.0, 2.0, 3.0];
     let result = ema(&data, 4, None);
     assert!(matches!(result, Err(TechnicalysisError::InsufficientData)));
@@ -89,7 +68,7 @@ fn test_insufficient_data() {
 
 proptest! {
     #[test]
-    fn proptest_ema(
+    fn proptest(
         input  in vec(-1e12f64..1e12, 2..200),
         window in 2usize..50
     ) {

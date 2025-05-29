@@ -8,7 +8,7 @@ import argparse
 from logger import logger
 import ohlcv
 
-DATA_DIR = Path(__file__).parent.parent / "tests" / "data" / "oracle"
+DATA_DIR = Path(__file__).parent.parent / "tests" / "data" / "generated"
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 RAND = np.random.default_rng(seed=42)
 
@@ -23,7 +23,7 @@ class Configuration():
 CONFIG_DICT = {
     "EMA": Configuration(talib, "EMA", ["close"], dict(timeperiod=30), ["out"]),
     "SMA": Configuration(talib, "SMA", ["close"], dict(timeperiod=30), ["out"]),
-    "RSI": Configuration(talib, "RSI", ["close"], dict(timeperiod=30), ["out"]),
+    "RSI": Configuration(talib, "RSI", ["close"], dict(timeperiod=14), ["out"]),
     "MACD": Configuration(talib, "MACD", ["close"], dict(fastperiod=12, slowperiod=26, signalperiod=9), ["macd", "signal", "histogram"]),
 }
 talib.MACD
