@@ -1,8 +1,7 @@
+use super::ema::period_to_alpha;
 use crate::errors::TechnicalysisError;
 use crate::indicators::step::ema_next;
 use crate::result::TechnicalysisResult;
-
-use super::ema::period_to_alpha;
 
 pub struct MacdResult {
     pub macd: Vec<f64>,
