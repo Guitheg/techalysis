@@ -11,9 +11,8 @@ def py_sma(data, window_size):
     return np.convolve(data, window, mode='valid')
 
 def benchmark_sma():
-    print("\nBenchmarking SMA...")
     iterations = 50
-    data = np.random.random(1_000_000)
+    data = np.random.random(10_000_000)
     window_size = 100
     
     duration = timeit.timeit(lambda: tx.sma(data, window_size), number=iterations)

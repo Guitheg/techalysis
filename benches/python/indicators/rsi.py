@@ -30,10 +30,9 @@ def py_rsi(data, window_size):
     return rsi_values
 
 def benchmark_rsi():
-    print("\nBenchmarking RSI...")
     iterations = 50
-    data = np.random.random(1_000_000)
-    window_size = 14
+    data = np.random.random(10_000_000)
+    window_size = 50
     
     duration = timeit.timeit(lambda: tx.rsi(data, window_size), number=iterations)
     average_time_rs = duration / iterations

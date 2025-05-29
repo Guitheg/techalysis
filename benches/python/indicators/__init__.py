@@ -22,7 +22,7 @@ def print_benchmark(iteration: int, parameters: dict, **benchmarks):
         else:
             if name == "rust":
                 time_ratio = rust_time / sorted_benchmarks[0][1]
-                print(colored(f"\t\t*{name}: {time_as_str(time)}* ({time_ratio:.2f}x slower)", "red"))
+                print(colored(f"\t\t{name}: {time_as_str(time)} ({time_ratio:.2f}x slower)", "red"))
             else:
                 print(f"\t\t{name}: {time_as_str(time)}")
             

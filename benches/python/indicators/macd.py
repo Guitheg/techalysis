@@ -4,8 +4,8 @@ from . import print_benchmark
 import technicalysis as tx
 import talib
 
+
 def benchmark_macd():
-    print("\nBenchmarking MACD...")
     iterations = 50
     data = np.random.random(1_000_000)
     

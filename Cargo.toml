@@ -45,7 +45,7 @@ path = "benches/rust/bench.rs"
 
 [profile.release]
 opt-level = 3
-lto = "fat"
+lto = true
 codegen-units = 1
 strip = "symbols"
 debug = false
