@@ -117,3 +117,40 @@ def rsi(
     array([nan, 1.0, 1.0, 1.0, 1.0])
     """
     ...
+
+def macd(
+    data: NDArray,
+    fast_period: int = 12,
+    slow_period: int = 26,
+    signal_period: int = 9
+) -> NDArray:
+    """
+    Moving Average Convergence Divergence (MACD).
+
+    Computes the **Moving Average Convergence Divergence** (MACD) over *data*.
+    The result has the **same length** as the input.
+
+    Parameters
+    ----------
+    data : numpy.ndarray[f64]
+        One dimensional array.
+    window_size : int
+        Size of the rolling window (must be ``> 0``).
+
+    Returns
+    -------
+    numpy.ndarray[f64]
+        Array of the same length as *data* containing the MACD.
+
+    Raises
+    ------
+    ValueError
+        If ``window_size`` is not in ``1 .. len(data)``, or if *data* contains at least one *NaN*.
+
+    Examples
+    --------
+    >>> import numpy as np, technicalysis as tx
+    >>> tx.macd(np.array([1., 2., 3., 4., 5.]), window_size=2)
+    array([nan, 1.0, 1.0, 1.0, 1.0])
+    """
+    ...
