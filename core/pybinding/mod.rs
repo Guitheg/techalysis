@@ -1,7 +1,6 @@
-use pyo3::prelude::pymodule;
+use pyo3::pymodule;
 
-use pyo3::prelude::*;
-
+#[macro_export]
 macro_rules! numpy_wrapper {
     (
         $rs_fn:path,
@@ -9,7 +8,7 @@ macro_rules! numpy_wrapper {
         $( $arg:ident : $typ:ty $(= $default:expr)? ),* $(,)?
     ) => {
         #[pyfunction(signature = (data, $( $arg $(= $default)? ),* ))]
-        fn $py_name<'py>(
+        pub(crate) fn $py_name<'py>(
             py: pyo3::Python<'py>,
             data: numpy::PyReadonlyArray1<'py, f64>,
             $( $arg : $typ ),*
@@ -22,29 +21,18 @@ macro_rules! numpy_wrapper {
     };
 }
 
-use crate::indicators::ema as core_ema;
-numpy_wrapper!(core_ema, ema,
-    window_size: usize,
-    alpha: Option<f64> = None,
-);
+mod py_ema;
+mod py_rsi;
+mod py_sma;
 
-use crate::indicators::sma as core_sma;
-numpy_wrapper!(core_sma, sma,
-    window_size: usize,
-);
+#[pymodule(gil_used = false)]
+mod _core {
+    #[pymodule_export]
+    use crate::pybinding::py_ema::ema;
 
-use crate::indicators::rsi as core_rsi;
-numpy_wrapper!(core_rsi, rsi,
-    window_size: usize,
-);
+    #[pymodule_export]
+    use crate::pybinding::py_rsi::rsi;
 
-#[pymodule]
-fn _core(m: &Bound<'_, PyModule>) -> PyResult<()> {
-    macro_rules! export{
-        ($($f:ident),* $(,)?) => {
-            $( m.add_function(wrap_pyfunction!($f, m)?)?; )*
-        };
-    }
-    export![ema, sma, rsi];
-    Ok(())
+    #[pymodule_export]
+    use crate::pybinding::py_sma::sma;
 }
