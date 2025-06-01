@@ -1,7 +1,7 @@
 use crate::rust::tests_helper::assert::approx_eq_f64;
 use crate::rust::tests_helper::generated::assert_vec_eq_gen_data;
 use proptest::{collection::vec, prelude::*};
-use technicalysis::{errors::TechnicalysisError, indicators::ema};
+use technicalysis::{errors::TechnicalysisError, indicators::ema::ema};
 
 use super::tests_helper::generated::load_generated_csv;
 
@@ -64,6 +64,15 @@ fn insufficient_data() {
     let data = vec![1.0, 2.0, 3.0];
     let result = ema(&data, 4, None);
     assert!(matches!(result, Err(TechnicalysisError::InsufficientData)));
+}
+
+#[test]
+fn period_1() {
+    let data = &[10.0, 11.0, 10.0, 10.0, 12.0];
+    let period = 1;
+    let result = ema(data, period, None);
+    assert!(result.is_err());
+    assert!(matches!(result, Err(TechnicalysisError::BadParam(_))));
 }
 
 proptest! {

@@ -1,6 +1,6 @@
 use super::ema::period_to_alpha;
 use crate::errors::TechnicalysisError;
-use crate::indicators::step::ema_next;
+use crate::indicators::ema::ema_next;
 use crate::result::TechnicalysisResult;
 
 #[derive(Debug)]
@@ -22,6 +22,38 @@ pub fn macd(
     slow_period: usize,
     signal_period: usize,
 ) -> Result<MacdResult, TechnicalysisError> {
+    let size: usize = data_array.len();
+
+    let mut output_macd = vec![f64::NAN; size];
+    let mut output_signal = vec![f64::NAN; size];
+    let mut output_histogram = vec![f64::NAN; size];
+
+    core_macd(
+        data_array,
+        fast_period,
+        slow_period,
+        signal_period,
+        &mut output_macd,
+        &mut output_signal,
+        &mut output_histogram,
+    )?;
+
+    Ok(MacdResult {
+        macd: output_macd,
+        signal: output_signal,
+        histogram: output_histogram,
+    })
+}
+
+pub fn core_macd(
+    data_array: &[f64],
+    fast_period: usize,
+    slow_period: usize,
+    signal_period: usize,
+    output_macd: &mut [f64],
+    output_signal: &mut [f64],
+    output_histogram: &mut [f64],
+) -> Result<(), TechnicalysisError> {
     if fast_period >= slow_period {
         return Err(TechnicalysisError::BadParam(
             "Fast period must be less than slow period".to_string(),
@@ -36,10 +68,6 @@ pub fn macd(
     let macd_start_idx = (slow_period - 1) + (signal_period - 1);
 
     let size: usize = data_array.len();
-
-    let mut macd = vec![f64::NAN; data_array.len()];
-    let mut signal = vec![f64::NAN; data_array.len()];
-    let mut histogram = vec![f64::NAN; data_array.len()];
 
     if size < skip_period {
         return Err(TechnicalysisError::InsufficientData);
@@ -93,11 +121,11 @@ pub fn macd(
 
     fast_ema_prev = ema_next(&data_array[macd_start_idx], &fast_ema_prev, &fast_alpha);
     slow_ema_prev = ema_next(&data_array[macd_start_idx], &slow_ema_prev, &slow_alpha);
-    macd[macd_start_idx] = fast_ema_prev - slow_ema_prev;
-    sum_macd += macd[macd_start_idx];
+    output_macd[macd_start_idx] = fast_ema_prev - slow_ema_prev;
+    sum_macd += output_macd[macd_start_idx];
     let mut signal_ema_prev = sum_macd / signal_period as f64;
-    signal[macd_start_idx] = signal_ema_prev;
-    histogram[macd_start_idx] = macd[macd_start_idx] - signal[macd_start_idx];
+    output_signal[macd_start_idx] = signal_ema_prev;
+    output_histogram[macd_start_idx] = output_macd[macd_start_idx] - output_signal[macd_start_idx];
 
     // Main loop
     for idx in macd_start_idx + 1..size {
@@ -107,15 +135,11 @@ pub fn macd(
         }
         fast_ema_prev = ema_next(&data, &fast_ema_prev, &fast_alpha);
         slow_ema_prev = ema_next(&data, &slow_ema_prev, &slow_alpha);
-        macd[idx] = fast_ema_prev - slow_ema_prev;
-        signal_ema_prev = ema_next(&macd[idx], &signal_ema_prev, &signal_alpha);
-        signal[idx] = signal_ema_prev;
-        histogram[idx] = macd[idx] - signal[idx];
+        output_macd[idx] = fast_ema_prev - slow_ema_prev;
+        signal_ema_prev = ema_next(&output_macd[idx], &signal_ema_prev, &signal_alpha);
+        output_signal[idx] = signal_ema_prev;
+        output_histogram[idx] = output_macd[idx] - output_signal[idx];
     }
 
-    Ok(MacdResult {
-        macd,
-        signal,
-        histogram,
-    })
+    Ok(())
 }

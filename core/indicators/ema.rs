@@ -26,43 +26,57 @@ pub fn period_to_alpha(period: usize, smoothing: Option<f64>) -> Result<f64, Tec
 
 pub fn ema(
     data_array: &[f64],
-    window_size: usize,
+    period: usize,
     alpha: Option<f64>,
 ) -> Result<Vec<f64>, TechnicalysisError> {
+    let mut output = vec![f64::NAN; data_array.len()];
+    core_ema(data_array, period, alpha, &mut output)?;
+    Ok(output)
+}
+
+pub fn core_ema(
+    data_array: &[f64],
+    period: usize,
+    alpha: Option<f64>,
+    output: &mut [f64],
+) -> Result<(), TechnicalysisError> {
     let size = data_array.len();
-    if window_size == 0 || size < window_size {
+    if period == 0 || size < period {
         return Err(TechnicalysisError::InsufficientData);
     }
 
-    if window_size == 1 {
-        return Ok(data_array.to_vec());
+    if period == 1 {
+        return Err(TechnicalysisError::BadParam(
+            "EMA period must be greater than 1".to_string(),
+        ));
     }
 
     let alpha = match alpha {
         Some(alpha) => alpha,
-        None => period_to_alpha(window_size, None)?,
+        None => period_to_alpha(period, None)?,
     };
-    let mut result = vec![f64::NAN; size];
+
+    output[..period - 1].fill(f64::NAN);
 
     let mut sum = 0.0;
-    for &value in &data_array[..window_size] {
+    for &value in &data_array[..period] {
         if value.is_nan() {
             return Err(TechnicalysisError::UnexpectedNan);
         }
         sum += value;
     }
-    let mut ema_prev = sum / window_size as f64;
-    result[window_size - 1] = ema_prev;
+    let mut ema_prev = sum / period as f64;
+    output[period - 1] = ema_prev;
 
-    for idx in window_size..size {
+    for idx in period..size {
         if data_array[idx].is_nan() {
             return Err(TechnicalysisError::UnexpectedNan);
         }
         ema_prev = ema_next(&data_array[idx], &ema_prev, &alpha);
-        result[idx] = ema_prev;
+        output[idx] = ema_prev;
     }
 
-    Ok(result)
+    Ok(())
 }
 
 #[inline(always)]

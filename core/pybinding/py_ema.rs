@@ -1,5 +1,5 @@
-use crate::indicators::ema as core_ema;
-use numpy::IntoPyArray;
+use crate::indicators::ema::core_ema;
+use numpy::{PyArray1, PyArrayMethods};
 use pyo3::pyfunction;
 
 #[pyfunction(signature = (data, window_size = 14, alpha = None))]
@@ -11,8 +11,11 @@ pub(crate) fn ema<'py>(
 ) -> pyo3::PyResult<pyo3::Py<numpy::PyArray1<f64>>> {
     let slice = data.as_slice()?;
 
-    let vec = py
-        .allow_threads(|| core_ema(slice, window_size, alpha.into()))
+    let py_array_out = unsafe { PyArray1::<f64>::new(py, [slice.len()], false) };
+    let py_array_ptr = unsafe { py_array_out.as_slice_mut()? };
+
+    py.allow_threads(|| core_ema(slice, window_size, alpha.into(), py_array_ptr))
         .map_err(|e| pyo3::exceptions::PyValueError::new_err(format!("{:?}", e)))?;
-    Ok(vec.into_pyarray(py).into())
+
+    Ok(py_array_out.into())
 }

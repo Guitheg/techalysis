@@ -1,7 +1,7 @@
 use criterion::BenchmarkId;
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
-use technicalysis::indicators::rsi;
+use technicalysis::indicators::rsi::rsi;
 
 fn bench_rsi(c: &mut criterion::Criterion) {
     let mut bench_group = c.benchmark_group("rsi");

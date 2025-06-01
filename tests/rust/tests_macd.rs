@@ -1,4 +1,4 @@
-use technicalysis::{errors::TechnicalysisError, indicators::macd};
+use technicalysis::{errors::TechnicalysisError, indicators::macd::macd};
 
 use crate::rust::tests_helper::generated::{assert_vec_eq_gen_data, load_generated_csv};
 

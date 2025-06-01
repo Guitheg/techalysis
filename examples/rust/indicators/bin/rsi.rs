@@ -1,4 +1,4 @@
-use technicalysis::{errors::TechnicalysisError, indicators::rsi};
+use technicalysis::{errors::TechnicalysisError, indicators::rsi::rsi};
 
 fn main() -> Result<(), TechnicalysisError> {
     let prices = vec![10.0, 11.0, 10.0, 10.1, 14.0, 15.0, 16.0, 17.0, 18.0, 19.0];

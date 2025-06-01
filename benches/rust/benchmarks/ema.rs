@@ -1,7 +1,7 @@
 use criterion::BenchmarkId;
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
-use technicalysis::indicators::ema;
+use technicalysis::indicators::ema::ema;
 
 fn bench_ema(c: &mut criterion::Criterion) {
     let mut bench_group = c.benchmark_group("ema");

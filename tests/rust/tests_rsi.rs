@@ -3,7 +3,7 @@ use crate::rust::tests_helper::assert::assert_vec_close;
 use crate::rust::tests_helper::generated::{assert_vec_eq_gen_data, load_generated_csv};
 use proptest::{prop_assert, prop_assert_eq, proptest};
 use technicalysis::errors::TechnicalysisError;
-use technicalysis::indicators::rsi;
+use technicalysis::indicators::rsi::rsi;
 
 #[test]
 fn generated() {

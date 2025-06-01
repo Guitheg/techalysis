@@ -1,5 +1,5 @@
 use technicalysis::errors::TechnicalysisError;
-use technicalysis::indicators::sma;
+use technicalysis::indicators::sma::sma;
 
 fn main() -> Result<(), TechnicalysisError> {
     let data = [10.0, 11.0, 12.0, 13.0, 12.5, 12.0];

@@ -3,7 +3,7 @@ use crate::rust::tests_helper::generated::assert_vec_eq_gen_data;
 use crate::rust::tests_helper::generated::load_generated_csv;
 use proptest::{collection::vec, prelude::*};
 use technicalysis::errors::TechnicalysisError;
-use technicalysis::indicators::sma;
+use technicalysis::indicators::sma::sma;
 
 #[test]
 fn generated() {
@@ -64,6 +64,15 @@ fn insufficient_data() {
     let data = vec![1.0, 2.0, 3.0];
     let result = sma(&data, 4);
     assert!(matches!(result, Err(TechnicalysisError::InsufficientData)));
+}
+
+#[test]
+fn period_1() {
+    let data = &[10.0, 11.0, 10.0, 10.0, 12.0];
+    let period = 1;
+    let result = sma(data, period);
+    assert!(result.is_err());
+    assert!(matches!(result, Err(TechnicalysisError::BadParam(_))));
 }
 
 fn slow_sma(data: &[f64], window: usize) -> Vec<f64> {

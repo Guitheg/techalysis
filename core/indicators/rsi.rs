@@ -14,6 +14,17 @@ fn calculate_rsi(avg_gain: f64, avg_loss: f64) -> f64 {
 }
 
 pub fn rsi(data_array: &[f64], window_size: usize) -> Result<Vec<f64>, TechnicalysisError> {
+    let size: usize = data_array.len();
+    let mut output = vec![f64::NAN; size];
+    core_rsi(data_array, window_size, &mut output)?;
+    Ok(output)
+}
+
+pub fn core_rsi(
+    data_array: &[f64],
+    window_size: usize,
+    output: &mut [f64],
+) -> Result<(), TechnicalysisError> {
     let size = data_array.len();
     let period = window_size as f64;
     if window_size == 0 || window_size + 1 > size {
@@ -28,7 +39,6 @@ pub fn rsi(data_array: &[f64], window_size: usize) -> Result<Vec<f64>, Technical
 
     let k = 1.0 / window_size as f64;
     let one_minus_k = 1.0 - k;
-    let mut result = vec![f64::NAN; size];
 
     let mut avg_gain: f64 = 0.0;
     let mut avg_loss: f64 = 0.0;
@@ -45,7 +55,7 @@ pub fn rsi(data_array: &[f64], window_size: usize) -> Result<Vec<f64>, Technical
     }
     avg_gain /= period;
     avg_loss /= period;
-    result[window_size] = calculate_rsi(avg_gain, avg_loss);
+    output[window_size] = calculate_rsi(avg_gain, avg_loss);
 
     for i in (window_size + 1)..size {
         let delta = data_array[i] - data_array[i - 1];
@@ -62,7 +72,7 @@ pub fn rsi(data_array: &[f64], window_size: usize) -> Result<Vec<f64>, Technical
             avg_gain *= one_minus_k;
             avg_loss *= one_minus_k;
         }
-        result[i] = calculate_rsi(avg_gain, avg_loss);
+        output[i] = calculate_rsi(avg_gain, avg_loss);
     }
-    Ok(result)
+    Ok(())
 }
