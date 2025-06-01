@@ -11,3 +11,9 @@ def test_sma_pandas_success(csv_loader):
    df = csv_loader("sma")
    out = tx.sma(df["close"], 30)
    testing.assert_allclose(out, df["out"])
+
+def test_thread_sma(thread_test):
+   def sma_tx_lambda(data):
+      return tx.sma(data, 30)
+
+   thread_test(sma_tx_lambda, n_threads=4)

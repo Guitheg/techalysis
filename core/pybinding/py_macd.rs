@@ -13,7 +13,8 @@ pub(crate) fn macd<'py>(
 ) -> PyResult<(Py<PyArray1<f64>>, Py<PyArray1<f64>>, Py<PyArray1<f64>>)> {
     let slice = data.as_slice()?;
 
-    let output_macd = core_macd(slice, fast_period, slow_period, signal_period)
+    let output_macd = py
+        .allow_threads(|| core_macd(slice, fast_period, slow_period, signal_period))
         .map_err(|e| pyo3::exceptions::PyValueError::new_err(format!("{:?}", e)))?;
 
     Ok((

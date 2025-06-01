@@ -1,7 +1,17 @@
-use crate::{indicators::rsi as core_rsi, numpy_wrapper};
+use crate::indicators::rsi as core_rsi;
 use numpy::IntoPyArray;
 use pyo3::pyfunction;
 
-numpy_wrapper!(core_rsi, rsi,
+#[pyfunction(signature = (data, window_size = 14))]
+pub(crate) fn rsi<'py>(
+    py: pyo3::Python<'py>,
+    data: numpy::PyReadonlyArray1<'py, f64>,
     window_size: usize,
-);
+) -> pyo3::PyResult<pyo3::Py<numpy::PyArray1<f64>>> {
+    let slice = data.as_slice()?;
+
+    let vec = py
+        .allow_threads(|| core_rsi(slice, window_size))
+        .map_err(|e| pyo3::exceptions::PyValueError::new_err(format!("{:?}", e)))?;
+    Ok(vec.into_pyarray(py).into())
+}
