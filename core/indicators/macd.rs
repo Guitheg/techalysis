@@ -52,16 +52,22 @@ pub fn macd(
     let mut fast_sum = 0.0;
     let mut slow_sum = 0.0;
 
-    for idx in slow_ema_start_idx..fast_ema_start_idx {
-        let value = data_array[idx];
+    for value in data_array
+        .iter()
+        .take(fast_ema_start_idx)
+        .skip(slow_ema_start_idx)
+    {
         if value.is_nan() {
             return Err(TechnicalysisError::UnexpectedNan);
         }
         slow_sum += value;
     }
 
-    for idx in fast_ema_start_idx..signal_start_idx {
-        let value = data_array[idx];
+    for value in data_array
+        .iter()
+        .take(signal_start_idx)
+        .skip(fast_ema_start_idx)
+    {
         if value.is_nan() {
             return Err(TechnicalysisError::UnexpectedNan);
         }
@@ -72,13 +78,16 @@ pub fn macd(
     let mut slow_ema_prev = slow_sum / slow_period as f64;
     let mut sum_macd = fast_ema_prev - slow_ema_prev;
 
-    for idx in signal_start_idx..macd_start_idx {
-        let value = data_array[idx];
+    for value in data_array
+        .iter()
+        .take(macd_start_idx)
+        .skip(signal_start_idx)
+    {
         if value.is_nan() {
             return Err(TechnicalysisError::UnexpectedNan);
         }
-        fast_ema_prev = ema_next(&value, &fast_ema_prev, &fast_alpha);
-        slow_ema_prev = ema_next(&value, &slow_ema_prev, &slow_alpha);
+        fast_ema_prev = ema_next(value, &fast_ema_prev, &fast_alpha);
+        slow_ema_prev = ema_next(value, &slow_ema_prev, &slow_alpha);
         sum_macd += fast_ema_prev - slow_ema_prev;
     }
 

@@ -15,7 +15,7 @@ fn generated_default() {
     assert_vec_eq_gen_data(&out.macd, expected_macd);
     assert_vec_eq_gen_data(&out.signal, expected_signal);
     assert_vec_eq_gen_data(&out.histogram, expected_histogram);
-    assert!(&out.macd.len() == &input.len());
+    assert!(out.macd.len() == input.len());
 }
 
 #[test]
@@ -32,7 +32,7 @@ fn generated_fast16_slow36_signal12() {
     assert_vec_eq_gen_data(&out.macd, expected_macd);
     assert_vec_eq_gen_data(&out.signal, expected_signal);
     assert_vec_eq_gen_data(&out.histogram, expected_histogram);
-    assert!(&out.macd.len() == &input.len());
+    assert!(out.macd.len() == input.len());
 }
 
 #[test]
@@ -48,7 +48,7 @@ fn generated_signal32() {
     assert_vec_eq_gen_data(&out.macd, expected_macd);
     assert_vec_eq_gen_data(&out.signal, expected_signal);
     assert_vec_eq_gen_data(&out.histogram, expected_histogram);
-    assert!(&out.macd.len() == &input.len());
+    assert!(out.macd.len() == input.len());
 }
 
 #[test]
