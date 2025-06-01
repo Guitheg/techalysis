@@ -3,6 +3,7 @@ use crate::errors::TechnicalysisError;
 use crate::indicators::step::ema_next;
 use crate::result::TechnicalysisResult;
 
+#[derive(Debug)]
 pub struct MacdResult {
     pub macd: Vec<f64>,
     pub signal: Vec<f64>,
@@ -41,9 +42,7 @@ pub fn macd(
     let mut histogram = vec![f64::NAN; data_array.len()];
 
     if size < skip_period {
-        return Err(TechnicalysisError::BadParam(
-            "Data array length must be greater than the MACD Starting Period".to_string(),
-        ));
+        return Err(TechnicalysisError::InsufficientData);
     }
 
     let fast_alpha = period_to_alpha(fast_period, None)?;
