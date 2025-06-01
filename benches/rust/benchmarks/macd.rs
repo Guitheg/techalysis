@@ -20,7 +20,7 @@ fn bench_macd(c: &mut criterion::Criterion) {
             &(fastperiod, slowperiod, signalperiod),
             |b, &(fastperiod, slowperiod, signalperiod)| {
                 b.iter(|| {
-                    let _ = macd(&data, fastperiod, slowperiod, signalperiod);
+                    let _ = macd(&data, fastperiod, slowperiod, signalperiod).unwrap();
                 })
             },
         );

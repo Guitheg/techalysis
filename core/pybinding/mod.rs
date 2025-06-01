@@ -16,7 +16,7 @@ macro_rules! numpy_wrapper {
             let slice = data.as_slice()?;
             let vec = $rs_fn(slice $(, $arg.into() )*)
                 .map_err(|e| pyo3::exceptions::PyValueError::new_err(format!("{:?}", e)))?;
-            Ok(numpy::PyArray1::from_vec(py, vec).to_owned().into())
+            Ok(vec.into_pyarray(py).into())
         }
     };
 }
