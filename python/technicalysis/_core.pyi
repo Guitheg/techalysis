@@ -1,3 +1,4 @@
+from typing import Optional
 from numpy.typing import NDArray
 
 def sma(
@@ -43,19 +44,13 @@ def sma(
 def ema(
     data: NDArray,
     window_size: int,
-    smoothing: float = 2.,
+    alpha: Optional[float] = None,
 ) -> NDArray:
     """
     Exponential (Weighted) Moving Average (EMA) / (EWMA).
 
     Computes an **exponential** moving average, also called an exponentially
     weighted moving average (EWMA) over *data*.  
-    The smoothing factor `alpha` is derived from the conventional
-    formula:
-
-        ```
-        alpha = smoothing / (window_size + 1)
-        ```
 
     The first ``window_size - 1`` values of the result are set to *NaN*
     because the EMA is undefined until a full window is available.
@@ -67,9 +62,7 @@ def ema(
         ``len(data) >= window_size``.
     window_size : int
         Size of the rolling window (must be ``> 0``).
-    smoothing : float, default ``2.0``
-        Numerator used to compute the weighting factor *alpha*.
-        A common choice is ``smoothing = 2.0``.
+    alpha : float, default ``2.0 / (window_size + 1)``
 
     Returns
     -------
@@ -121,6 +114,43 @@ def rsi(
     --------
     >>> import numpy as np, technicalysis as tx
     >>> tx.rsi(np.array([1., 2., 3., 4., 5.]), window_size=2)
+    array([nan, 1.0, 1.0, 1.0, 1.0])
+    """
+    ...
+
+def macd(
+    data: NDArray,
+    fast_period: int = 12,
+    slow_period: int = 26,
+    signal_period: int = 9
+) -> NDArray:
+    """
+    Moving Average Convergence Divergence (MACD).
+
+    Computes the **Moving Average Convergence Divergence** (MACD) over *data*.
+    The result has the **same length** as the input.
+
+    Parameters
+    ----------
+    data : numpy.ndarray[f64]
+        One dimensional array.
+    window_size : int
+        Size of the rolling window (must be ``> 0``).
+
+    Returns
+    -------
+    numpy.ndarray[f64]
+        Array of the same length as *data* containing the MACD.
+
+    Raises
+    ------
+    ValueError
+        If ``window_size`` is not in ``1 .. len(data)``, or if *data* contains at least one *NaN*.
+
+    Examples
+    --------
+    >>> import numpy as np, technicalysis as tx
+    >>> tx.macd(np.array([1., 2., 3., 4., 5.]), window_size=2)
     array([nan, 1.0, 1.0, 1.0, 1.0])
     """
     ...

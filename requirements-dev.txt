@@ -1,7 +1,9 @@
 maturin
 pytest
+pyperf
 
 # for benchmark comparaison and test data generation (as oracle)
+termcolor
 # ta-lib
 
 # for testing

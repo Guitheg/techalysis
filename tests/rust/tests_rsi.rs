@@ -1,13 +1,24 @@
-use crate::rust::tests_helper::{assert::assert_vec_close, oracle::read_fixture};
-use crate::{assert_vec_float_eq, oracle_test};
+use crate::assert_vec_float_eq;
+use crate::rust::tests_helper::assert::assert_vec_close;
+use crate::rust::tests_helper::generated::{assert_vec_eq_gen_data, load_generated_csv};
 use proptest::{prop_assert, prop_assert_eq, proptest};
 use technicalysis::errors::TechnicalysisError;
 use technicalysis::indicators::rsi;
 
-oracle_test!(rsi, |x: &[f64]| rsi(x, 14));
+#[test]
+fn generated() {
+    let columns = load_generated_csv("rsi.csv").unwrap();
+    let input = columns.get("close").unwrap();
+    let output = rsi(input, 14);
+    assert!(output.is_ok());
+    let out = output.unwrap();
+    let expected = columns.get("out").unwrap();
+    assert_vec_eq_gen_data(&out, expected);
+    assert!(out.len() == input.len());
+}
 
 #[test]
-fn test_rsi_empty_input() {
+fn empty_input() {
     let data: [f64; 0] = [];
     let period = 14;
     let result = rsi(&data, period);
@@ -16,7 +27,7 @@ fn test_rsi_empty_input() {
 }
 
 #[test]
-fn test_rsi_input_shorter_than_period() {
+fn input_shorter_than_period() {
     let data = &[1.0, 2.0, 3.0];
     let period = 5;
     let result = rsi(data, period);
@@ -25,7 +36,7 @@ fn test_rsi_input_shorter_than_period() {
 }
 
 #[test]
-fn test_rsi_input_length_equals_period() {
+fn input_length_equals_period() {
     let data = &[1.0, 2.0, 3.0];
     let period = 3;
     let result = rsi(data, period);
@@ -34,7 +45,7 @@ fn test_rsi_input_length_equals_period() {
 }
 
 #[test]
-fn test_rsi_period_1() {
+fn period_1() {
     let data = &[10.0, 11.0, 10.0, 10.0, 12.0];
     let period = 1;
     let result = rsi(data, period);
@@ -43,7 +54,7 @@ fn test_rsi_period_1() {
 }
 
 #[test]
-fn test_rsi_min_data_for_one_value_mixed() {
+fn min_data_for_one_value_mixed() {
     let data = &[10.0, 11.0, 10.0];
     let period = 2;
     let expected = vec![f64::NAN, f64::NAN, 50.0];
@@ -52,7 +63,7 @@ fn test_rsi_min_data_for_one_value_mixed() {
 }
 
 #[test]
-fn test_rsi_alternating_up_down() {
+fn alternating_up_down() {
     let data = &[10.0, 12.0, 10.0, 12.0, 10.0, 12.0];
     let period = 2;
     let expected = vec![f64::NAN, f64::NAN, 50.0, 75.0, 37.5, 68.75];
@@ -61,7 +72,7 @@ fn test_rsi_alternating_up_down() {
 }
 
 #[test]
-fn test_rsi_all_values_approximatelly_same() {
+fn all_values_approximatelly_same() {
     let data = &[
         10.1, 9.9, 10.0, 10.2, 10.1, 10.12, 10.11, 10.12, 10.11, 10.10, 10.09, 10.10,
     ];
@@ -85,7 +96,7 @@ fn test_rsi_all_values_approximatelly_same() {
 }
 
 #[test]
-fn test_rsi_all_values_same() {
+fn all_values_same() {
     let data = &[10.0, 10.0, 10.0, 10.0, 10.0];
     let period = 3;
     let expected = vec![f64::NAN, f64::NAN, f64::NAN, 50.0, 50.0];
@@ -94,7 +105,7 @@ fn test_rsi_all_values_same() {
 }
 
 #[test]
-fn test_rsi_all_increasing() {
+fn all_increasing() {
     let data = &[1.0, 2.0, 3.0, 4.0, 5.0];
     let period = 3;
     let expected = vec![f64::NAN, f64::NAN, f64::NAN, 100.0, 100.0];
@@ -103,7 +114,7 @@ fn test_rsi_all_increasing() {
 }
 
 #[test]
-fn test_rsi_all_decreasing() {
+fn all_decreasing() {
     let data = &[5.0, 4.0, 3.0, 2.0, 1.0];
     let period = 3;
     let expected = vec![f64::NAN, f64::NAN, f64::NAN, 0.0, 0.0];
@@ -112,7 +123,7 @@ fn test_rsi_all_decreasing() {
 }
 
 #[test]
-fn test_rsi_input_with_nans() {
+fn input_with_nans() {
     let data = &[1.0, 2.0, f64::NAN, 4.0, 5.0];
     let period = 2;
     let result = rsi(data, period);
@@ -121,7 +132,7 @@ fn test_rsi_input_with_nans() {
 }
 
 #[test]
-fn test_rsi_period_zero() {
+fn period_zero() {
     let data = &[1.0, 2.0, 3.0];
     let period = 0;
     let result = rsi(data, period);
@@ -131,7 +142,7 @@ fn test_rsi_period_zero() {
 
 proptest! {
     #[test]
-    fn proptest_rsi_random_inputs(
+    fn proptest(
         data in proptest::collection::vec(-1000.0..1000.0, 1..100),
         period in 1..50
 ) {

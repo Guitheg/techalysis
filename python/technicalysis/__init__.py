@@ -14,18 +14,20 @@ def __init__():
 
     try:
         from pandas import Series as _pd_Series
+        from pandas import DataFrame as _pd_DataFrame
     except ModuleNotFoundError:
         _pd_Series = None
+        _pd_DataFrame = None
 
     def wrapper(function):
         from functools import wraps
         from itertools import chain
-        if _pd_Series is None:
+        if _pd_Series is None or _pd_DataFrame is None:
             return function
         
         @wraps(function)
         def inner_wrapper(*args, **kwargs):
-            use_pd = any(isinstance(a, _pd_Series) for a in chain(args, kwargs.values()))
+            use_pd = any(isinstance(arg, _pd_Series) for arg in chain(args, kwargs.values()))
 
             _args = args
             _kwargs = kwargs
@@ -52,6 +54,8 @@ def __init__():
             if use_pd:
                 if isinstance(out, tuple):
                     return tuple(_pd_Series(o, index=index) for o in out)
+                if out.ndim == 2:
+                    return _pd_DataFrame(out.T, index=index)
                 return _pd_Series(out, index=index)
             return out
         return inner_wrapper
