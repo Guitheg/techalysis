@@ -14,6 +14,6 @@ def test_sma_pandas_success(csv_loader):
 
 def test_thread_sma(thread_test):
    def sma_tx_lambda(data):
-      return tx.sma(data, 30)
+      return tx.sma(data, 30, release_gil = True)
 
    thread_test(sma_tx_lambda, n_threads=4)

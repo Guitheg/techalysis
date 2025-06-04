@@ -1,120 +1,95 @@
 from typing import Optional
 from numpy.typing import NDArray
+from typing import Tuple
 
 def sma(
     data: NDArray,
-    window_size: int,
+    period: int,
+    release_gil: bool = False
 ) -> NDArray:
     """
-    Simple Moving Average (SMA).
-
-    Computes a **simple (arithmetic) moving average** over *data* using a
-    fixed length sliding window.  
-    The result has the **same length** as the input.  
-    By convention, the first ``window_size - 1`` values are set to *NaN*
-    because a complete window is not yet available.
+    SMA: Simple Moving Average
+    ----------
 
     Parameters
     ----------
-    data : numpy.ndarray[f64]
+    data : 1-D array
         One dimensional array. Must satisfy
-        ``len(data) >= window_size``.
-    window_size : int
+        ``len(data) >= period``.
+    period : int
         Size of the rolling window (must be ``> 0``).
+
+    release_gil : bool, default False
+        If ``True``, the GIL is released during the computation.
+        This is useful when using this function in a multi-threaded context.
 
     Returns
     -------
-    numpy.ndarray[f64]
+    1-D array
         Array of the same length as *data* containing the SMA.
-
-    Raises
-    ------
-    ValueError
-        If ``window_size`` is not in ``1 .. len(data)``, or if *data* contains at least one *NaN*.
-
-    Examples
-    --------
-    >>> import numpy as np, technicalysis as tx
-    >>> tx.sma(np.array([1., 2., 3., 4., 5.]), window_size=2)
-    array([nan, 1.5, 2.5, 3.5, 4.5])
     """
     ...
 
 
 def ema(
     data: NDArray,
-    window_size: int,
+    period: int,
     alpha: Optional[float] = None,
+    release_gil: bool = False
 ) -> NDArray:
     """
-    Exponential (Weighted) Moving Average (EMA) / (EWMA).
-
-    Computes an **exponential** moving average, also called an exponentially
-    weighted moving average (EWMA) over *data*.  
-
-    The first ``window_size - 1`` values of the result are set to *NaN*
-    because the EMA is undefined until a full window is available.
+    EMA / EWMA: Exponential (Weighted) Moving Average 
+    ----------
 
     Parameters
     ----------
-    data : numpy.ndarray[f64]
+    data : 1-D array
         One dimensional array of numeric observations. Must have
-        ``len(data) >= window_size``.
-    window_size : int
+        ``len(data) >= period``.
+
+    period : int
         Size of the rolling window (must be ``> 0``).
-    alpha : float, default ``2.0 / (window_size + 1)``
+
+    alpha : float, default ``2.0 / (period + 1)``
+
+    release_gil : bool, default False
+        If ``True``, the GIL is released during the computation.
+        This is useful when using this function in a multi-threaded context.
 
     Returns
     -------
-    numpy.ndarray[f64]
+    1-D array
         Array of the same length as *data* containing the EMA.
 
-    Raises
-    ------
-    ValueError
-        If ``window_size`` is not in ``1 .. len(data)`` or if *data* contains at least one *NaN*.
-
-    Examples
-    --------
-    >>> import numpy as np, technicalysis as tx
-    >>> tx.ema(np.array([1., 2., 3., 4., 5.]), window_size=2, smoothing=2.)
-    array([nan, 1.5, 2.5, 3.5, 4.5])
     """
     ...
 
 def rsi(
     data: NDArray,
-    window_size: int,
+    period: int,
+    release_gil: bool = False
 ) -> NDArray:
     """
-    Relative Strength Index (RSI).
-
-    Computes the **Relative Strength Index** (RSI) over *data* using a fixed length sliding window.
-    The result has the **same length** as the input.
-    By convention, the first ``window_size - 1`` values are set to *NaN* because a complete window is not yet available.
+    RSI: Relative Strength Index
+    ----------
 
     Parameters
     ----------
-    data : numpy.ndarray[f64]
+    data : 1-D array
         One dimensional array.
-    window_size : int
+
+    period : int
         Size of the rolling window (must be ``> 0``).
+
+    release_gil : bool, default False
+        If ``True``, the GIL is released during the computation.
+        This is useful when using this function in a multi-threaded context.
 
     Returns
     -------
-    numpy.ndarray[f64]
+    1-D array
         Array of the same length as *data* containing the RSI.
 
-    Raises
-    ------
-    ValueError
-        If ``window_size`` is not in ``1 .. len(data)``, or if *data* contains at least one *NaN*.
-
-    Examples
-    --------
-    >>> import numpy as np, technicalysis as tx
-    >>> tx.rsi(np.array([1., 2., 3., 4., 5.]), window_size=2)
-    array([nan, 1.0, 1.0, 1.0, 1.0])
     """
     ...
 
@@ -122,35 +97,37 @@ def macd(
     data: NDArray,
     fast_period: int = 12,
     slow_period: int = 26,
-    signal_period: int = 9
-) -> NDArray:
+    signal_period: int = 9,
+    release_gil: bool = False
+) -> Tuple[NDArray, NDArray, NDArray]:
     """
-    Moving Average Convergence Divergence (MACD).
-
-    Computes the **Moving Average Convergence Divergence** (MACD) over *data*.
-    The result has the **same length** as the input.
+    MACD: Moving Average Convergence Divergence
+    ----------
 
     Parameters
     ----------
-    data : numpy.ndarray[f64]
+    data : 1-D array
         One dimensional array.
-    window_size : int
-        Size of the rolling window (must be ``> 0``).
+
+    fast_period : int, default 12
+        Size of the fast EMA (must be ``> 0``).
+
+    slow_period : int, default 26
+        Size of the slow EMA (must be ``> 0``).
+
+    signal_period : int, default 9
+        Size of the signal EMA (must be ``> 0``).
+
+    release_gil : bool, default False
+        If ``True``, the GIL is released during the computation.
+        This is useful when using this function in a multi-threaded context.
 
     Returns
     -------
-    numpy.ndarray[f64]
-        Array of the same length as *data* containing the MACD.
-
-    Raises
-    ------
-    ValueError
-        If ``window_size`` is not in ``1 .. len(data)``, or if *data* contains at least one *NaN*.
-
-    Examples
-    --------
-    >>> import numpy as np, technicalysis as tx
-    >>> tx.macd(np.array([1., 2., 3., 4., 5.]), window_size=2)
-    array([nan, 1.0, 1.0, 1.0, 1.0])
+    Tuple[1-D array, 1-D array, 1-D array]
+        A tuple containing three numpy arrays of the same length as *data*:
+            - MACD line
+            - Signal line
+            - Histogram
     """
     ...

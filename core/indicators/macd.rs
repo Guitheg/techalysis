@@ -73,6 +73,10 @@ pub fn core_macd(
         return Err(TechnicalysisError::InsufficientData);
     }
 
+    output_macd[..macd_start_idx].fill(f64::NAN);
+    output_signal[..macd_start_idx].fill(f64::NAN);
+    output_histogram[..macd_start_idx].fill(f64::NAN);
+
     let fast_alpha = period_to_alpha(fast_period, None)?;
     let slow_alpha = period_to_alpha(slow_period, None)?;
     let signal_alpha = period_to_alpha(signal_period, None)?;

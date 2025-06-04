@@ -25,12 +25,14 @@ pub fn core_sma(
     }
 
     let mut running_sum: f64 = 0.0;
-    for &value in &data_array[..period] {
+    for idx in 0..period {
+        let value = &data_array[idx];
         if value.is_nan() {
             return Err(TechnicalysisError::UnexpectedNan);
         } else {
             running_sum += value;
         }
+        output[idx] = f64::NAN;
     }
     output[period - 1] = running_sum / period as f64;
 

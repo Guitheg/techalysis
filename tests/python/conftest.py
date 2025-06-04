@@ -1,6 +1,5 @@
 from concurrent.futures import ThreadPoolExecutor
 import pytest
-from pathlib import Path
 from typing import Tuple, Callable
 from numpy.typing import NDArray
 import pandas as pd
@@ -19,9 +18,8 @@ def csv_loader() -> Callable[[str], pd.DataFrame] :
 
 @pytest.fixture
 def thread_test() -> Callable[[Callable], None]:
-    def _thread_test(tx_lambda: Callable, n_threads: int, tolerance: float = 0.5) -> None:
+    def _thread_test(tx_lambda: Callable, n_threads: int = 4, tolerance: float = 0.5) -> None:
         data = np.array([float(i) for i in range(10_000_000)])
-        period = 30
         t0 = time.perf_counter()
         for _ in range(n_threads):
             _ = tx_lambda(data)

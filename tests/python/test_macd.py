@@ -19,6 +19,6 @@ def test_macd_pandas_success(csv_loader):
 
 def test_thread_macd(thread_test):
    def macd_tx_lambda(data):
-      return tx.macd(data)
+      return tx.macd(data, release_gil = True)
 
    thread_test(macd_tx_lambda, n_threads=4)

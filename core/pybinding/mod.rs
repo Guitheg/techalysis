@@ -5,7 +5,7 @@ mod py_macd;
 mod py_rsi;
 mod py_sma;
 
-#[pymodule(gil_used = false)]
+#[pymodule]
 mod _core {
     #[pymodule_export]
     use crate::pybinding::py_ema::ema;

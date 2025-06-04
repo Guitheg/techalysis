@@ -22,27 +22,28 @@ pub fn rsi(data_array: &[f64], window_size: usize) -> Result<Vec<f64>, Technical
 
 pub fn core_rsi(
     data_array: &[f64],
-    window_size: usize,
+    period: usize,
     output: &mut [f64],
 ) -> Result<(), TechnicalysisError> {
     let size = data_array.len();
-    let period = window_size as f64;
-    if window_size == 0 || window_size + 1 > size {
+    let period_as_float = period as f64;
+    if period == 0 || period + 1 > size {
         return Err(TechnicalysisError::InsufficientData);
     }
 
-    if window_size == 1 {
+    if period == 1 {
         return Err(TechnicalysisError::BadParam(
             "RSI window size must be greater than 1".to_string(),
         ));
     }
 
-    let k = 1.0 / window_size as f64;
+    let k = 1.0 / period as f64;
     let one_minus_k = 1.0 - k;
 
     let mut avg_gain: f64 = 0.0;
     let mut avg_loss: f64 = 0.0;
-    for i in 1..=window_size {
+    output[0] = f64::NAN;
+    for i in 1..=period {
         let delta = data_array[i] - data_array[i - 1];
         if delta.is_nan() {
             return Err(TechnicalysisError::UnexpectedNan);
@@ -52,12 +53,13 @@ pub fn core_rsi(
         } else {
             avg_loss -= delta;
         }
+        output[i] = f64::NAN;
     }
-    avg_gain /= period;
-    avg_loss /= period;
-    output[window_size] = calculate_rsi(avg_gain, avg_loss);
+    avg_gain /= period_as_float;
+    avg_loss /= period_as_float;
+    output[period] = calculate_rsi(avg_gain, avg_loss);
 
-    for i in (window_size + 1)..size {
+    for i in (period + 1)..size {
         let delta = data_array[i] - data_array[i - 1];
         if delta.is_nan() {
             return Err(TechnicalysisError::UnexpectedNan);

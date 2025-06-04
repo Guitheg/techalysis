@@ -1,21 +1,28 @@
 use crate::indicators::ema::core_ema;
-use numpy::{PyArray1, PyArrayMethods};
-use pyo3::pyfunction;
+use numpy::{IntoPyArray, PyArray1, PyArrayMethods, PyUntypedArrayMethods};
+use pyo3::{exceptions::PyValueError, pyfunction};
 
-#[pyfunction(signature = (data, window_size = 14, alpha = None))]
+#[pyfunction(signature = (data, period = 14, alpha = None, release_gil = false))]
 pub(crate) fn ema<'py>(
     py: pyo3::Python<'py>,
     data: numpy::PyReadonlyArray1<'py, f64>,
-    window_size: usize,
+    period: usize,
     alpha: Option<f64>,
+    release_gil: bool,
 ) -> pyo3::PyResult<pyo3::Py<numpy::PyArray1<f64>>> {
-    let slice = data.as_slice()?;
+    let len = data.len();
+    let input_slice = data.as_slice()?;
 
-    let py_array_out = unsafe { PyArray1::<f64>::new(py, [slice.len()], false) };
-    let py_array_ptr = unsafe { py_array_out.as_slice_mut()? };
-
-    py.allow_threads(|| core_ema(slice, window_size, alpha.into(), py_array_ptr))
-        .map_err(|e| pyo3::exceptions::PyValueError::new_err(format!("{:?}", e)))?;
-
-    Ok(py_array_out.into())
+    if release_gil {
+        let mut output = vec![0.0; len];
+        py.allow_threads(|| core_ema(input_slice, period, alpha, output.as_mut_slice()))
+            .map_err(|e| PyValueError::new_err(format!("{:?}", e)))?;
+        return Ok(output.into_pyarray(py).into());
+    } else {
+        let output_array = PyArray1::<f64>::zeros(py, [len], false);
+        let output_slice = unsafe { output_array.as_slice_mut()? };
+        core_ema(input_slice, period, alpha, output_slice)
+            .map_err(|e| PyValueError::new_err(format!("{:?}", e)))?;
+        return Ok(output_array.into());
+    }
 }

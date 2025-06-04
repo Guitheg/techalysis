@@ -14,6 +14,6 @@ def test_rsi_pandas_success(csv_loader):
 
 def test_thread_rsi(thread_test):
    def rsi_tx_lambda(data):
-      return tx.rsi(data, 30)
+      return tx.rsi(data, 30, release_gil = True)
 
    thread_test(rsi_tx_lambda, n_threads=4)

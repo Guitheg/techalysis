@@ -56,14 +56,14 @@ pub fn core_ema(
         None => period_to_alpha(period, None)?,
     };
 
-    output[..period - 1].fill(f64::NAN);
-
     let mut sum = 0.0;
-    for &value in &data_array[..period] {
+    for idx in 0..period {
+        let value = &data_array[idx];
         if value.is_nan() {
             return Err(TechnicalysisError::UnexpectedNan);
         }
         sum += value;
+        output[idx] = f64::NAN;
     }
     let mut ema_prev = sum / period as f64;
     output[period - 1] = ema_prev;

@@ -16,6 +16,6 @@ def test_ema_pandas_success(csv_loader):
 
 def test_thread_ema(thread_test):
    def ema_tx_lambda(data):
-      return tx.ema(data, 30)
+      return tx.ema(data, 30, release_gil = True)
 
    thread_test(ema_tx_lambda, n_threads=4)
