@@ -1,4 +1,4 @@
-use crate::indicators::sma::core_sma;
+use crate::indicators::sma::sma_into;
 use numpy::{IntoPyArray, PyArray1, PyArrayMethods, PyUntypedArrayMethods};
 use pyo3::pyfunction;
 
@@ -14,7 +14,7 @@ pub(crate) fn sma<'py>(
 
     if release_gil {
         let mut output = vec![0.0; len];
-        py.allow_threads(|| core_sma(slice, period, output.as_mut_slice()))
+        py.allow_threads(|| sma_into(slice, period, output.as_mut_slice()))
             .map_err(|e| pyo3::exceptions::PyValueError::new_err(format!("{:?}", e)))?;
 
         Ok(output.into_pyarray(py).into())
@@ -22,7 +22,7 @@ pub(crate) fn sma<'py>(
         let py_array_out = PyArray1::<f64>::zeros(py, [slice.len()], false);
         let py_array_ptr = unsafe { py_array_out.as_slice_mut()? };
 
-        core_sma(slice, period, py_array_ptr)
+        sma_into(slice, period, py_array_ptr)
             .map_err(|e| pyo3::exceptions::PyValueError::new_err(format!("{:?}", e)))?;
 
         Ok(py_array_out.into())

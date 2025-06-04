@@ -1,4 +1,4 @@
-use crate::indicators::macd::core_macd;
+use crate::indicators::macd::macd_into;
 
 use numpy::{IntoPyArray, PyArray1, PyArrayMethods, PyUntypedArrayMethods};
 use pyo3::{pyfunction, Py, PyResult};
@@ -21,7 +21,7 @@ pub(crate) fn macd<'py>(
         let mut output_histogram = vec![0.0; len];
 
         py.allow_threads(|| {
-            core_macd(
+            macd_into(
                 input_data,
                 fast_period,
                 slow_period,
@@ -48,7 +48,7 @@ pub(crate) fn macd<'py>(
         let py_array_histogram = PyArray1::<f64>::zeros(py, [len], false);
         let output_histogram_data = unsafe { py_array_histogram.as_slice_mut()? };
 
-        core_macd(
+        macd_into(
             input_data,
             fast_period,
             slow_period,

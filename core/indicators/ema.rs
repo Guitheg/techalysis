@@ -30,11 +30,11 @@ pub fn ema(
     alpha: Option<f64>,
 ) -> Result<Vec<f64>, TechnicalysisError> {
     let mut output = vec![f64::NAN; data_array.len()];
-    core_ema(data_array, period, alpha, &mut output)?;
+    ema_into(data_array, period, alpha, &mut output)?;
     Ok(output)
 }
 
-pub fn core_ema(
+pub fn ema_into(
     data_array: &[f64],
     period: usize,
     alpha: Option<f64>,

@@ -16,11 +16,11 @@ fn calculate_rsi(avg_gain: f64, avg_loss: f64) -> f64 {
 pub fn rsi(data_array: &[f64], window_size: usize) -> Result<Vec<f64>, TechnicalysisError> {
     let size: usize = data_array.len();
     let mut output = vec![f64::NAN; size];
-    core_rsi(data_array, window_size, &mut output)?;
+    rsi_into(data_array, window_size, &mut output)?;
     Ok(output)
 }
 
-pub fn core_rsi(
+pub fn rsi_into(
     data_array: &[f64],
     period: usize,
     output: &mut [f64],

@@ -28,7 +28,7 @@ pub fn macd(
     let mut output_signal = vec![f64::NAN; size];
     let mut output_histogram = vec![f64::NAN; size];
 
-    core_macd(
+    macd_into(
         data_array,
         fast_period,
         slow_period,
@@ -45,7 +45,7 @@ pub fn macd(
     })
 }
 
-pub fn core_macd(
+pub fn macd_into(
     data_array: &[f64],
     fast_period: usize,
     slow_period: usize,

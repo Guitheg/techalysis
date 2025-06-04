@@ -4,11 +4,11 @@ use std::f64;
 pub fn sma(data_array: &[f64], period: usize) -> Result<Vec<f64>, TechnicalysisError> {
     let size = data_array.len();
     let mut output = vec![f64::NAN; size];
-    core_sma(data_array, period, &mut output)?;
+    sma_into(data_array, period, &mut output)?;
     Ok(output)
 }
 
-pub fn core_sma(
+pub fn sma_into(
     data_array: &[f64],
     period: usize,
     output: &mut [f64],

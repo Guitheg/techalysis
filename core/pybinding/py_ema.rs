@@ -1,4 +1,4 @@
-use crate::indicators::ema::core_ema;
+use crate::indicators::ema::ema_into;
 use numpy::{IntoPyArray, PyArray1, PyArrayMethods, PyUntypedArrayMethods};
 use pyo3::{exceptions::PyValueError, pyfunction};
 
@@ -15,13 +15,13 @@ pub(crate) fn ema<'py>(
 
     if release_gil {
         let mut output = vec![0.0; len];
-        py.allow_threads(|| core_ema(input_slice, period, alpha, output.as_mut_slice()))
+        py.allow_threads(|| ema_into(input_slice, period, alpha, output.as_mut_slice()))
             .map_err(|e| PyValueError::new_err(format!("{:?}", e)))?;
         return Ok(output.into_pyarray(py).into());
     } else {
         let output_array = PyArray1::<f64>::zeros(py, [len], false);
         let output_slice = unsafe { output_array.as_slice_mut()? };
-        core_ema(input_slice, period, alpha, output_slice)
+        ema_into(input_slice, period, alpha, output_slice)
             .map_err(|e| PyValueError::new_err(format!("{:?}", e)))?;
         return Ok(output_array.into());
     }
