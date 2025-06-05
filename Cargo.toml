@@ -40,7 +40,7 @@ rand = "0.9.1"
 [[bench]]
 name = "bench"
 harness = false
-path = "benches/rust/bench.rs"
+path = "benchmarks/rust/bench.rs"
 
 [profile.release]
 opt-level = 3

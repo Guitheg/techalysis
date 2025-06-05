@@ -1,8 +1,8 @@
 import argparse
-from indicators.rsi import benchmark_rsi
-from indicators.sma import benchmark_sma
-from indicators.ema import benchmark_ema
-from indicators.macd import benchmark_macd
+from timeit_bench.rsi import benchmark_rsi
+from timeit_bench.sma import benchmark_sma
+from timeit_bench.ema import benchmark_ema
+from timeit_bench.macd import benchmark_macd
 
 BENCHMARKS = {
     'sma': benchmark_sma,
