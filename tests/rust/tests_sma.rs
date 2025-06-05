@@ -1,4 +1,4 @@
-use crate::rust::tests_helper::assert::approx_eq_f64;
+use crate::rust::tests_helper::assert::{approx_eq_f64, approx_eq_f64_custom};
 use crate::rust::tests_helper::generated::assert_vec_eq_gen_data;
 use crate::rust::tests_helper::generated::load_generated_csv;
 use proptest::{collection::vec, prelude::*};
@@ -13,15 +13,42 @@ fn generated() {
     assert!(output.is_ok());
     let out = output.unwrap();
     let expected = columns.get("out").unwrap();
-    assert_vec_eq_gen_data(&out, expected);
-    assert!(out.len() == input.len());
+    assert_vec_eq_gen_data(&out.values, expected);
+    assert!(out.values.len() == input.len());
+}
+
+#[test]
+fn no_lookahead() {
+    let columns = load_generated_csv("sma.csv").unwrap();
+    let input = columns.get("close").unwrap();
+    let expected = columns.get("out").unwrap();
+    // Check that the state given by : 'out_sma, state = sma(input[..-1])' is equal to sma_next(input[-1], state)
+    let output = sma(&input[0..input.len() - 1], 30);
+    assert!(output.is_ok());
+    let result = output.unwrap();
+    assert_vec_eq_gen_data(&result.values, &expected[0..&expected.len() - 1]);
+
+    let new_output = result.state.next(input[input.len() - 1]);
+    assert!(
+        new_output.is_ok(),
+        "Expected next state to be Ok, but got an error: {new_output:?}",
+    );
+    let new_state = new_output.unwrap();
+    assert!(
+        approx_eq_f64_custom(new_state.sma, expected[expected.len() - 1], 1e-8),
+        "Expected last value to be {}, but got {}",
+        expected[expected.len() - 1],
+        new_state.sma
+    );
 }
 
 #[test]
 fn extremum_value_injection_without_panic() {
     use std::f64;
     let data = vec![f64::MAX / 2.0, f64::MAX / 2.0, f64::MIN_POSITIVE, -0.0, 0.0];
-    let out = sma(&data, 2).expect("sma must not error on finite extremes");
+    let out = sma(&data, 2)
+        .expect("sma must not error on finite extremes")
+        .values;
     assert_eq!(out.len(), data.len());
     for (i, v) in out.iter().enumerate() {
         if i < 1 {
@@ -47,7 +74,7 @@ fn period_higher_bound() {
     let data = vec![1.0, 2.0, 3.0];
     let result = sma(&data, 3);
     assert!(result.is_ok());
-    let out = result.unwrap();
+    let out = result.unwrap().values;
     assert!(out[2] == 2.0);
 }
 
@@ -102,7 +129,7 @@ proptest! {
             prop_assert!(out.is_err());
             prop_assert!(matches!(out, Err(TechnicalysisError::UnexpectedNan)));
         } else {
-            let out = out.unwrap();
+            let out = out.unwrap().values;
             prop_assert_eq!(out.len(), input.len());
             prop_assert!(out[..window-1].iter().all(|v| v.is_nan()));
 
@@ -119,7 +146,7 @@ proptest! {
             // Linearity
             let k = 4.3;
             let scaled_input: Vec<_> = input.iter().map(|v| v * k).collect();
-            let scaled_fast = sma(&scaled_input, window).unwrap();
+            let scaled_fast = sma(&scaled_input, window).unwrap().values;
 
             for (o, scaled) in out.iter().zip(scaled_fast) {
                 if o.is_nan() {

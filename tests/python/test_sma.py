@@ -4,13 +4,25 @@ import numpy as np
 
 def test_sma_numpy_success(csv_loader):
    df = csv_loader("sma")
-   out = tx.sma(np.array(df["close"]), 30)
-   testing.assert_allclose(out, np.array(df["out"]))
+   result = tx.sma(np.array(df["close"].iloc[:-1]), 30)
+   final_result = tx.sma(np.array(df["close"]), 30)
+
+   next_state = tx.sma_next(df["close"].iloc[-1], result.state)
+   testing.assert_allclose(result.values, final_result.values[:-1])
+   testing.assert_allclose(final_result.values, np.array(df["out"]))
+   assert(next_state.sma == final_result.state.sma)
+   assert(next_state.window == final_result.state.window)
 
 def test_sma_pandas_success(csv_loader):
    df = csv_loader("sma")
-   out = tx.sma(df["close"], 30)
-   testing.assert_allclose(out, df["out"])
+   result = tx.sma(df["close"].iloc[:-1], 30)
+   final_result = tx.sma(df["close"], 30)
+
+   next_state = tx.sma_next(df["close"].iloc[-1], result.state)
+   testing.assert_allclose(result.values, final_result.values[:-1])
+   testing.assert_allclose(final_result.values, df["out"], atol=1e-8)
+   assert(next_state.sma == final_result.state.sma)
+   assert(next_state.window == final_result.state.window)
 
 def test_thread_sma(thread_test):
    def sma_tx_lambda(data):

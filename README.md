@@ -25,7 +25,7 @@ Technical analysis library for financial market trading applications written in 
 ### Build python wheel for CPython with maturin
 
 ```
-maturin develop --release --features python
+maturin develop --release
 ```
 
 ### Fuzz requirements

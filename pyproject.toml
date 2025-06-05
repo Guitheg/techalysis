@@ -3,8 +3,10 @@ requires = ["maturin>=0.12"]
 build-backend = "maturin"
 
 [tool.maturin]
+bindings = "pyo3"
 python-source = "python"
 module-name = "technicalysis._core"
+features = ["pyo3/extension-module", "python"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests/python"]

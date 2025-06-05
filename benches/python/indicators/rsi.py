@@ -33,12 +33,24 @@ def benchmark_rsi():
     iterations = 50
     data = np.random.random(10_000_000)
     window_size = 50
-    
-    duration = timeit.timeit(lambda: tx.rsi(data, window_size), number=iterations)
-    average_time_rs = duration / iterations
 
     duration = timeit.timeit(lambda: talib.RSI(data, window_size), number=iterations)
     average_time_c = duration / iterations
+
+    duration = timeit.timeit(lambda: tx.rsi(data, window_size), number=iterations)
+    average_time_rs = duration / iterations
+
+    print_benchmark(iterations, {"length": len(data), "window size": window_size}, rust=average_time_rs, c=average_time_c)
+
+    iterations = 50
+    data = np.random.random(3_000_000)
+    window_size = 50
+
+    duration = timeit.timeit(lambda: talib.RSI(data, window_size), number=iterations)
+    average_time_c = duration / iterations
+
+    duration = timeit.timeit(lambda: tx.rsi(data, window_size), number=iterations)
+    average_time_rs = duration / iterations
 
     print_benchmark(iterations, {"length": len(data), "window size": window_size}, rust=average_time_rs, c=average_time_c)
 

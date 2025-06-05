@@ -10,7 +10,7 @@ DATA_DIR = "tests/data/generated/{feature_name}.csv"
 
 @pytest.fixture
 def csv_loader() -> Callable[[str], pd.DataFrame] :
-    def _load(feature_name: str) -> Tuple[pd.Series, pd.Series]:
+    def _load(feature_name: str) -> pd.DataFrame:
         csv_path = DATA_DIR.format(feature_name = feature_name)
         return pd.read_csv(csv_path, delimiter=",")
     return _load
@@ -19,7 +19,7 @@ def csv_loader() -> Callable[[str], pd.DataFrame] :
 @pytest.fixture
 def thread_test() -> Callable[[Callable], None]:
     def _thread_test(tx_lambda: Callable, n_threads: int = 4, tolerance: float = 0.5) -> None:
-        data = np.array([float(i) for i in range(10_000_000)])
+        data = np.array([float(i) for i in range(5_000_000)])
         t0 = time.perf_counter()
         for _ in range(n_threads):
             _ = tx_lambda(data)

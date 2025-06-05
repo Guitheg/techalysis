@@ -1,4 +1,4 @@
-use pyo3::pymodule;
+use pyo3::prelude::*;
 
 mod py_ema;
 mod py_macd;
@@ -6,16 +6,22 @@ mod py_rsi;
 mod py_sma;
 
 #[pymodule]
-mod _core {
-    #[pymodule_export]
-    use crate::pybinding::py_ema::ema;
+fn _core(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    m.add_function(wrap_pyfunction!(py_ema::ema, m)?)?;
+    m.add_function(wrap_pyfunction!(py_ema::ema_next, m)?)?;
+    m.add_class::<py_ema::PyEmaState>()?;
 
-    #[pymodule_export]
-    use crate::pybinding::py_rsi::rsi;
+    m.add_function(wrap_pyfunction!(py_rsi::rsi, m)?)?;
+    m.add_function(wrap_pyfunction!(py_rsi::rsi_next, m)?)?;
+    m.add_class::<py_rsi::PyRsiState>()?;
 
-    #[pymodule_export]
-    use crate::pybinding::py_sma::sma;
+    m.add_function(wrap_pyfunction!(py_sma::sma, m)?)?;
+    m.add_function(wrap_pyfunction!(py_sma::sma_next, m)?)?;
+    m.add_class::<py_sma::PySmaState>()?;
 
-    #[pymodule_export]
-    use crate::pybinding::py_macd::macd;
+    m.add_function(wrap_pyfunction!(py_macd::macd, m)?)?;
+    m.add_function(wrap_pyfunction!(py_macd::macd_next, m)?)?;
+    m.add_class::<py_macd::PyMacdState>()?;
+
+    Ok(())
 }

@@ -11,17 +11,39 @@ fn generated() {
     let input = columns.get("close").unwrap();
     let output = ema(input, 30, None);
     assert!(output.is_ok());
-    let out = output.unwrap();
+    let out = output.unwrap().values;
     let expected = columns.get("out").unwrap();
     assert_vec_eq_gen_data(&out, expected);
     assert!(out.len() == input.len());
 }
 
 #[test]
+fn no_lookahead() {
+    let columns = load_generated_csv("ema.csv").unwrap();
+    let input = columns.get("close").unwrap();
+    let expected = columns.get("out").unwrap();
+    let output = ema(&input[0..input.len() - 1], 30, None);
+    assert!(output.is_ok());
+    let result = output.unwrap();
+    assert_vec_eq_gen_data(&result.values, &expected[0..&expected.len() - 1]);
+    let new_output = result.state.next(input[input.len() - 1]);
+    assert!(new_output.is_ok());
+    let new_state = new_output.unwrap();
+    assert!(
+        approx_eq_f64(new_state.ema, expected[expected.len() - 1]),
+        "Expected last value to be {}, but got {}",
+        expected[expected.len() - 1],
+        new_state.ema
+    );
+}
+
+#[test]
 fn extremum_value_injection_without_panic() {
     use std::f64;
     let data = vec![f64::MAX / 2.0, f64::MAX / 2.0, f64::MIN_POSITIVE, -0.0, 0.0];
-    let out = ema(&data, 2, None).expect("sma must not error on finite extremes");
+    let out = ema(&data, 2, None)
+        .expect("sma must not error on finite extremes")
+        .values;
     assert_eq!(out.len(), data.len());
     for (i, v) in out.iter().enumerate() {
         if i < 1 {
@@ -47,7 +69,7 @@ fn period_higher_bound() {
     let data = vec![1.0, 2.0, 3.0];
     let result = ema(&data, 3, None);
     assert!(result.is_ok());
-    let out = result.unwrap();
+    let out = result.unwrap().values;
     assert!(out[2] == 2.0);
 }
 
@@ -89,14 +111,14 @@ proptest! {
             prop_assert!(out.is_err());
             prop_assert!(matches!(out, Err(TechnicalysisError::UnexpectedNan)));
         } else {
-            let out = out.unwrap();
+            let out = out.unwrap().values;
 
             prop_assert_eq!(out.len(), input.len());
             prop_assert!(out[..window-1].iter().all(|v| v.is_nan()));
 
             let k = 7.0_f64;
             let scaled_input: Vec<_> = input.iter().map(|v| v*k).collect();
-            let scaled_fast = ema(&scaled_input, window, None).unwrap();
+            let scaled_fast = ema(&scaled_input, window, None).unwrap().values;
 
             for (orig, scaled) in out.iter().zip(&scaled_fast) {
                 if orig.is_nan() {
