@@ -30,7 +30,7 @@ pub struct MacdState {
 
 impl MacdState {
     pub fn next(&self, new_value: f64) -> Result<MacdState, TechnicalysisError> {
-        Ok(macd_next(
+        macd_next(
             new_value,
             self.fast_ema,
             self.slow_ema,
@@ -38,7 +38,7 @@ impl MacdState {
             self.fast_period,
             self.slow_period,
             self.signal_period,
-        )?)
+        )
     }
 }
 

@@ -53,9 +53,9 @@ fn no_lookahead() {
     let expected_histogram_minus = &expected_histogram[0..last_index];
 
     let result_minus = macd(input_minus, 12, 26, 9).unwrap();
-    assert_vec_eq_gen_data(&result_minus.macd, &expected_macd_minus);
-    assert_vec_eq_gen_data(&result_minus.signal, &expected_signal_minus);
-    assert_vec_eq_gen_data(&result_minus.histogram, &expected_histogram_minus);
+    assert_vec_eq_gen_data(&result_minus.macd, expected_macd_minus);
+    assert_vec_eq_gen_data(&result_minus.signal, expected_signal_minus);
+    assert_vec_eq_gen_data(&result_minus.histogram, expected_histogram_minus);
 
     let next_state = result_minus.state.next(input[last_index]).unwrap();
     assert!(

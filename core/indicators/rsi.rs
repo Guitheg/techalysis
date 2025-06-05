@@ -24,13 +24,13 @@ pub struct RsiState {
 
 impl RsiState {
     pub fn next(&self, new_value: f64) -> Result<RsiState, TechnicalysisError> {
-        Ok(rsi_next(
+        rsi_next(
             new_value,
             self.prev_value,
             self.avg_gain,
             self.avg_loss,
             self.period,
-        )?)
+        )
     }
 }
 
@@ -159,7 +159,7 @@ pub fn rsi_next_unchecked(
     prev_avg_loss: f64,
     period: f64,
 ) -> (f64, f64, f64) {
-    let k = 1.0 / period as f64;
+    let k = 1.0 / period;
     let one_minus_k = 1.0 - k;
     let (avg_gain, avg_loss) = if delta > 0.0 {
         (

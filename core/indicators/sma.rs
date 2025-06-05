@@ -22,7 +22,7 @@ pub struct SmaState {
 
 impl SmaState {
     pub fn next(&self, new_value: f64) -> Result<SmaState, TechnicalysisError> {
-        Ok(sma_next(new_value, self.sma, &self.window, self.period)?)
+        sma_next(new_value, self.sma, &self.window, self.period)
     }
 }
 
@@ -121,7 +121,7 @@ pub fn sma_next(
     Ok(SmaState {
         sma: sma_next_unchecked(new_value, old_value, prev_sma, period as f64),
         period,
-        window: window,
+        window,
     })
 }
 

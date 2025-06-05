@@ -23,12 +23,7 @@ pub struct EmaState {
 
 impl EmaState {
     pub fn next(&self, new_value: f64) -> Result<EmaState, TechnicalysisError> {
-        Ok(ema_next(
-            new_value,
-            self.ema,
-            self.period,
-            Some(self.alpha),
-        )?)
+        ema_next(new_value, self.ema, self.period, Some(self.alpha))
     }
 }
 
@@ -111,8 +106,8 @@ pub fn ema_into(
 
     Ok(EmaState {
         ema: ema_prev,
-        period: period,
-        alpha: alpha,
+        period,
+        alpha,
     })
 }
 

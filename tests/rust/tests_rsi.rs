@@ -32,7 +32,7 @@ fn no_lookahead() {
     assert!(output_minus_1.is_ok());
     let result_minus_1 = output_minus_1.unwrap();
     assert_vec_eq_gen_data(&result_minus_1.values, expected_minus_1);
-    let output = rsi(&input, 14).unwrap();
+    let output = rsi(input, 14).unwrap();
     assert_vec_eq_gen_data(&output.values[0..len - 1], &result_minus_1.values);
     let next_state = result_minus_1.state.next(last_input).unwrap();
     assert!(
