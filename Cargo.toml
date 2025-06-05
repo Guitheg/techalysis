@@ -1,7 +1,7 @@
 [workspace]
 resolver = "2"
 
-members = ["examples/rust/indicators", "fuzz"]
+members = ["examples/rust/indicators", "tests/fuzz"]
 exclude = []
 
 [workspace.package]
