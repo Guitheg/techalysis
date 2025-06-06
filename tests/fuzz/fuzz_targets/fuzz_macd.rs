@@ -1,7 +1,7 @@
 #![no_main]
 
 use libfuzzer_sys::fuzz_target;
-use technicalysis::indicators::macd::macd;
+use techalysis::indicators::macd::macd;
 
 fuzz_target!(|data: (Vec<f64>, u8, u8, u8)| {
     let (values, fastperiod, slowperiod, signalperiod) = data;

@@ -4,8 +4,8 @@ use crate::helper::{
 };
 
 use proptest::{collection::vec, prelude::*};
-use technicalysis::errors::TechnicalysisError;
-use technicalysis::indicators::sma::sma;
+use techalysis::errors::TechalysisError;
+use techalysis::indicators::sma::sma;
 
 #[test]
 fn generated() {
@@ -66,7 +66,7 @@ fn invalid_period_lower_bound() {
     let data = vec![1.0, 2.0, 3.0];
     let result = sma(&data, 0);
     assert!(result.is_err());
-    if let Err(TechnicalysisError::BadParam(msg)) = result {
+    if let Err(TechalysisError::BadParam(msg)) = result {
         assert!(msg.contains("between 2 and 100000"));
     }
 }
@@ -85,14 +85,14 @@ fn unexpected_nan() {
     let data = vec![1.0, 2.0, 3.0, f64::NAN];
     let result = sma(&data, 3);
     assert!(result.is_err());
-    assert!(matches!(result, Err(TechnicalysisError::UnexpectedNan)));
+    assert!(matches!(result, Err(TechalysisError::UnexpectedNan)));
 }
 
 #[test]
 fn insufficient_data() {
     let data = vec![1.0, 2.0, 3.0];
     let result = sma(&data, 4);
-    assert!(matches!(result, Err(TechnicalysisError::InsufficientData)));
+    assert!(matches!(result, Err(TechalysisError::InsufficientData)));
 }
 
 #[test]
@@ -101,7 +101,7 @@ fn period_1() {
     let period = 1;
     let result = sma(data, period);
     assert!(result.is_err());
-    assert!(matches!(result, Err(TechnicalysisError::BadParam(_))));
+    assert!(matches!(result, Err(TechalysisError::BadParam(_))));
 }
 
 fn slow_sma(data: &[f64], window: usize) -> Vec<f64> {
@@ -129,7 +129,7 @@ proptest! {
 
         if has_nan {
             prop_assert!(out.is_err());
-            prop_assert!(matches!(out, Err(TechnicalysisError::UnexpectedNan)));
+            prop_assert!(matches!(out, Err(TechalysisError::UnexpectedNan)));
         } else {
             let out = out.unwrap().values;
             prop_assert_eq!(out.len(), input.len());

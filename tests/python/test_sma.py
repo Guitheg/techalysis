@@ -1,4 +1,4 @@
-import technicalysis as tx
+import techalysis as tx
 from numpy import testing
 import numpy as np
 

@@ -1,9 +1,9 @@
 use numpy::{IntoPyArray, PyArray1, PyArrayMethods, PyReadonlyArray1, PyUntypedArrayMethods};
 use pyo3::{exceptions::PyValueError, pyclass, pyfunction, pymethods, Py, PyResult, Python};
-use technicalysis::indicators::ema::{ema_into, ema_next as core_ema_next, EmaState};
+use techalysis::indicators::ema::{ema_into, ema_next as core_ema_next, EmaState};
 
 #[derive(Debug, Clone)]
-#[pyclass(name = "EmaState", module = "technicalysis._core")]
+#[pyclass(name = "EmaState", module = "techalysis._core")]
 pub struct PyEmaState {
     #[pyo3(get)]
     pub ema: f64,

@@ -176,7 +176,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "technicalysis"
+name = "techalysis"
 version = "0.1.0"
 dependencies = [
  "csv",
@@ -184,11 +184,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "technicalysis-fuzz"
+name = "techalysis-fuzz"
 version = "0.1.0"
 dependencies = [
  "libfuzzer-sys",
- "technicalysis",
+ "techalysis",
 ]
 
 [[package]]

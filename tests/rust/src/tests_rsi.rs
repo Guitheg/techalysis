@@ -4,8 +4,8 @@ use crate::helper::{
     generated::{assert_vec_eq_gen_data, load_generated_csv},
 };
 use proptest::{prop_assert, prop_assert_eq, proptest};
-use technicalysis::errors::TechnicalysisError;
-use technicalysis::indicators::rsi::rsi;
+use techalysis::errors::TechalysisError;
+use techalysis::indicators::rsi::rsi;
 
 #[test]
 fn generated() {
@@ -57,7 +57,7 @@ fn empty_input() {
     let period = 14;
     let result = rsi(&data, period);
     assert!(result.is_err());
-    assert!(matches!(result, Err(TechnicalysisError::InsufficientData)));
+    assert!(matches!(result, Err(TechalysisError::InsufficientData)));
 }
 
 #[test]
@@ -66,7 +66,7 @@ fn input_shorter_than_period() {
     let period = 5;
     let result = rsi(data, period);
     assert!(result.is_err());
-    assert!(matches!(result, Err(TechnicalysisError::InsufficientData)));
+    assert!(matches!(result, Err(TechalysisError::InsufficientData)));
 }
 
 #[test]
@@ -75,7 +75,7 @@ fn input_length_equals_period() {
     let period = 3;
     let result = rsi(data, period);
     assert!(result.is_err());
-    assert!(matches!(result, Err(TechnicalysisError::InsufficientData)));
+    assert!(matches!(result, Err(TechalysisError::InsufficientData)));
 }
 
 #[test]
@@ -84,7 +84,7 @@ fn period_1() {
     let period = 1;
     let result = rsi(data, period);
     assert!(result.is_err());
-    assert!(matches!(result, Err(TechnicalysisError::BadParam(_))));
+    assert!(matches!(result, Err(TechalysisError::BadParam(_))));
 }
 
 #[test]
@@ -162,7 +162,7 @@ fn input_with_nans() {
     let period = 2;
     let result = rsi(data, period);
     assert!(result.is_err());
-    assert!(matches!(result, Err(TechnicalysisError::UnexpectedNan)));
+    assert!(matches!(result, Err(TechalysisError::UnexpectedNan)));
 }
 
 #[test]
@@ -171,7 +171,7 @@ fn period_zero() {
     let period = 0;
     let result = rsi(data, period);
     assert!(result.is_err());
-    assert!(matches!(result, Err(TechnicalysisError::InsufficientData)));
+    assert!(matches!(result, Err(TechalysisError::InsufficientData)));
 }
 
 proptest! {
@@ -186,9 +186,9 @@ proptest! {
         if data.len() <= period || period <= 1 {
             prop_assert!(result.is_err());
             if period <= 1 && data.len() > 1 {
-                prop_assert!(matches!(result, Err(TechnicalysisError::BadParam(_))));
+                prop_assert!(matches!(result, Err(TechalysisError::BadParam(_))));
             } else {
-                prop_assert!(matches!(result, Err(TechnicalysisError::InsufficientData)));
+                prop_assert!(matches!(result, Err(TechalysisError::InsufficientData)));
             }
         } else {
             let rsi_values = result.unwrap().values;

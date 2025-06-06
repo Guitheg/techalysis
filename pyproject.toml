@@ -6,7 +6,7 @@ build-backend = "maturin"
 bindings = "pyo3"
 manifest-path = "crates/python/Cargo.toml"
 python-source = "python"
-module-name = "technicalysis._core"
+module-name = "techalysis._core"
 features = ["pyo3/extension-module"]
 
 [tool.pytest.ini_options]

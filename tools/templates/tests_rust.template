@@ -4,8 +4,8 @@ use crate::helper::{
 };
 
 use proptest::{collection::vec, prelude::*};
-use technicalysis::errors::TechnicalysisError;
-use technicalysis::indicators::${indicator_name}::${indicator_name};
+use techalysis::errors::TechalysisError;
+use techalysis::indicators::${indicator_name}::${indicator_name};
 
 #[test]
 fn generated() {

@@ -1,5 +1,5 @@
 [package]
-name = "technicalysis-fuzz"
+name = "techalysis-fuzz"
 version = "0.1.0"
 publish = false
 edition = "2021"
@@ -10,7 +10,7 @@ cargo-fuzz = true
 [dependencies]
 libfuzzer-sys = "0.4"
 
-[dependencies.technicalysis]
+[dependencies.techalysis]
 path = "../../crates/core"
 
 [[bin]]

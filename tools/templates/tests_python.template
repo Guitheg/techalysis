@@ -1,5 +1,5 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
-import technicalysis as tx
+import techalysis as tx
 from numpy import testing
 import numpy as np
 import time

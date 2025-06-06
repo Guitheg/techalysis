@@ -1,5 +1,5 @@
 import numpy as np
-import technicalysis as tx
+import techalysis as tx
 import matplotlib.pyplot as plt
 
 

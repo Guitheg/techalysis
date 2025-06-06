@@ -1,6 +1,6 @@
 use numpy::{IntoPyArray, PyArray1, PyArrayMethods, PyUntypedArrayMethods};
 use pyo3::{exceptions::PyValueError, pyclass, pyfunction, pymethods, Py, PyResult, Python};
-use technicalysis::indicators::rsi::{rsi_into, rsi_next as core_rsi_next, RsiState};
+use techalysis::indicators::rsi::{rsi_into, rsi_next as core_rsi_next, RsiState};
 
 #[pyclass(name = "RsiState")]
 #[derive(Debug, Clone)]
