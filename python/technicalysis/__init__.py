@@ -1,8 +1,10 @@
 from ._core import *
 
-def __init__():
+def __init__() -> list[str]:
     from ._core import __all__ as __core_all
+    from .maptypes import __tuple2types__
     from importlib import import_module
+    from numpy import ndarray
 
     core = import_module("._core", __name__)
 
@@ -18,6 +20,17 @@ def __init__():
     except ModuleNotFoundError:
         _pd_Series = None
         _pd_DataFrame = None
+
+    def convert_to_pandas(obj: object, index: list) -> object:
+        if isinstance(obj, tuple):
+            return tuple(convert_to_pandas(o, index) for o in obj)
+        if isinstance(obj, ndarray):
+            if obj.ndim == 1:
+                return _pd_Series(obj, index=index)
+            else:
+                return _pd_DataFrame(obj, index=index)
+        return obj
+                    
 
     def wrapper(function):
         from functools import wraps
@@ -52,12 +65,8 @@ def __init__():
 
             out = function(*_args, **_kwargs)
             if use_pd:
-                if isinstance(out, tuple):
-                    return tuple(_pd_Series(o, index=index) for o in out)
-                if out.ndim == 2:
-                    return _pd_DataFrame(out.T, index=index)
-                return _pd_Series(out, index=index)
-            return out
+                out = convert_to_pandas(out, index)
+            return __tuple2types__(function, out)
         return inner_wrapper
 
     for name in __all__:

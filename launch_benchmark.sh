@@ -1,1 +1,1 @@
-python benches/python/benchmark_timeit.py $@
+python benchmarks/python/benchmark_timeit.py $@

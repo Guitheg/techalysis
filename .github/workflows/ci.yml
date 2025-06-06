@@ -46,14 +46,14 @@ jobs:
 
     - name: Fuzz tests
       run: |
-        chmod +x fuzz/run_all.sh
+        chmod +x tests/fuzz/run_all.sh
         cargo +nightly --version
-        bash fuzz/run_all.sh
+        bash tests/fuzz/run_all.sh
 
     - name: Build & test (pytest)
       run: | 
         python -m venv .venv
         source .venv/bin/activate
         pip install -r requirements-dev.txt
-        maturin develop --release --features python
+        maturin develop --release
         pytest

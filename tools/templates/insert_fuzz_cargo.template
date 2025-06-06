@@ -1,0 +1,7 @@
+
+[[bin]]
+name = "${indicator_name}"
+path = "fuzz_targets/fuzz_${indicator_name}.rs"
+test = false
+doc = false
+bench = false

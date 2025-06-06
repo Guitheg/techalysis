@@ -1,0 +1,70 @@
+use crate::errors::TechnicalysisError;
+
+#[derive(Debug)]
+pub struct ${IndicatorName}Result {
+    // TODO: IMPLEMENTS RESULT ATTRIBUTES
+    pub state: ${IndicatorName}State,
+}
+
+impl From<${IndicatorName}Result> for Vec<f64> {
+    fn from(result: ${IndicatorName}Result) -> Self {
+        // TODO: IMPLEMENTS FROM IMPL
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct ${IndicatorName}State {
+    // TODO: IMPLEMENTS STATE ATTRIBUTES
+}
+
+impl ${IndicatorName}State {
+    pub fn next(&self
+        // TODO: IMPLEMENTS ARGUMENTS OF NEXT METHODS
+    ) -> Result<${IndicatorName}State, TechnicalysisError> {
+        ${indicator_name}_next(
+            // TODO: IMPLEMENTS ARGUMENTS OF NEXT FUNCTION
+        )
+    }
+}
+
+pub fn ${indicator_name}(
+    // TODO: IMPLEMENTS ARGUMENTS OF INDICATOR FUNCTION
+) -> Result<${IndicatorName}Result, TechnicalysisError> {
+    // TODO: INITIALIZE OUTPUTS
+    
+    let ${indicator_name}_state = ${indicator_name}_into(
+        // TODO: ARGUMENTS AND OUTPUTS ARGUMENTS
+    )?;
+
+    Ok(${IndicatorName}Result {
+        // TODO: OUTPUT AND STATES TO RESULT
+    })
+}
+
+pub fn ${indicator_name}_into(
+    // TODO: ARGUMENTS AND OUTPUTS ARGUMENTS
+) -> Result<${IndicatorName}State, TechnicalysisError> {
+    // TODO: IMPLEMENTS CORE FUNCTION LOGIC
+
+    Ok(${IndicatorName}State {
+        // TODO: STATE ATTRIBUTES TO RETURN
+    })
+}
+
+pub fn ${indicator_name}_next(
+    // TODO: ARGUMENTS FOR INCREMENTAL
+) -> Result<${IndicatorName}State, TechnicalysisError> {
+    // TODO: CHECK INPUT ARGUMENTS
+
+    //TODO: USE ${indicator_name}_next_unchecked(...);
+    Ok(${IndicatorName}State {
+        // TODO: STATE ATTRIBUTES TO RETURN
+    })
+}
+
+#[inline(always)]
+pub fn ${indicator_name}_next_unchecked(
+    // TODO: CORE ARGUMENTS FOR INCREMENTAL
+) -> f64 {
+    // TODO: IMPLEMENTS CORE INCREMENTAL LOGIC
+}
