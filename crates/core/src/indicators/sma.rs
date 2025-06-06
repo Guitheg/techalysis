@@ -89,7 +89,7 @@ pub fn sma_next(
     window: &VecDeque<f64>,
     period: usize,
 ) -> Result<SmaState, TechalysisError> {
-    if period < 1 {
+    if period <= 1 {
         return Err(TechalysisError::BadParam(
             "SMA period must be greater than 1".to_string(),
         ));

@@ -39,7 +39,7 @@ Built for developers and quants who need the performance of Rust with the ease o
   || **MACD** - Moving Average Convergence Divergence                              | ✅         |
   || *Work in progress...*                                                         | 🚧         |
   | **_Volatility_** |                                                             |            |
-  || Bollinger Bands (BBANDS)                                                      | ⬜         |
+  || Bollinger Bands (BBANDS)                                                      | ✅         |
   || *Work in progress...*                                                         | 🚧         |
   | **_Volume_**     |                                                             |            |
   || *Work in progress...*                                                         | 🚧         |

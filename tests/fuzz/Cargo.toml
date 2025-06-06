@@ -40,3 +40,10 @@ path = "fuzz_targets/fuzz_macd.rs"
 test = false
 doc = false
 bench = false
+
+[[bin]]
+name = "bbands"
+path = "fuzz_targets/fuzz_bbands.rs"
+test = false
+doc = false
+bench = false

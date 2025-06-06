@@ -6,6 +6,8 @@ use techalysis::indicators::${indicator_name}::{${indicator_name}_into, ${Indica
 #[derive(Debug, Clone)]
 pub struct Py${IndicatorName}State {
     // TODO: DEFINE ATTRIBUTES
+    // #[pyo3(get)]
+    // pub ...
 }
 #[pymethods]
 impl Py${IndicatorName}State {

@@ -25,6 +25,7 @@ CONFIG_DICT = {
     "SMA": Configuration(talib, "SMA", ["close"], dict(timeperiod=30), ["out"]),
     "RSI": Configuration(talib, "RSI", ["close"], dict(timeperiod=14), ["out"]),
     "MACD": Configuration(talib, "MACD", ["close"], dict(fastperiod=12, slowperiod=26, signalperiod=9), ["macd", "signal", "histogram"]),
+    "BBANDS": Configuration(talib, "BBANDS", ["close"], dict(timeperiod=20, nbdevup=2, nbdevdn=2, matype=0), ["upper", "middle", "lower"]),
 }
 
 def generate_test_data(filename: str, configuration: Configuration, seed: int):

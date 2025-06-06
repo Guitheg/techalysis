@@ -3,6 +3,7 @@ use crate::errors::TechalysisError;
 #[derive(Debug)]
 pub struct ${IndicatorName}Result {
     // TODO: IMPLEMENTS RESULT ATTRIBUTES
+    // pub ..
     pub state: ${IndicatorName}State,
 }
 
@@ -15,6 +16,7 @@ impl From<${IndicatorName}Result> for Vec<f64> {
 #[derive(Debug, Clone, Copy)]
 pub struct ${IndicatorName}State {
     // TODO: IMPLEMENTS STATE ATTRIBUTES
+    // pub ...
 }
 
 impl ${IndicatorName}State {
