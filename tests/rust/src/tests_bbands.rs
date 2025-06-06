@@ -3,7 +3,7 @@ use crate::helper::{
     generated::{assert_vec_eq_gen_data, load_generated_csv},
 };
 
-use techalysis::indicators::bbands::bbands;
+use techalysis::{errors::TechalysisError, indicators::bbands::bbands};
 
 #[test]
 fn generated() {
@@ -54,14 +54,73 @@ fn no_lookahead() {
     );
 }
 
-// TODO: IMPLEMENTS OTHER TESTS
+#[test]
+fn all_zeros() {
+    let n = 30;
+    let input = vec![0.0; n];
+    let result = bbands(&input, 10, 2.0, 2.0).unwrap();
+    let expected = vec![f64::NAN; 9]
+        .into_iter()
+        .chain(vec![0.0; n - 9])
+        .collect::<Vec<f64>>();
+    assert_vec_eq_gen_data(&expected, &result.upper_band);
+    assert_vec_eq_gen_data(&expected, &result.middle_band);
+    assert_vec_eq_gen_data(&expected, &result.lower_band);
+}
 
-// TODO: IMPLEMENTS proptest
-// proptest! {
-//     #[test]
-//     fn proptest(
-//        // TODO: DEFINE ARGS
-//     ) {
+#[test]
+fn linear_series_stability() {
+    let input: Vec<f64> = (0..50).map(|x| x as f64).collect();
+    let result = bbands(&input, 5, 1.5, 1.5).unwrap();
+    for i in 5..result.middle_band.len() {
+        let diff = result.middle_band[i] - result.middle_band[i - 1];
+        assert!((diff - 1.0).abs() < 1e-6);
+    }
+}
 
-//     }
-// }
+#[test]
+fn breakout_detection() {
+    let mut input: Vec<f64> = vec![100.0; 20];
+    for i in 0..20 {
+        input[i] += i as f64;
+    }
+    input.push(200.0); // sudden spike
+    let len = input.len();
+    let result = bbands(&input, 20, 1.0, 1.0).unwrap();
+    let last_price = input[len - 1];
+    let upper = result.upper_band[len - 1];
+    assert!(last_price > upper, "Expected breakout above upper band");
+}
+
+#[test]
+fn nan_input_err() {
+    let mut input = vec![1.0, 2.0, 3.0];
+    input.push(f64::NAN);
+    let output = bbands(&input, 3, 2.0, 2.0);
+    assert!(output.is_err());
+    assert!(matches!(output, Err(TechalysisError::UnexpectedNan)));
+}
+
+#[test]
+fn invalid_params_err() {
+    let data = vec![1.0, 2.0, 3.0];
+    let output = bbands(&data, 0, 2.0, 2.0);
+    assert!(output.is_err()); // length = 0
+    assert!(matches!(output, Err(TechalysisError::BadParam(_))));
+
+    let output = bbands(&data, 3, -1.0, 2.0);
+    assert!(output.is_err()); // negative std_dev mult
+    assert!(matches!(output, Err(TechalysisError::BadParam(_))));
+
+    let output = bbands(&data, 3, 2.0, -1.0);
+    assert!(output.is_err()); // negative lower mult
+    assert!(matches!(output, Err(TechalysisError::BadParam(_))));
+}
+
+#[test]
+fn insufficient_data_err() {
+    let input = vec![1.0, 2.0, 3.0];
+    let output = bbands(&input, 5, 2.0, 2.0);
+    assert!(output.is_err());
+    assert!(matches!(output, Err(TechalysisError::InsufficientData)),);
+}
