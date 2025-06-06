@@ -1,2 +1,0 @@
-[alias]
-oracle = "run -q --package xtask --bin test_data_gen && test"
