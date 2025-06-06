@@ -1,28 +1,65 @@
-# techalysis
-Technical analysis library for financial market trading applications written in rust and available in python.
+# Techalysis
 
+**Techalysis** is a fast, reliable, and ergonomic technical analysis library written in Rust, with seamless Python bindings.
 
-### **Available soon on PyPI and Cargo**
+Built for developers and quants who need the performance of Rust with the ease of use of Python.
 
+## 🚀 Features
 
-## Features
+- ⚡ **High performance**  
+  Core engine written in Rust with optimized algorithms — at least as fast as TA-Lib
 
-| Function      | Description                                                                     | More                                                    | Status   |
-|---------------|---------------------------------------------------------------------------------|---------------------------------------------------------|----------|
-| sma           | Simple Moving Average: calculates the arithmetic mean of prices over N periods. | [Détails](https://www.investopedia.com/terms/s/sma.asp) | ✅       |
-| ema           | Exponential Moving Average: is a type of moving average (MA) that places a greater weight and significance on the most recent data points. | [Détails](https://www.investopedia.com/terms/e/ema.asp) | ✅       |
-| rsi           | Relative Strength Index: a momentum oscillator measuring speed and change of recent price movements. | [Détails](https://www.investopedia.com/terms/r/rsi.asp) | ✅       |
-| macd          | Moving Average Convergence Divergence: shows the relationship between two EMAs to identify momentum shifts. | [Détails](https://www.investopedia.com/terms/m/macd.asp)| ✅       |
-| bbands        | Bollinger Bands: volatility bands placed above and below a moving average, based on standard deviation. | [Détails](https://www.investopedia.com/terms/b/bollingerbands.asp)| ⏳ |
-| atr           | Average True Range: measures market volatility by calculating the range of price movement. | [Détails](https://www.investopedia.com/terms/a/atr.asp) | ⏳       |
-| supertrend    | SuperTrend: an indicator that identifies trend direction and provides buy/sell signals based on ATR. | [Détails](https://www.tradingview.com/support/solutions/43000634738-supertrend/)| ⏳     |
-| stochastic    | Stochastic Oscillator: compares the closing price to the price range over a specified period to identify potential reversals. | [Détails](https://www.investopedia.com/terms/s/stochasticoscillator.asp)| ⏳|
-| ichimoku      | Ichimoku Kinko Hyo: comprehensive indicator that identifies trends, momentum, and support/resistance levels. | [Détails](https://www.investopedia.com/terms/i/ichimoku-cloud.asp)| ⏳ |
+- 🧠 **Ergonomic API**  
+  Designed for Python developers with a clean and intuitive interface and well documented.
+
+- 🔒 **Safe and reliable**  
+  Backed by a large test suite, consistency checks against TA-Lib and fuzz testing
+
+- 🧩 **Easy integration**  
+  Use seamlessly in both Python and Rust projects
+
+- ⏱️ **Real-time updates**  
+  Indicators support incremental computation via internal state objects and a next() method — ideal for streaming data or large datasets
+
+- 🐍 **Python friendly**  
+  Pythonic API with rich return types using NamedTuples, and optional GIL unlocking for true multithreaded performance
+
+- 🖥️ **Multi-platform**  
+  Supports macOS, Linux, and Windows
+
+- 📊 Supported Indicators
+  | **Category**     | **Name**                                        | **Status** |
+  | ---------------- | ---------------------------------------------               | ---------- |
+  | **_Trend_**      |                                                             |            |
+  || **SMA** - Simple Moving Average                                               | ✅         |
+  || **EMA** - Exponential Moving Average                                          | ✅         |
+  || *Work in progress...*                                                         | 🚧         |
+  | **_Momentum_**   |                                                             |            |
+  || **RSI** - Relative Strength Index                                             | ✅         |
+  || **MACD** - Moving Average Convergence Divergence                              | ✅         |
+  || *Work in progress...*                                                         | 🚧         |
+  | **_Volatility_** |                                                             |            |
+  || Bollinger Bands (BBANDS)                                                      | ⬜         |
+  || *Work in progress...*                                                         | 🚧         |
+  | **_Volume_**     |                                                             |            |
+  || *Work in progress...*                                                         | 🚧         |
+  | **_Oscillators_**|                                                             |            |
+  || *Work in progress...*                                                         | 🚧         |
+  | **_Other_**      |                                                             |            |
+  || *Work in progress...*                                                         | 🚧         |
+
+## 📦 Installation
+
+**Available soon on PyPI and Cargo**
+
+## 📚 Documentation
+
+**Available soon**
 
 
 ## For developers
 
-### Build python wheel for CPython with maturin
+### Build with maturin
 
 ```
 maturin develop --release
