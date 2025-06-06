@@ -7,9 +7,9 @@ use crate::assert_vec_float_eq;
 pub const GENERATED_CSV_DIR: &str = "../../tests/data/generated";
 pub const GENERATED_PRECISION: f64 = 1e-8;
 
-pub fn assert_vec_eq_gen_data(a: &[f64], b: &[f64]) {
-    assert_eq!(a.len(), b.len());
-    assert_vec_float_eq!(a, b, GENERATED_PRECISION);
+pub fn assert_vec_eq_gen_data(expected: &[f64], got: &[f64]) {
+    assert_eq!(expected.len(), got.len());
+    assert_vec_float_eq!(expected, got, GENERATED_PRECISION);
 }
 
 pub fn load_generated_csv(file_name: &str) -> Result<HashMap<String, Vec<f64>>, csv::Error> {

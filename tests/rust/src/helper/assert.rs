@@ -15,9 +15,9 @@ pub fn approx_eq_f64(a: f64, b: f64) -> bool {
 
 #[macro_export]
 macro_rules! assert_vec_float_eq {
-    ($a:expr, $b:expr, $epsilon:expr) => {{
+    ($expected:expr, $got:expr, $epsilon:expr) => {{
         use $crate::helper::assert::approx_eq_f64_custom;
-        for (i, (x, y)) in $a.iter().zip($b.iter()).enumerate() {
+        for (i, (x, y)) in $expected.iter().zip($got.iter()).enumerate() {
             if x.is_nan() && y.is_nan() {
                 continue;
             }
@@ -32,9 +32,9 @@ macro_rules! assert_vec_float_eq {
     }};
 }
 
-pub fn assert_vec_close(a: &[f64], b: &[f64]) {
-    assert_eq!(a.len(), b.len());
-    assert_vec_float_eq!(a, b, 1e-9);
+pub fn assert_vec_close(expected: &[f64], got: &[f64]) {
+    assert_eq!(expected.len(), got.len());
+    assert_vec_float_eq!(expected, got, 1e-9);
 }
 
 fn ulp_at(x: f64) -> f64 {

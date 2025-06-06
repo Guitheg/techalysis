@@ -88,7 +88,7 @@ impl From<PyBBandsState> for BBandsState {
     }
 }
 
-#[pyfunction(signature = (data, period = 20, std_up = 2.0, std_down = 2.0, release_gil = true))]
+#[pyfunction(signature = (data, period = 20, std_up = 2.0, std_down = 2.0, release_gil = false))]
 pub(crate) fn bbands(
     py: Python,
     data: PyReadonlyArray1<f64>,

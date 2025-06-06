@@ -43,127 +43,6 @@ impl BBandsState {
     }
 }
 
-pub fn bbands(
-    data_array: &[f64],
-    period: usize,
-    std_up: f64,
-    std_down: f64,
-) -> Result<BBandsResult, TechalysisError> {
-    let mut output_upper = vec![0.0; data_array.len()];
-    let mut output_middle = vec![0.0; data_array.len()];
-    let mut output_lower = vec![0.0; data_array.len()];
-
-    let bbands_state = bbands_into(
-        data_array,
-        period,
-        std_up,
-        std_down,
-        &mut output_upper,
-        &mut output_middle,
-        &mut output_lower,
-    )?;
-
-    Ok(BBandsResult {
-        upper_band: output_upper,
-        middle_band: output_middle,
-        lower_band: output_lower,
-        state: bbands_state,
-    })
-}
-
-pub fn bbands_into(
-    data_array: &[f64],
-    period: usize,
-    std_up: f64,
-    std_down: f64,
-    output_upper: &mut [f64],
-    output_middle: &mut [f64],
-    output_lower: &mut [f64],
-) -> Result<BBandsState, TechalysisError> {
-    let len = data_array.len();
-    let period_as_f64 = period as f64;
-    if period > len {
-        return Err(TechalysisError::InsufficientData);
-    }
-
-    if period <= 1 {
-        return Err(TechalysisError::BadParam(
-            "SMA period must be greater than 1".to_string(),
-        ));
-    }
-
-    if std_up <= 0.0 || std_down <= 0.0 {
-        return Err(TechalysisError::BadParam(
-            "Standard deviations must be greater than 0".to_string(),
-        ));
-    }
-
-    if output_upper.len() != len || output_middle.len() != len || output_lower.len() != len {
-        return Err(TechalysisError::BadParam(
-            "Output arrays must have the same length as input data".to_string(),
-        ));
-    }
-
-    let mut running_sum: f64 = 0.0;
-    let mut running_sum_sq: f64 = 0.0;
-    for idx in 0..period {
-        let value = &data_array[idx];
-        if value.is_nan() {
-            return Err(TechalysisError::UnexpectedNan);
-        } else {
-            running_sum += value;
-            running_sum_sq += value * value;
-        }
-        output_upper[idx] = f64::NAN;
-        output_middle[idx] = f64::NAN;
-        output_lower[idx] = f64::NAN;
-    }
-    output_middle[period - 1] = running_sum / period_as_f64;
-    output_upper[period - 1] = to_std_up(
-        output_middle[period - 1],
-        running_sum_sq,
-        period_as_f64,
-        std_up,
-    );
-    output_lower[period - 1] = to_std_down(
-        output_middle[period - 1],
-        running_sum_sq,
-        period_as_f64,
-        std_down,
-    );
-
-    for idx in period..len {
-        if data_array[idx].is_nan() {
-            return Err(TechalysisError::UnexpectedNan);
-        }
-        (
-            output_upper[idx],
-            output_middle[idx],
-            output_lower[idx],
-            running_sum_sq,
-        ) = bbands_next_unchecked(
-            data_array[idx],
-            data_array[idx - period],
-            output_middle[idx - 1],
-            running_sum_sq,
-            period_as_f64,
-            std_up,
-            std_down,
-        );
-    }
-
-    Ok(BBandsState {
-        upper: output_upper[len - 1],
-        middle: output_middle[len - 1],
-        lower: output_lower[len - 1],
-        sum_sq: running_sum_sq,
-        window: VecDeque::from(data_array[len - period..len].to_vec()),
-        period,
-        std_up,
-        std_down,
-    })
-}
-
 pub fn bbands_next(
     new_value: f64,
     prev_mean: f64,
@@ -207,7 +86,7 @@ pub fn bbands_next(
         old_value,
         prev_mean,
         prev_sum_sq,
-        period as f64,
+        1.0 / period as f64,
         std_up,
         std_down,
     );
@@ -223,29 +102,138 @@ pub fn bbands_next(
     })
 }
 
+pub fn bbands(
+    data_array: &[f64],
+    period: usize,
+    std_up: f64,
+    std_down: f64,
+) -> Result<BBandsResult, TechalysisError> {
+    let mut output_upper = vec![0.0; data_array.len()];
+    let mut output_middle = vec![0.0; data_array.len()];
+    let mut output_lower = vec![0.0; data_array.len()];
+
+    let bbands_state = bbands_into(
+        data_array,
+        period,
+        std_up,
+        std_down,
+        output_upper.as_mut_slice(),
+        output_middle.as_mut_slice(),
+        output_lower.as_mut_slice(),
+    )?;
+
+    Ok(BBandsResult {
+        upper_band: output_upper,
+        middle_band: output_middle,
+        lower_band: output_lower,
+        state: bbands_state,
+    })
+}
+
+pub fn bbands_into(
+    data_array: &[f64],
+    period: usize,
+    std_up: f64,
+    std_down: f64,
+    output_upper: &mut [f64],
+    output_middle: &mut [f64],
+    output_lower: &mut [f64],
+) -> Result<BBandsState, TechalysisError> {
+    let len = data_array.len();
+    let inv_period = 1.0 / (period as f64);
+    if period > len {
+        return Err(TechalysisError::InsufficientData);
+    }
+
+    if period <= 1 {
+        return Err(TechalysisError::BadParam(
+            "SMA period must be greater than 1".to_string(),
+        ));
+    }
+
+    if std_up <= 0.0 || std_down <= 0.0 {
+        return Err(TechalysisError::BadParam(
+            "Standard deviations must be greater than 0".to_string(),
+        ));
+    }
+
+    if output_upper.len() != len || output_middle.len() != len || output_lower.len() != len {
+        return Err(TechalysisError::BadParam(
+            "Output arrays must have the same length as input data".to_string(),
+        ));
+    }
+
+    let (mut sum, mut sum_sq) = (0.0, 0.0);
+    for idx in 0..period {
+        let value = &data_array[idx];
+        if value.is_nan() {
+            return Err(TechalysisError::UnexpectedNan);
+        } else {
+            sum += value;
+            sum_sq += value * value;
+        }
+        output_upper[idx] = f64::NAN;
+        output_middle[idx] = f64::NAN;
+        output_lower[idx] = f64::NAN;
+    }
+    output_middle[period - 1] = sum * inv_period;
+    (output_upper[period - 1], output_lower[period - 1]) = bands(
+        output_middle[period - 1],
+        sum_sq * inv_period,
+        std_up,
+        std_down,
+    );
+
+    for idx in period..len {
+        if data_array[idx].is_nan() {
+            return Err(TechalysisError::UnexpectedNan);
+        }
+        (
+            output_upper[idx],
+            output_middle[idx],
+            output_lower[idx],
+            sum_sq,
+        ) = bbands_next_unchecked(
+            data_array[idx],
+            data_array[idx - period],
+            output_middle[idx - 1],
+            sum_sq,
+            inv_period,
+            std_up,
+            std_down,
+        );
+    }
+
+    Ok(BBandsState {
+        upper: output_upper[len - 1],
+        middle: output_middle[len - 1],
+        lower: output_lower[len - 1],
+        sum_sq,
+        window: VecDeque::from(data_array[len - period..len].to_vec()),
+        period,
+        std_up,
+        std_down,
+    })
+}
+
 #[inline(always)]
 pub fn bbands_next_unchecked(
     new_value: f64,
     old_value: f64,
     prev_mean: f64,
     prev_sum_sq: f64,
-    period: f64,
+    inv_period: f64,
     std_up: f64,
     std_down: f64,
 ) -> (f64, f64, f64, f64) {
     let sum_sq = prev_sum_sq + (new_value * new_value) - (old_value * old_value);
-    let middle = sma_next_unchecked(new_value, old_value, prev_mean, period);
-    let upper = to_std_up(middle, sum_sq, period, std_up);
-    let lower = to_std_down(middle, sum_sq, period, std_down);
+    let middle = sma_next_unchecked(new_value, old_value, prev_mean, inv_period);
+    let (upper, lower) = bands(middle, sum_sq * inv_period, std_up, std_down);
     (upper, middle, lower, sum_sq)
 }
 
 #[inline(always)]
-fn to_std_up(mean: f64, running_sum_sq: f64, period_as_f64: f64, multiplier: f64) -> f64 {
-    mean + multiplier * ((running_sum_sq / period_as_f64) - mean.powi(2)).sqrt()
-}
-
-#[inline(always)]
-fn to_std_down(mean: f64, running_sum_sq: f64, period_as_f64: f64, multiplier: f64) -> f64 {
-    mean - multiplier * ((running_sum_sq / period_as_f64) - mean.powi(2)).sqrt()
+fn bands(mean: f64, mean_sq: f64, std_up: f64, std_down: f64) -> (f64, f64) {
+    let std = (mean_sq - mean * mean).sqrt();
+    (mean + std_up * std, mean - std_down * std)
 }

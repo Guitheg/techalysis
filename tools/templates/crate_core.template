@@ -7,16 +7,16 @@ pub struct ${IndicatorName}Result {
     pub state: ${IndicatorName}State,
 }
 
-impl From<${IndicatorName}Result> for Vec<f64> {
-    fn from(result: ${IndicatorName}Result) -> Self {
-        // TODO: IMPLEMENTS FROM IMPL
-    }
-}
-
 #[derive(Debug, Clone, Copy)]
 pub struct ${IndicatorName}State {
     // TODO: IMPLEMENTS STATE ATTRIBUTES
     // pub ...
+}
+
+impl From<${IndicatorName}Result> for Vec<f64> {
+    fn from(result: ${IndicatorName}Result) -> Self {
+        // TODO: IMPLEMENTS FROM IMPL
+    }
 }
 
 impl ${IndicatorName}State {
@@ -27,6 +27,17 @@ impl ${IndicatorName}State {
             // TODO: IMPLEMENTS ARGUMENTS OF NEXT FUNCTION
         )
     }
+}
+
+pub fn ${indicator_name}_next(
+    // TODO: ARGUMENTS FOR INCREMENTAL
+) -> Result<${IndicatorName}State, TechalysisError> {
+    // TODO: CHECK INPUT ARGUMENTS
+
+    //TODO: USE ${indicator_name}_next_unchecked(...);
+    Ok(${IndicatorName}State {
+        // TODO: STATE ATTRIBUTES TO RETURN
+    })
 }
 
 pub fn ${indicator_name}(
@@ -48,17 +59,6 @@ pub fn ${indicator_name}_into(
 ) -> Result<${IndicatorName}State, TechalysisError> {
     // TODO: IMPLEMENTS CORE FUNCTION LOGIC
 
-    Ok(${IndicatorName}State {
-        // TODO: STATE ATTRIBUTES TO RETURN
-    })
-}
-
-pub fn ${indicator_name}_next(
-    // TODO: ARGUMENTS FOR INCREMENTAL
-) -> Result<${IndicatorName}State, TechalysisError> {
-    // TODO: CHECK INPUT ARGUMENTS
-
-    //TODO: USE ${indicator_name}_next_unchecked(...);
     Ok(${IndicatorName}State {
         // TODO: STATE ATTRIBUTES TO RETURN
     })

@@ -42,7 +42,7 @@ pub fn sma_into(
     output: &mut [f64],
 ) -> Result<SmaState, TechalysisError> {
     let size = data_array.len();
-    let period_as_f64 = period as f64;
+    let inv_period = 1.0 / (period as f64);
     if period == 0 || period > size {
         return Err(TechalysisError::InsufficientData);
     }
@@ -63,7 +63,7 @@ pub fn sma_into(
         }
         output[idx] = f64::NAN;
     }
-    output[period - 1] = running_sum / period_as_f64;
+    output[period - 1] = running_sum * inv_period;
 
     for idx in period..size {
         if data_array[idx].is_nan() {
@@ -73,7 +73,7 @@ pub fn sma_into(
             data_array[idx],
             data_array[idx - period],
             output[idx - 1],
-            period_as_f64,
+            inv_period,
         );
     }
     Ok(SmaState {
@@ -119,13 +119,13 @@ pub fn sma_next(
     window.push_back(new_value);
 
     Ok(SmaState {
-        sma: sma_next_unchecked(new_value, old_value, prev_sma, period as f64),
+        sma: sma_next_unchecked(new_value, old_value, prev_sma, 1.0 / (period as f64)),
         period,
         window,
     })
 }
 
 #[inline(always)]
-pub fn sma_next_unchecked(new_value: f64, old_value: f64, prev_sma: f64, period: f64) -> f64 {
-    prev_sma + (new_value - old_value) / period
+pub fn sma_next_unchecked(new_value: f64, old_value: f64, prev_sma: f64, inv_period: f64) -> f64 {
+    prev_sma + (new_value - old_value) * inv_period
 }

@@ -19,9 +19,9 @@ fn generated() {
     assert!(output.is_ok());
     let result = output.unwrap();
 
-    assert_vec_eq_gen_data(&result.upper_band, upper);
-    assert_vec_eq_gen_data(&result.middle_band, middle);
-    assert_vec_eq_gen_data(&result.lower_band, lower);
+    assert_vec_eq_gen_data(upper, &result.upper_band);
+    assert_vec_eq_gen_data(middle, &result.middle_band);
+    assert_vec_eq_gen_data(lower, &result.lower_band);
 }
 
 #[test]
@@ -41,9 +41,9 @@ fn no_lookahead() {
 
     let result = bbands(input_prev, 20, 2.0, 2.0).unwrap();
 
-    assert_vec_eq_gen_data(&result.upper_band, &upper[0..last_idx]);
-    assert_vec_eq_gen_data(&result.middle_band, &middle[0..last_idx]);
-    assert_vec_eq_gen_data(&result.lower_band, &lower[0..last_idx]);
+    assert_vec_eq_gen_data(&upper[0..last_idx], &result.upper_band);
+    assert_vec_eq_gen_data(&middle[0..last_idx], &result.middle_band);
+    assert_vec_eq_gen_data(&lower[0..last_idx], &result.lower_band);
 
     let new_state = result.state.next(input[last_idx]).unwrap();
     assert!(
