@@ -1,0 +1,34 @@
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import technicalysis as tx
+from numpy import testing
+import numpy as np
+import time
+
+def test_${indicator_name}_numpy_success(csv_loader):
+    # TODO: IMPLEMENTS TEST
+    df = csv_loader("${indicator_name}")
+    # result = tx.${indicator_name}(...)
+    # final_result = tx.${indicator_name}(...)
+
+    # next_state = tx.${indicator_name}_next(...)
+    # testing.assert_allclose(result.ATTR, final_result.ATTR[:-1])
+    # testing.assert_allclose(final_result.ATTR, np.array(df["ATTR"]), atol=1e-8)
+    # assert(next_state.ATTR == final_result.state.ATTR)
+
+def test_${indicator_name}_pandas_success(csv_loader):
+    # TODO: IMPLEMENTS TEST
+    df = csv_loader("${indicator_name}")
+    # result = tx.${indicator_name}(...)
+    # final_result = tx.${indicator_name}(...)
+
+    # next_state = tx.${indicator_name}_next(...)
+    # testing.assert_allclose(result.ATTR, final_result.ATTR[:-1])
+    # testing.assert_allclose(final_result.ATTR, df["ATTR"], atol=1e-8)
+    # assert(next_state.ATTR == final_result.state.ATTR)
+
+def test_thread_${indicator_name}(thread_test):
+    # TODO: IMPLEMENTS LAMBDA
+    # def ${indicator_name}_tx_lambda(data):
+    #   return tx.${indicator_name}(..., release_gil = True)
+
+    # thread_test(${indicator_name}_tx_lambda, n_threads=4)

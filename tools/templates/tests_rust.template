@@ -1,0 +1,75 @@
+use crate::helper::{
+    assert::{approx_eq_f64, approx_eq_f64_custom},
+    generated::{assert_vec_eq_gen_data, load_generated_csv},
+};
+
+use proptest::{collection::vec, prelude::*};
+use technicalysis::errors::TechnicalysisError;
+use technicalysis::indicators::${indicator_name}::${indicator_name};
+
+#[test]
+fn generated() {
+    let columns = load_generated_csv("${indicator_name}.csv").unwrap();
+    // TODO: GET INPUTS DATA
+    // let input = columns.get("close").unwrap();
+
+    // TODO: GET EXPECTED DATA
+    // let expected = columns.get("out").unwrap();
+
+    // TODO: PERFORM CALCULATION
+    // let output = ${indicator_name}(input);
+    // assert!(output.is_ok());
+    // let result = output.unwrap();
+
+    // TODO COMPARE WITH EXPECTED
+    // assert_vec_eq_gen_data(&out.values, expected);
+    // assert!(out.values.len() == input.len());
+}
+
+#[test]
+fn no_lookahead() {
+    let columns = load_generated_csv("${indicator_name}.csv").unwrap();
+
+    // TODO: GET INPUTS DATA
+    // let input = columns.get("close").unwrap();
+
+    // TODO: LEN DATA
+    // let len = input.len();
+
+    // TODO: LAST IDX
+    // let last_idx = len - 1;
+
+    // TODO: GET EXPECTED DATA
+    // let expected = columns.get("out").unwrap();
+
+    // TODO: IMPLEMENTS INPUTS PREV DATA
+    // let input_prev = &input[0..last_idx-1];
+
+    // TODO: PERFORM CALCULATION
+    // let output = ${indicator_name}(input_prev);
+    // assert!(output.is_ok());
+    // let result = output.unwrap();
+
+    // TODO: COMPARE
+    // assert_vec_eq_gen_data(&result.values, &expected[0..last_idx]);
+
+    // let new_state = result.state.next(input[last_idx]).unwrap();
+    // assert!(
+    //     approx_eq_f64_custom(new_state.sma, expected[last_idx], 1e-8),
+    //     "Expected last value to be {}, but got {}",
+    //     expected[last_idx],
+    //     new_state.sma
+    // );
+}
+
+// TODO: IMPLEMENTS OTHER TESTS
+
+// TODO: IMPLEMENTS proptest
+// proptest! {
+//     #[test]
+//     fn proptest(
+//        // TODO: DEFINE ARGS
+//     ) {
+
+//     }
+// }

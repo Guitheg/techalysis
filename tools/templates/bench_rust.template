@@ -1,0 +1,29 @@
+use criterion::BenchmarkId;
+use rand::{rngs::StdRng, Rng, SeedableRng};
+use technicalysis::indicators::${indicator_name}::${indicator_name};
+
+fn bench_${indicator_name}(c: &mut criterion::Criterion) {
+    let mut bench_group = c.benchmark_group("${indicator_name}");
+
+    // TODO: DEFINE THE CASES
+    // let cases = vec![(50_000, INPUT_ARGS_VALUES), (1_000_000, INPUT_ARGS_VALUES)];
+
+
+    // for (len, INPUT_ARGS_NAMES) in cases {
+    //     let mut rng = StdRng::seed_from_u64(SOMETHING as u64);
+    //     TODO: INITIALIZE THE INPUT DATA
+    //     let data: Vec<f64> = (0..len).map(|_| rng.random_range(0.0..ANYTHING)).collect();
+
+    //     bench_group.bench_with_input(
+    //         BenchmarkId::new(format!("len={len}"), INPUT_ARGS_NAMES),
+    //         &INPUT_ARGS_NAMES,
+    //         |b, &INPUT_ARGS_NAMES| {
+    //             b.iter(|| {
+    //                 let _ = ${indicator_name}(&data, INPUT_ARGS_NAMES);
+    //             })
+    //         },
+    //     );
+    // }
+}
+
+criterion::criterion_group!(bench, bench_${indicator_name});
