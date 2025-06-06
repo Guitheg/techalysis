@@ -16,4 +16,4 @@ name = "rsi"
 path = "bin/rsi.rs"
 
 [dependencies]
-technicalysis = { path = "../../../" }
+technicalysis = { path = "../../../crates/core" }

@@ -1,0 +1,28 @@
+[package]
+name = "technicalysis-python"
+
+description.workspace = true
+version.workspace = true
+repository.workspace = true
+
+license.workspace = true
+authors.workspace = true
+
+rust-version.workspace = true
+edition.workspace = true
+
+[lib]
+name = "technicalysis"
+path = "src/lib.rs"
+crate-type = ["cdylib"]
+
+[dependencies]
+numpy = { version = "0.25.0", optional = true }
+pyo3 = { version = "0.25.0", optional = true, features = [
+    "extension-module",
+    "abi3-py38",
+] }
+technicalysis = { path = "../core" }
+
+[features]
+default = ["numpy", "pyo3"]

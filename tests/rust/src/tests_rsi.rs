@@ -1,6 +1,8 @@
 use crate::assert_vec_float_eq;
-use crate::rust::tests_helper::assert::{approx_eq_f64_custom, assert_vec_close};
-use crate::rust::tests_helper::generated::{assert_vec_eq_gen_data, load_generated_csv};
+use crate::helper::{
+    assert::{approx_eq_f64_custom, assert_vec_close},
+    generated::{assert_vec_eq_gen_data, load_generated_csv},
+};
 use proptest::{prop_assert, prop_assert_eq, proptest};
 use technicalysis::errors::TechnicalysisError;
 use technicalysis::indicators::rsi::rsi;

@@ -1,12 +1,13 @@
 [build-system]
-requires = ["maturin>=0.12"]
+requires = ["maturin>=1.0,<2.0"]
 build-backend = "maturin"
 
 [tool.maturin]
 bindings = "pyo3"
+manifest-path = "crates/python/Cargo.toml"
 python-source = "python"
 module-name = "technicalysis._core"
-features = ["pyo3/extension-module", "python"]
+features = ["pyo3/extension-module"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests/python"]

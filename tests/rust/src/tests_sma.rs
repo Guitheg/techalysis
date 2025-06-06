@@ -1,6 +1,8 @@
-use crate::rust::tests_helper::assert::{approx_eq_f64, approx_eq_f64_custom};
-use crate::rust::tests_helper::generated::assert_vec_eq_gen_data;
-use crate::rust::tests_helper::generated::load_generated_csv;
+use crate::helper::{
+    assert::{approx_eq_f64, approx_eq_f64_custom},
+    generated::{assert_vec_eq_gen_data, load_generated_csv},
+};
+
 use proptest::{collection::vec, prelude::*};
 use technicalysis::errors::TechnicalysisError;
 use technicalysis::indicators::sma::sma;

@@ -4,7 +4,7 @@ use csv::ReaderBuilder;
 
 use crate::assert_vec_float_eq;
 
-pub const GENERATED_CSV_DIR: &str = "tests/data/generated";
+pub const GENERATED_CSV_DIR: &str = "../../tests/data/generated";
 pub const GENERATED_PRECISION: f64 = 1e-8;
 
 pub fn assert_vec_eq_gen_data(a: &[f64], b: &[f64]) {

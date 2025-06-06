@@ -1,5 +1,11 @@
+#[cfg(test)]
+pub(crate) mod helper;
+
+#[cfg(test)]
 pub(crate) mod tests_ema;
-pub(crate) mod tests_helper;
+#[cfg(test)]
 pub(crate) mod tests_macd;
+#[cfg(test)]
 pub(crate) mod tests_rsi;
+#[cfg(test)]
 pub(crate) mod tests_sma;

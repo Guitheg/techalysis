@@ -16,7 +16,7 @@ pub fn approx_eq_f64(a: f64, b: f64) -> bool {
 #[macro_export]
 macro_rules! assert_vec_float_eq {
     ($a:expr, $b:expr, $epsilon:expr) => {{
-        use $crate::rust::tests_helper::assert::approx_eq_f64_custom;
+        use $crate::helper::assert::approx_eq_f64_custom;
         for (i, (x, y)) in $a.iter().zip($b.iter()).enumerate() {
             if x.is_nan() && y.is_nan() {
                 continue;
@@ -48,7 +48,7 @@ fn ulp_at(x: f64) -> f64 {
 }
 
 mod test {
-    use crate::rust::tests_helper::assert::approx_eq_f64;
+    use crate::helper::assert::approx_eq_f64;
 
     #[test]
     fn test_1_success() {

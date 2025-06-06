@@ -1,6 +1,6 @@
 use technicalysis::{errors::TechnicalysisError, indicators::macd::macd};
 
-use crate::rust::tests_helper::{
+use crate::helper::{
     assert::approx_eq_f64_custom,
     generated::{assert_vec_eq_gen_data, load_generated_csv},
 };

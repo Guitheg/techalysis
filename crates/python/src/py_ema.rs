@@ -1,8 +1,6 @@
-use crate::indicators::ema::ema_into;
-use crate::indicators::ema::ema_next as core_ema_next;
 use numpy::{IntoPyArray, PyArray1, PyArrayMethods, PyReadonlyArray1, PyUntypedArrayMethods};
-use pyo3::pymethods;
-use pyo3::{exceptions::PyValueError, pyclass, pyfunction, Py, PyResult, Python};
+use pyo3::{exceptions::PyValueError, pyclass, pyfunction, pymethods, Py, PyResult, Python};
+use technicalysis::indicators::ema::{ema_into, ema_next as core_ema_next, EmaState};
 
 #[derive(Debug, Clone)]
 #[pyclass(name = "EmaState", module = "technicalysis._core")]
@@ -32,8 +30,8 @@ impl PyEmaState {
         )
     }
 }
-impl From<crate::indicators::ema::EmaState> for PyEmaState {
-    fn from(state: crate::indicators::ema::EmaState) -> Self {
+impl From<EmaState> for PyEmaState {
+    fn from(state: EmaState) -> Self {
         PyEmaState {
             ema: state.ema,
             period: state.period,

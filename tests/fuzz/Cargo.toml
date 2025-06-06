@@ -10,9 +10,8 @@ cargo-fuzz = true
 [dependencies]
 libfuzzer-sys = "0.4"
 
-
 [dependencies.technicalysis]
-path = "../.."
+path = "../../crates/core"
 
 [[bin]]
 name = "sma"
