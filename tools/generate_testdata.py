@@ -5,8 +5,8 @@ import pandas as pd
 import talib
 from pathlib import Path
 import argparse
-from logger import logger
-import ohlcv
+from utils.logger import logger
+from utils import ohlcv
 
 DATA_DIR = Path(__file__).parent.parent / "tests" / "data" / "generated"
 DATA_DIR.mkdir(parents=True, exist_ok=True)
@@ -26,7 +26,7 @@ CONFIG_DICT = {
     "RSI": Configuration(talib, "RSI", ["close"], dict(timeperiod=14), ["out"]),
     "MACD": Configuration(talib, "MACD", ["close"], dict(fastperiod=12, slowperiod=26, signalperiod=9), ["macd", "signal", "histogram"]),
 }
-talib.MACD
+
 def generate_test_data(filename: str, configuration: Configuration, seed: int):
     logger.info(f"📊 ({configuration.fct_name}) Generating test data with parameters: {configuration.parameters}")
     generated_data = ohlcv.random_walk(1000, scale=1.5, start_offset = 50, seed = seed)
