@@ -1,7 +1,7 @@
 import numpy as np
 import timeit
 from . import print_benchmark
-import technicalysis as tx
+import techalysis as tx
 import talib
 
 

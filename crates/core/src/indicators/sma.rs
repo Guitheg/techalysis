@@ -1,4 +1,4 @@
-use crate::errors::TechnicalysisError;
+use crate::errors::TechalysisError;
 use std::{collections::VecDeque, f64};
 
 #[derive(Debug)]
@@ -21,12 +21,12 @@ pub struct SmaState {
 }
 
 impl SmaState {
-    pub fn next(&self, new_value: f64) -> Result<SmaState, TechnicalysisError> {
+    pub fn next(&self, new_value: f64) -> Result<SmaState, TechalysisError> {
         sma_next(new_value, self.sma, &self.window, self.period)
     }
 }
 
-pub fn sma(data_array: &[f64], period: usize) -> Result<SmaResult, TechnicalysisError> {
+pub fn sma(data_array: &[f64], period: usize) -> Result<SmaResult, TechalysisError> {
     let size = data_array.len();
     let mut output = vec![0.0; size];
     let sma_state = sma_into(data_array, period, &mut output)?;
@@ -40,15 +40,15 @@ pub fn sma_into(
     data_array: &[f64],
     period: usize,
     output: &mut [f64],
-) -> Result<SmaState, TechnicalysisError> {
+) -> Result<SmaState, TechalysisError> {
     let size = data_array.len();
     let period_as_f64 = period as f64;
     if period == 0 || period > size {
-        return Err(TechnicalysisError::InsufficientData);
+        return Err(TechalysisError::InsufficientData);
     }
 
     if period == 1 {
-        return Err(TechnicalysisError::BadParam(
+        return Err(TechalysisError::BadParam(
             "SMA period must be greater than 1".to_string(),
         ));
     }
@@ -57,7 +57,7 @@ pub fn sma_into(
     for idx in 0..period {
         let value = &data_array[idx];
         if value.is_nan() {
-            return Err(TechnicalysisError::UnexpectedNan);
+            return Err(TechalysisError::UnexpectedNan);
         } else {
             running_sum += value;
         }
@@ -67,7 +67,7 @@ pub fn sma_into(
 
     for idx in period..size {
         if data_array[idx].is_nan() {
-            return Err(TechnicalysisError::UnexpectedNan);
+            return Err(TechalysisError::UnexpectedNan);
         }
         output[idx] = sma_next_unchecked(
             data_array[idx],
@@ -88,26 +88,26 @@ pub fn sma_next(
     prev_sma: f64,
     window: &VecDeque<f64>,
     period: usize,
-) -> Result<SmaState, TechnicalysisError> {
+) -> Result<SmaState, TechalysisError> {
     if period < 1 {
-        return Err(TechnicalysisError::BadParam(
+        return Err(TechalysisError::BadParam(
             "SMA period must be greater than 1".to_string(),
         ));
     }
 
     if new_value.is_nan() || prev_sma.is_nan() {
-        return Err(TechnicalysisError::UnexpectedNan);
+        return Err(TechalysisError::UnexpectedNan);
     }
 
     if window.len() != period {
-        return Err(TechnicalysisError::BadParam(
+        return Err(TechalysisError::BadParam(
             "Window length must match the SMA period".to_string(),
         ));
     }
 
     for &value in window {
         if value.is_nan() {
-            return Err(TechnicalysisError::UnexpectedNan);
+            return Err(TechalysisError::UnexpectedNan);
         }
     }
 
@@ -115,7 +115,7 @@ pub fn sma_next(
 
     let old_value = window
         .pop_front()
-        .ok_or(TechnicalysisError::InsufficientData)?;
+        .ok_or(TechalysisError::InsufficientData)?;
     window.push_back(new_value);
 
     Ok(SmaState {

@@ -1,4 +1,4 @@
-use technicalysis::{errors::TechnicalysisError, indicators::macd::macd};
+use techalysis::{errors::TechalysisError, indicators::macd::macd};
 
 use crate::helper::{
     assert::approx_eq_f64_custom,
@@ -108,7 +108,7 @@ fn empty_input() {
     let output = macd(&input, 12, 26, 9);
     assert!(output.is_err());
     assert!(
-        matches!(output, Err(TechnicalysisError::InsufficientData)),
+        matches!(output, Err(TechalysisError::InsufficientData)),
         "Got: {output:?}"
     );
 }
@@ -133,7 +133,7 @@ fn insufficient_data() {
     let output = macd(&input, 12, 26, 9);
     assert!(output.is_err());
     assert!(
-        matches!(output, Err(TechnicalysisError::InsufficientData)),
+        matches!(output, Err(TechalysisError::InsufficientData)),
         "Got: {output:?}",
     );
 }
@@ -143,7 +143,7 @@ fn fast_greater_than_slow() {
     let input: Vec<f64> = (1..=50).map(|x| x as f64).collect();
     let output = macd(&input, 30, 20, 9);
     assert!(output.is_err());
-    assert!(matches!(output, Err(TechnicalysisError::BadParam(_))));
+    assert!(matches!(output, Err(TechalysisError::BadParam(_))));
 }
 
 #[test]
@@ -152,5 +152,5 @@ fn unexpected_nan() {
     input[10] = f64::NAN; // Introduce NaN
     let output = macd(&input, 12, 26, 9);
     assert!(output.is_err());
-    assert!(matches!(output, Err(TechnicalysisError::UnexpectedNan)));
+    assert!(matches!(output, Err(TechalysisError::UnexpectedNan)));
 }

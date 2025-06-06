@@ -1,4 +1,4 @@
-use crate::errors::TechnicalysisError;
+use crate::errors::TechalysisError;
 
 #[derive(Debug)]
 pub struct ${IndicatorName}Result {
@@ -20,7 +20,7 @@ pub struct ${IndicatorName}State {
 impl ${IndicatorName}State {
     pub fn next(&self
         // TODO: IMPLEMENTS ARGUMENTS OF NEXT METHODS
-    ) -> Result<${IndicatorName}State, TechnicalysisError> {
+    ) -> Result<${IndicatorName}State, TechalysisError> {
         ${indicator_name}_next(
             // TODO: IMPLEMENTS ARGUMENTS OF NEXT FUNCTION
         )
@@ -29,7 +29,7 @@ impl ${IndicatorName}State {
 
 pub fn ${indicator_name}(
     // TODO: IMPLEMENTS ARGUMENTS OF INDICATOR FUNCTION
-) -> Result<${IndicatorName}Result, TechnicalysisError> {
+) -> Result<${IndicatorName}Result, TechalysisError> {
     // TODO: INITIALIZE OUTPUTS
     
     let ${indicator_name}_state = ${indicator_name}_into(
@@ -43,7 +43,7 @@ pub fn ${indicator_name}(
 
 pub fn ${indicator_name}_into(
     // TODO: ARGUMENTS AND OUTPUTS ARGUMENTS
-) -> Result<${IndicatorName}State, TechnicalysisError> {
+) -> Result<${IndicatorName}State, TechalysisError> {
     // TODO: IMPLEMENTS CORE FUNCTION LOGIC
 
     Ok(${IndicatorName}State {
@@ -53,7 +53,7 @@ pub fn ${indicator_name}_into(
 
 pub fn ${indicator_name}_next(
     // TODO: ARGUMENTS FOR INCREMENTAL
-) -> Result<${IndicatorName}State, TechnicalysisError> {
+) -> Result<${IndicatorName}State, TechalysisError> {
     // TODO: CHECK INPUT ARGUMENTS
 
     //TODO: USE ${indicator_name}_next_unchecked(...);

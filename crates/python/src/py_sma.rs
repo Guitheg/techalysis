@@ -1,7 +1,7 @@
 use numpy::{IntoPyArray, PyArray1, PyArrayMethods, PyReadonlyArray1, PyUntypedArrayMethods};
 use pyo3::pymethods;
 use pyo3::{exceptions::PyValueError, pyclass, pyfunction, Py, PyResult, Python};
-use technicalysis::indicators::sma::{sma_into, SmaState};
+use techalysis::indicators::sma::{sma_into, SmaState};
 
 #[pyclass(name = "SmaState")]
 #[derive(Debug, Clone)]

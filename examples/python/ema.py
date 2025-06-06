@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-import technicalysis as tx
+import techalysis as tx
 import matplotlib.pyplot as plt
 
 

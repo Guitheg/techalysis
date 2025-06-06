@@ -12,4 +12,4 @@ def initLogger():
         handlers=[handler],
     )
 initLogger()
-logger = logging.getLogger("TechnicalysisPyTools")
+logger = logging.getLogger("TechalysisPyTools")

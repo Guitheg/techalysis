@@ -1,6 +1,6 @@
 use criterion::BenchmarkId;
 use rand::{rngs::StdRng, Rng, SeedableRng};
-use technicalysis::indicators::${indicator_name}::${indicator_name};
+use techalysis::indicators::${indicator_name}::${indicator_name};
 
 fn bench_${indicator_name}(c: &mut criterion::Criterion) {
     let mut bench_group = c.benchmark_group("${indicator_name}");

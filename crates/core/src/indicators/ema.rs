@@ -1,4 +1,4 @@
-use crate::errors::TechnicalysisError;
+use crate::errors::TechalysisError;
 
 const DEFAULT_SMOOTHING: f64 = 2.0;
 
@@ -22,14 +22,14 @@ pub struct EmaState {
 }
 
 impl EmaState {
-    pub fn next(&self, new_value: f64) -> Result<EmaState, TechnicalysisError> {
+    pub fn next(&self, new_value: f64) -> Result<EmaState, TechalysisError> {
         ema_next(new_value, self.ema, self.period, Some(self.alpha))
     }
 }
 
-pub fn period_to_alpha(period: usize, smoothing: Option<f64>) -> Result<f64, TechnicalysisError> {
+pub fn period_to_alpha(period: usize, smoothing: Option<f64>) -> Result<f64, TechalysisError> {
     if period == 0 {
-        return Err(TechnicalysisError::BadParam(
+        return Err(TechalysisError::BadParam(
             "Period must be greater than 0".to_string(),
         ));
     }
@@ -37,7 +37,7 @@ pub fn period_to_alpha(period: usize, smoothing: Option<f64>) -> Result<f64, Tec
     let smoothing = match smoothing {
         Some(s) => {
             if s <= 0.0 {
-                return Err(TechnicalysisError::BadParam(
+                return Err(TechalysisError::BadParam(
                     "Smoothing must be greater than 0".to_string(),
                 ));
             }
@@ -53,7 +53,7 @@ pub fn ema(
     data_array: &[f64],
     period: usize,
     alpha: Option<f64>,
-) -> Result<EmaResult, TechnicalysisError> {
+) -> Result<EmaResult, TechalysisError> {
     let mut output = vec![0.0; data_array.len()];
     let ema_state = ema_into(data_array, period, alpha, &mut output)?;
     Ok(EmaResult {
@@ -67,14 +67,14 @@ pub fn ema_into(
     period: usize,
     alpha: Option<f64>,
     output: &mut [f64],
-) -> Result<EmaState, TechnicalysisError> {
+) -> Result<EmaState, TechalysisError> {
     let size = data_array.len();
     if period == 0 || size < period {
-        return Err(TechnicalysisError::InsufficientData);
+        return Err(TechalysisError::InsufficientData);
     }
 
     if period == 1 {
-        return Err(TechnicalysisError::BadParam(
+        return Err(TechalysisError::BadParam(
             "EMA period must be greater than 1".to_string(),
         ));
     }
@@ -88,7 +88,7 @@ pub fn ema_into(
     for idx in 0..period {
         let value = &data_array[idx];
         if value.is_nan() {
-            return Err(TechnicalysisError::UnexpectedNan);
+            return Err(TechalysisError::UnexpectedNan);
         }
         sum += value;
         output[idx] = f64::NAN;
@@ -98,7 +98,7 @@ pub fn ema_into(
 
     for idx in period..size {
         if data_array[idx].is_nan() {
-            return Err(TechnicalysisError::UnexpectedNan);
+            return Err(TechalysisError::UnexpectedNan);
         }
         ema_prev = ema_next_unchecked(data_array[idx], ema_prev, alpha);
         output[idx] = ema_prev;
@@ -116,19 +116,19 @@ pub fn ema_next(
     prev_ema: f64,
     period: usize,
     alpha: Option<f64>,
-) -> Result<EmaState, TechnicalysisError> {
+) -> Result<EmaState, TechalysisError> {
     let alpha = match alpha {
         Some(alpha) => alpha,
         None => period_to_alpha(period, None)?,
     };
     if period <= 1 {
-        return Err(TechnicalysisError::BadParam(
+        return Err(TechalysisError::BadParam(
             "Period must be greater than 1".to_string(),
         ));
     }
 
     if new_value.is_nan() || prev_ema.is_nan() || alpha.is_nan() {
-        return Err(TechnicalysisError::UnexpectedNan);
+        return Err(TechalysisError::UnexpectedNan);
     }
 
     let ema = ema_next_unchecked(new_value, prev_ema, alpha);

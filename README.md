@@ -1,4 +1,4 @@
-# technicalysis
+# techalysis
 Technical analysis library for financial market trading applications written in rust and available in python.
 
 

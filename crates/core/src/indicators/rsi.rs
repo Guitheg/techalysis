@@ -1,4 +1,4 @@
-use crate::errors::TechnicalysisError;
+use crate::errors::TechalysisError;
 use std::{f64, vec};
 
 #[derive(Debug)]
@@ -23,7 +23,7 @@ pub struct RsiState {
 }
 
 impl RsiState {
-    pub fn next(&self, new_value: f64) -> Result<RsiState, TechnicalysisError> {
+    pub fn next(&self, new_value: f64) -> Result<RsiState, TechalysisError> {
         rsi_next(
             new_value,
             self.prev_value,
@@ -46,7 +46,7 @@ fn calculate_rsi(avg_gain: f64, avg_loss: f64) -> f64 {
     100.0 - (100.0 / (1.0 + rs))
 }
 
-pub fn rsi(data_array: &[f64], window_size: usize) -> Result<RsiResult, TechnicalysisError> {
+pub fn rsi(data_array: &[f64], window_size: usize) -> Result<RsiResult, TechalysisError> {
     let size: usize = data_array.len();
     let mut output = vec![0.0; size];
     let rsi_state = rsi_into(data_array, window_size, output.as_mut_slice())?;
@@ -60,21 +60,21 @@ pub fn rsi_into(
     data_array: &[f64],
     period: usize,
     output_rsi: &mut [f64],
-) -> Result<RsiState, TechnicalysisError> {
+) -> Result<RsiState, TechalysisError> {
     let size = data_array.len();
     let period_as_float = period as f64;
     if period == 0 || period + 1 > size {
-        return Err(TechnicalysisError::InsufficientData);
+        return Err(TechalysisError::InsufficientData);
     }
 
     if period == 1 {
-        return Err(TechnicalysisError::BadParam(
+        return Err(TechalysisError::BadParam(
             "RSI window size must be greater than 1".to_string(),
         ));
     }
 
     if output_rsi.len() != size {
-        return Err(TechnicalysisError::BadParam(
+        return Err(TechalysisError::BadParam(
             "Output RSI length must match input data length".to_string(),
         ));
     }
@@ -85,7 +85,7 @@ pub fn rsi_into(
     for i in 1..=period {
         let delta = data_array[i] - data_array[i - 1];
         if delta.is_nan() {
-            return Err(TechnicalysisError::UnexpectedNan);
+            return Err(TechalysisError::UnexpectedNan);
         }
         if delta > 0.0 {
             avg_gain += delta;
@@ -101,7 +101,7 @@ pub fn rsi_into(
     for i in (period + 1)..size {
         let delta = data_array[i] - data_array[i - 1];
         if delta.is_nan() {
-            return Err(TechnicalysisError::UnexpectedNan);
+            return Err(TechalysisError::UnexpectedNan);
         }
         (output_rsi[i], avg_gain, avg_loss) = rsi_next_unchecked(
             data_array[i] - data_array[i - 1],
@@ -125,16 +125,16 @@ pub fn rsi_next(
     prev_avg_gain: f64,
     prev_avg_loss: f64,
     period: usize,
-) -> Result<RsiState, TechnicalysisError> {
+) -> Result<RsiState, TechalysisError> {
     if period <= 1 {
-        return Err(TechnicalysisError::BadParam(
+        return Err(TechalysisError::BadParam(
             "RSI period must be greater than 1".to_string(),
         ));
     }
 
     if new_value.is_nan() || prev_value.is_nan() || prev_avg_gain.is_nan() || prev_avg_loss.is_nan()
     {
-        return Err(TechnicalysisError::UnexpectedNan);
+        return Err(TechalysisError::UnexpectedNan);
     }
 
     let (rsi, avg_gain, avg_loss) = rsi_next_unchecked(

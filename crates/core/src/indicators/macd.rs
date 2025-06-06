@@ -1,5 +1,5 @@
 use super::ema::period_to_alpha;
-use crate::errors::TechnicalysisError;
+use crate::errors::TechalysisError;
 use crate::indicators::ema::ema_next_unchecked;
 
 #[derive(Debug)]
@@ -29,7 +29,7 @@ pub struct MacdState {
 }
 
 impl MacdState {
-    pub fn next(&self, new_value: f64) -> Result<MacdState, TechnicalysisError> {
+    pub fn next(&self, new_value: f64) -> Result<MacdState, TechalysisError> {
         macd_next(
             new_value,
             self.fast_ema,
@@ -47,7 +47,7 @@ pub fn macd(
     fast_period: usize,
     slow_period: usize,
     signal_period: usize,
-) -> Result<MacdResult, TechnicalysisError> {
+) -> Result<MacdResult, TechalysisError> {
     let size: usize = data_array.len();
 
     let mut output_macd = vec![0.0; size];
@@ -80,9 +80,9 @@ pub fn macd_into(
     output_macd: &mut [f64],
     output_signal: &mut [f64],
     output_histogram: &mut [f64],
-) -> Result<MacdState, TechnicalysisError> {
+) -> Result<MacdState, TechalysisError> {
     if fast_period >= slow_period {
-        return Err(TechnicalysisError::BadParam(
+        return Err(TechalysisError::BadParam(
             "Fast period must be less than slow period".to_string(),
         ));
     }
@@ -97,7 +97,7 @@ pub fn macd_into(
     let size: usize = data_array.len();
 
     if size < skip_period {
-        return Err(TechnicalysisError::InsufficientData);
+        return Err(TechalysisError::InsufficientData);
     }
 
     output_macd[..macd_start_idx].fill(f64::NAN);
@@ -117,7 +117,7 @@ pub fn macd_into(
         .skip(slow_ema_start_idx)
     {
         if value.is_nan() {
-            return Err(TechnicalysisError::UnexpectedNan);
+            return Err(TechalysisError::UnexpectedNan);
         }
         slow_sum += value;
     }
@@ -128,7 +128,7 @@ pub fn macd_into(
         .skip(fast_ema_start_idx)
     {
         if value.is_nan() {
-            return Err(TechnicalysisError::UnexpectedNan);
+            return Err(TechalysisError::UnexpectedNan);
         }
         slow_sum += value;
         fast_sum += value;
@@ -143,7 +143,7 @@ pub fn macd_into(
         .skip(signal_start_idx)
     {
         if value.is_nan() {
-            return Err(TechnicalysisError::UnexpectedNan);
+            return Err(TechalysisError::UnexpectedNan);
         }
         fast_ema = ema_next_unchecked(*value, fast_ema, fast_alpha);
         slow_ema = ema_next_unchecked(*value, slow_ema, slow_alpha);
@@ -160,7 +160,7 @@ pub fn macd_into(
     for idx in macd_start_idx + 1..size {
         let data = data_array[idx];
         if data.is_nan() {
-            return Err(TechnicalysisError::UnexpectedNan);
+            return Err(TechalysisError::UnexpectedNan);
         }
         (
             fast_ema,
@@ -199,9 +199,9 @@ pub fn macd_next(
     fast_period: usize,
     slow_period: usize,
     signal_period: usize,
-) -> Result<MacdState, TechnicalysisError> {
+) -> Result<MacdState, TechalysisError> {
     if fast_period >= slow_period {
-        return Err(TechnicalysisError::BadParam(
+        return Err(TechalysisError::BadParam(
             "Fast period must be less than slow period".to_string(),
         ));
     }
@@ -215,7 +215,7 @@ pub fn macd_next(
         || prev_slow_ema.is_nan()
         || prev_signal.is_nan()
     {
-        return Err(TechnicalysisError::UnexpectedNan);
+        return Err(TechalysisError::UnexpectedNan);
     }
 
     let (fast_ema, slow_ema, macd, signal, histogram) = macd_next_unchecked(

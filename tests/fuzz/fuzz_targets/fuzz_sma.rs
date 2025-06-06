@@ -1,7 +1,7 @@
 #![no_main]
 
 use libfuzzer_sys::fuzz_target;
-use technicalysis::indicators::sma::sma;
+use techalysis::indicators::sma::sma;
 
 fuzz_target!(|data: (Vec<f64>, u8)| {
     let (v, w) = data;

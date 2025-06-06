@@ -1,6 +1,6 @@
 use numpy::{IntoPyArray, PyArray1, PyArrayMethods, PyReadonlyArray1, PyUntypedArrayMethods};
 use pyo3::{exceptions::PyValueError, pyclass, pyfunction, pymethods, Py, PyResult, Python};
-use technicalysis::indicators::macd::{macd_into, macd_next as core_macd_next, MacdState};
+use techalysis::indicators::macd::{macd_into, macd_next as core_macd_next, MacdState};
 
 #[pyclass(name = "MacdState")]
 #[derive(Debug, Clone)]

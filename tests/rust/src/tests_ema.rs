@@ -2,7 +2,7 @@ use crate::helper::{
     assert::approx_eq_f64, generated::assert_vec_eq_gen_data, generated::load_generated_csv,
 };
 use proptest::{collection::vec, prelude::*};
-use technicalysis::{errors::TechnicalysisError, indicators::ema::ema};
+use techalysis::{errors::TechalysisError, indicators::ema::ema};
 
 #[test]
 fn generated() {
@@ -58,7 +58,7 @@ fn invalid_period_lower_bound() {
     let data = vec![1.0, 2.0, 3.0];
     let result = ema(&data, 0, None);
     assert!(result.is_err());
-    if let Err(TechnicalysisError::BadParam(msg)) = result {
+    if let Err(TechalysisError::BadParam(msg)) = result {
         assert!(msg.contains("between 2 and 100000"));
     }
 }
@@ -77,14 +77,14 @@ fn unexpected_nan() {
     let data = vec![1.0, 2.0, 3.0, f64::NAN];
     let result = ema(&data, 3, None);
     assert!(result.is_err());
-    assert!(matches!(result, Err(TechnicalysisError::UnexpectedNan)));
+    assert!(matches!(result, Err(TechalysisError::UnexpectedNan)));
 }
 
 #[test]
 fn insufficient_data() {
     let data = vec![1.0, 2.0, 3.0];
     let result = ema(&data, 4, None);
-    assert!(matches!(result, Err(TechnicalysisError::InsufficientData)));
+    assert!(matches!(result, Err(TechalysisError::InsufficientData)));
 }
 
 #[test]
@@ -93,7 +93,7 @@ fn period_1() {
     let period = 1;
     let result = ema(data, period, None);
     assert!(result.is_err());
-    assert!(matches!(result, Err(TechnicalysisError::BadParam(_))));
+    assert!(matches!(result, Err(TechalysisError::BadParam(_))));
 }
 
 proptest! {
@@ -108,7 +108,7 @@ proptest! {
 
         if has_nan {
             prop_assert!(out.is_err());
-            prop_assert!(matches!(out, Err(TechnicalysisError::UnexpectedNan)));
+            prop_assert!(matches!(out, Err(TechalysisError::UnexpectedNan)));
         } else {
             let out = out.unwrap().values;
 

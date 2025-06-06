@@ -1,5 +1,5 @@
 #[derive(Debug)]
-pub enum TechnicalysisError {
+pub enum TechalysisError {
     BadParam(String),
     InsufficientData,
     UnexpectedNan,
