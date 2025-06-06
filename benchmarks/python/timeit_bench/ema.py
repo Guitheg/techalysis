@@ -7,7 +7,7 @@ import talib
 
 def benchmark_ema():
     iterations = 50
-    data = np.random.random(10_000_000)
+    data = np.random.random(5_000_000)
     window_size = 100
     
     duration = timeit.timeit(lambda: tx.ema(data, window_size, 2), number=iterations)
