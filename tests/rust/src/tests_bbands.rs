@@ -1,11 +1,12 @@
 use crate::helper::{
-    assert::approx_eq_f64_custom,
+    assert::approx_eq_float,
     generated::{assert_vec_eq_gen_data, load_generated_csv},
 };
 
 use techalysis::{
     errors::TechalysisError,
     indicators::bbands::{bbands, BBandsMA},
+    types::Float,
 };
 
 #[test]
@@ -69,7 +70,7 @@ fn no_lookahead() {
 
     let new_state = result.state.next(input[last_idx]).unwrap();
     assert!(
-        approx_eq_f64_custom(new_state.upper, upper[last_idx], 1e-8),
+        approx_eq_float(new_state.upper, upper[last_idx], 1e-8),
         "Expected last value to be {}, but got {}",
         upper[last_idx],
         new_state.upper
@@ -99,14 +100,14 @@ fn no_lookahead_ema() {
 
     let new_state = result.state.next(input[last_idx]).unwrap();
     assert!(
-        approx_eq_f64_custom(new_state.upper, upper[last_idx], 1e-8),
+        approx_eq_float(new_state.upper, upper[last_idx], 1e-8),
         "Expected last value to be {}, but got {}",
         upper[last_idx],
         new_state.upper
     );
     let new_state = new_state.next(input[last_idx + 1]).unwrap();
     assert!(
-        approx_eq_f64_custom(new_state.upper, upper[last_idx + 1], 1e-8),
+        approx_eq_float(new_state.upper, upper[last_idx + 1], 1e-8),
         "Expected last value to be {}, but got {}",
         upper[last_idx],
         new_state.upper
@@ -118,10 +119,10 @@ fn all_zeros() {
     let n = 30;
     let input = vec![0.0; n];
     let result = bbands(&input, 10, 2.0, 2.0, BBandsMA::SMA).unwrap();
-    let expected = vec![f64::NAN; 9]
+    let expected = vec![Float::NAN; 9]
         .into_iter()
         .chain(vec![0.0; n - 9])
-        .collect::<Vec<f64>>();
+        .collect::<Vec<Float>>();
     assert_vec_eq_gen_data(&expected, &result.upper_band);
     assert_vec_eq_gen_data(&expected, &result.middle_band);
     assert_vec_eq_gen_data(&expected, &result.lower_band);
@@ -129,7 +130,7 @@ fn all_zeros() {
 
 #[test]
 fn linear_series_stability() {
-    let input: Vec<f64> = (0..50).map(|x| x as f64).collect();
+    let input: Vec<Float> = (0..50).map(|x| x as Float).collect();
     let result = bbands(&input, 5, 1.5, 1.5, BBandsMA::SMA).unwrap();
     for i in 5..result.middle_band.len() {
         let diff = result.middle_band[i] - result.middle_band[i - 1];
@@ -139,9 +140,9 @@ fn linear_series_stability() {
 
 #[test]
 fn breakout_detection() {
-    let mut input: Vec<f64> = vec![100.0; 20];
+    let mut input: Vec<Float> = vec![100.0; 20];
     for i in 0..20 {
-        input[i] += i as f64;
+        input[i] += i as Float;
     }
     input.push(200.0); // sudden spike
     let len = input.len();
@@ -154,7 +155,7 @@ fn breakout_detection() {
 #[test]
 fn nan_input_err() {
     let mut input = vec![1.0, 2.0, 3.0];
-    input.push(f64::NAN);
+    input.push(Float::NAN);
     let output = bbands(&input, 3, 2.0, 2.0, BBandsMA::SMA);
     assert!(output.is_err());
     assert!(matches!(output, Err(TechalysisError::DataNonFinite(_))));
@@ -186,7 +187,7 @@ fn insufficient_data_err() {
 
 #[test]
 fn unexpected_nan_err() {
-    let data = vec![1.0, 2.0, 3.0, f64::NAN, 5.0, 6.0, 7.0];
+    let data = vec![1.0, 2.0, 3.0, Float::NAN, 5.0, 6.0, 7.0];
     let result = bbands(&data, 3, 2.0, 2.0, BBandsMA::SMA);
     assert!(result.is_err());
     assert!(matches!(result, Err(TechalysisError::DataNonFinite(_))));
@@ -194,7 +195,7 @@ fn unexpected_nan_err() {
 
 #[test]
 fn non_finite_err() {
-    let data = vec![1.0, 2.0, 3.0, f64::INFINITY, 5.0, 6.0, 7.0];
+    let data = vec![1.0, 2.0, 3.0, Float::INFINITY, 5.0, 6.0, 7.0];
     let result = bbands(&data, 3, 2.0, 2.0, BBandsMA::SMA);
     assert!(result.is_err());
     assert!(matches!(result, Err(TechalysisError::DataNonFinite(_))));

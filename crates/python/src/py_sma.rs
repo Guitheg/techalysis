@@ -2,21 +2,22 @@ use numpy::{IntoPyArray, PyArray1, PyArrayMethods, PyReadonlyArray1, PyUntypedAr
 use pyo3::pymethods;
 use pyo3::{exceptions::PyValueError, pyclass, pyfunction, Py, PyResult, Python};
 use techalysis::indicators::sma::{sma_into, SmaState};
+use techalysis::types::Float;
 
 #[pyclass(name = "SmaState")]
 #[derive(Debug, Clone)]
 pub struct PySmaState {
     #[pyo3(get)]
-    pub sma: f64,
+    pub sma: Float,
     #[pyo3(get)]
     pub period: usize,
     #[pyo3(get)]
-    pub window: Vec<f64>,
+    pub window: Vec<Float>,
 }
 #[pymethods]
 impl PySmaState {
     #[new]
-    pub fn new(sma: f64, period: usize, window: Vec<f64>) -> Self {
+    pub fn new(sma: Float, period: usize, window: Vec<Float>) -> Self {
         PySmaState {
             sma,
             period,
@@ -55,10 +56,10 @@ impl From<PySmaState> for SmaState {
 #[pyfunction(signature = (data, period = 14, release_gil = false))]
 pub(crate) fn sma(
     py: Python,
-    data: PyReadonlyArray1<f64>,
+    data: PyReadonlyArray1<Float>,
     period: usize,
     release_gil: bool,
-) -> PyResult<(Py<PyArray1<f64>>, PySmaState)> {
+) -> PyResult<(Py<PyArray1<Float>>, PySmaState)> {
     let len = data.len();
     let slice = data.as_slice()?;
 
@@ -70,7 +71,7 @@ pub(crate) fn sma(
 
         Ok((output.into_pyarray(py).into(), state.into()))
     } else {
-        let py_array_out = PyArray1::<f64>::zeros(py, [slice.len()], false);
+        let py_array_out = PyArray1::<Float>::zeros(py, [slice.len()], false);
         let py_array_ptr = unsafe { py_array_out.as_slice_mut()? };
 
         let state = sma_into(slice, period, py_array_ptr)
@@ -81,7 +82,7 @@ pub(crate) fn sma(
 }
 
 #[pyfunction(signature = (new_value, sma_state))]
-pub(crate) fn sma_next(new_value: f64, sma_state: PySmaState) -> PyResult<PySmaState> {
+pub(crate) fn sma_next(new_value: Float, sma_state: PySmaState) -> PyResult<PySmaState> {
     let sma_state: SmaState = sma_state.into();
     let sma_state = sma_state
         .next(new_value)

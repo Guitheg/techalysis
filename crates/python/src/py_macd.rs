@@ -1,20 +1,21 @@
 use numpy::{IntoPyArray, PyArray1, PyArrayMethods, PyReadonlyArray1, PyUntypedArrayMethods};
 use pyo3::{exceptions::PyValueError, pyclass, pyfunction, pymethods, Py, PyResult, Python};
 use techalysis::indicators::macd::{macd_into, macd_next as core_macd_next, MacdState};
+use techalysis::types::Float;
 
 #[pyclass(name = "MacdState")]
 #[derive(Debug, Clone)]
 pub struct PyMacdState {
     #[pyo3(get)]
-    pub macd: f64,
+    pub macd: Float,
     #[pyo3(get)]
-    pub signal: f64,
+    pub signal: Float,
     #[pyo3(get)]
-    pub histogram: f64,
+    pub histogram: Float,
     #[pyo3(get)]
-    pub fast_ema: f64,
+    pub fast_ema: Float,
     #[pyo3(get)]
-    pub slow_ema: f64,
+    pub slow_ema: Float,
     #[pyo3(get)]
     pub fast_period: usize,
     #[pyo3(get)]
@@ -26,11 +27,11 @@ pub struct PyMacdState {
 impl PyMacdState {
     #[new]
     pub fn new(
-        macd: f64,
-        signal: f64,
-        histogram: f64,
-        fast_ema: f64,
-        slow_ema: f64,
+        macd: Float,
+        signal: Float,
+        histogram: Float,
+        fast_ema: Float,
+        slow_ema: Float,
         fast_period: usize,
         slow_period: usize,
         signal_period: usize,
@@ -76,15 +77,15 @@ impl From<MacdState> for PyMacdState {
 #[pyfunction(signature = (data, fast_period = 12, slow_period = 26, signal_period = 9, release_gil = false))]
 pub(crate) fn macd(
     py: Python,
-    data: PyReadonlyArray1<f64>,
+    data: PyReadonlyArray1<Float>,
     fast_period: usize,
     slow_period: usize,
     signal_period: usize,
     release_gil: bool,
 ) -> PyResult<(
-    Py<PyArray1<f64>>,
-    Py<PyArray1<f64>>,
-    Py<PyArray1<f64>>,
+    Py<PyArray1<Float>>,
+    Py<PyArray1<Float>>,
+    Py<PyArray1<Float>>,
     PyMacdState,
 )> {
     let len = data.len();
@@ -116,13 +117,13 @@ pub(crate) fn macd(
             macd_state.into(),
         ));
     } else {
-        let py_array_macd = PyArray1::<f64>::zeros(py, [len], false);
+        let py_array_macd = PyArray1::<Float>::zeros(py, [len], false);
         let output_macd_data = unsafe { py_array_macd.as_slice_mut()? };
 
-        let py_array_signal = PyArray1::<f64>::zeros(py, [len], false);
+        let py_array_signal = PyArray1::<Float>::zeros(py, [len], false);
         let output_signal_data = unsafe { py_array_signal.as_slice_mut()? };
 
-        let py_array_histogram = PyArray1::<f64>::zeros(py, [len], false);
+        let py_array_histogram = PyArray1::<Float>::zeros(py, [len], false);
         let output_histogram_data = unsafe { py_array_histogram.as_slice_mut()? };
 
         let macd_state = macd_into(
@@ -146,7 +147,7 @@ pub(crate) fn macd(
 }
 
 #[pyfunction(signature = (new_value, macd_state,))]
-pub(crate) fn macd_next(new_value: f64, macd_state: PyMacdState) -> PyResult<PyMacdState> {
+pub(crate) fn macd_next(new_value: Float, macd_state: PyMacdState) -> PyResult<PyMacdState> {
     let state = core_macd_next(
         new_value,
         macd_state.fast_ema,

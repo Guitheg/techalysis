@@ -1,15 +1,16 @@
 use crate::errors::TechalysisError;
 use crate::indicators::sma::init_sma_unchecked;
+use crate::types::Float;
 
-const DEFAULT_SMOOTHING: f64 = 2.0;
+const DEFAULT_SMOOTHING: Float = 2.0;
 
 #[derive(Debug)]
 pub struct EmaResult {
-    pub values: Vec<f64>,
+    pub values: Vec<Float>,
     pub state: EmaState,
 }
 
-impl From<EmaResult> for Vec<f64> {
+impl From<EmaResult> for Vec<Float> {
     fn from(result: EmaResult) -> Self {
         result.values
     }
@@ -17,18 +18,18 @@ impl From<EmaResult> for Vec<f64> {
 
 #[derive(Debug, Clone, Copy)]
 pub struct EmaState {
-    pub ema: f64,
+    pub ema: Float,
     pub period: usize,
-    pub alpha: f64,
+    pub alpha: Float,
 }
 
 impl EmaState {
-    pub fn next(&self, new_value: f64) -> Result<EmaState, TechalysisError> {
+    pub fn next(&self, new_value: Float) -> Result<EmaState, TechalysisError> {
         ema_next(new_value, self.ema, self.period, Some(self.alpha))
     }
 }
 
-pub fn period_to_alpha(period: usize, smoothing: Option<f64>) -> Result<f64, TechalysisError> {
+pub fn period_to_alpha(period: usize, smoothing: Option<Float>) -> Result<Float, TechalysisError> {
     if period == 0 {
         return Err(TechalysisError::BadParam(
             "Period must be greater than 0".to_string(),
@@ -47,13 +48,13 @@ pub fn period_to_alpha(period: usize, smoothing: Option<f64>) -> Result<f64, Tec
         None => DEFAULT_SMOOTHING,
     };
 
-    Ok(smoothing / (period as f64 + 1.0))
+    Ok(smoothing / (period as Float + 1.0))
 }
 
 pub fn ema(
-    data_array: &[f64],
+    data_array: &[Float],
     period: usize,
-    alpha: Option<f64>,
+    alpha: Option<Float>,
 ) -> Result<EmaResult, TechalysisError> {
     let mut output = vec![0.0; data_array.len()];
     let ema_state = ema_into(data_array, period, alpha, &mut output)?;
@@ -64,13 +65,13 @@ pub fn ema(
 }
 
 pub fn ema_into(
-    data: &[f64],
+    data: &[Float],
     period: usize,
-    alpha: Option<f64>,
-    output: &mut [f64],
+    alpha: Option<Float>,
+    output: &mut [Float],
 ) -> Result<EmaState, TechalysisError> {
     let len = data.len();
-    let inv_period = 1.0 / period as f64;
+    let inv_period = 1.0 / period as Float;
     if period == 0 || len < period {
         return Err(TechalysisError::InsufficientData);
     }
@@ -106,10 +107,10 @@ pub fn ema_into(
 }
 
 pub fn ema_next(
-    new_value: f64,
-    prev_ema: f64,
+    new_value: Float,
+    prev_ema: Float,
     period: usize,
-    alpha: Option<f64>,
+    alpha: Option<Float>,
 ) -> Result<EmaState, TechalysisError> {
     let alpha = match alpha {
         Some(alpha) => alpha,
@@ -143,6 +144,6 @@ pub fn ema_next(
 }
 
 #[inline(always)]
-pub fn ema_next_unchecked(new_value: f64, prev_ema: f64, alpha: f64) -> f64 {
+pub fn ema_next_unchecked(new_value: Float, prev_ema: Float, alpha: Float) -> Float {
     new_value * alpha + prev_ema * (1.0 - alpha)
 }

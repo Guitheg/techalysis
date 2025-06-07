@@ -1,13 +1,14 @@
 use crate::errors::TechalysisError;
-use std::{collections::VecDeque, f64};
+use crate::types::Float;
+use std::collections::VecDeque;
 
 #[derive(Debug)]
 pub struct SmaResult {
-    pub values: Vec<f64>,
+    pub values: Vec<Float>,
     pub state: SmaState,
 }
 
-impl From<SmaResult> for Vec<f64> {
+impl From<SmaResult> for Vec<Float> {
     fn from(result: SmaResult) -> Self {
         result.values
     }
@@ -15,18 +16,18 @@ impl From<SmaResult> for Vec<f64> {
 
 #[derive(Debug, Clone)]
 pub struct SmaState {
-    pub sma: f64,
+    pub sma: Float,
     pub period: usize,
-    pub window: VecDeque<f64>,
+    pub window: VecDeque<Float>,
 }
 
 impl SmaState {
-    pub fn next(&self, new_value: f64) -> Result<SmaState, TechalysisError> {
+    pub fn next(&self, new_value: Float) -> Result<SmaState, TechalysisError> {
         sma_next(new_value, self.sma, &self.window, self.period)
     }
 }
 
-pub fn sma(data_array: &[f64], period: usize) -> Result<SmaResult, TechalysisError> {
+pub fn sma(data_array: &[Float], period: usize) -> Result<SmaResult, TechalysisError> {
     let size = data_array.len();
     let mut output = vec![0.0; size];
     let sma_state = sma_into(data_array, period, &mut output)?;
@@ -37,12 +38,12 @@ pub fn sma(data_array: &[f64], period: usize) -> Result<SmaResult, TechalysisErr
 }
 
 pub fn sma_into(
-    data: &[f64],
+    data: &[Float],
     period: usize,
-    output: &mut [f64],
+    output: &mut [Float],
 ) -> Result<SmaState, TechalysisError> {
     let len = data.len();
-    let inv_period = 1.0 / (period as f64);
+    let inv_period = 1.0 / (period as Float);
     if period == 0 || period > len {
         return Err(TechalysisError::InsufficientData);
     }
@@ -79,9 +80,9 @@ pub fn sma_into(
 }
 
 pub fn sma_next(
-    new_value: f64,
-    prev_sma: f64,
-    window: &VecDeque<f64>,
+    new_value: Float,
+    prev_sma: Float,
+    window: &VecDeque<Float>,
     period: usize,
 ) -> Result<SmaState, TechalysisError> {
     if period <= 1 {
@@ -121,25 +122,30 @@ pub fn sma_next(
     window.push_back(new_value);
 
     Ok(SmaState {
-        sma: sma_next_unchecked(new_value, old_value, prev_sma, 1.0 / (period as f64)),
+        sma: sma_next_unchecked(new_value, old_value, prev_sma, 1.0 / (period as Float)),
         period,
         window,
     })
 }
 
 #[inline(always)]
-pub fn sma_next_unchecked(new_value: f64, old_value: f64, prev_sma: f64, inv_period: f64) -> f64 {
+pub fn sma_next_unchecked(
+    new_value: Float,
+    old_value: Float,
+    prev_sma: Float,
+    inv_period: Float,
+) -> Float {
     prev_sma + (new_value - old_value) * inv_period
 }
 
 #[inline(always)]
 pub(crate) fn init_sma_unchecked(
-    data_array: &[f64],
+    data_array: &[Float],
     period: usize,
-    inv_period: f64,
-    output: &mut [f64],
-) -> Result<f64, TechalysisError> {
-    let mut sum: f64 = 0.0;
+    inv_period: Float,
+    output: &mut [Float],
+) -> Result<Float, TechalysisError> {
+    let mut sum: Float = 0.0;
     for idx in 0..period {
         let value = &data_array[idx];
         if !value.is_finite() {
@@ -149,7 +155,7 @@ pub(crate) fn init_sma_unchecked(
         } else {
             sum += value;
         }
-        output[idx] = f64::NAN;
+        output[idx] = Float::NAN;
     }
     output[period - 1] = sum * inv_period;
     Ok(sum)

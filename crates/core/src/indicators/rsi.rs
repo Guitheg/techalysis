@@ -1,13 +1,13 @@
 use crate::errors::TechalysisError;
-use std::{f64, vec};
+use crate::types::Float;
 
 #[derive(Debug)]
 pub struct RsiResult {
-    pub values: Vec<f64>,
+    pub values: Vec<Float>,
     pub state: RsiState,
 }
 
-impl From<RsiResult> for Vec<f64> {
+impl From<RsiResult> for Vec<Float> {
     fn from(result: RsiResult) -> Self {
         result.values
     }
@@ -15,15 +15,15 @@ impl From<RsiResult> for Vec<f64> {
 
 #[derive(Debug, Clone, Copy)]
 pub struct RsiState {
-    pub rsi: f64,
-    pub prev_value: f64,
-    pub avg_gain: f64,
-    pub avg_loss: f64,
+    pub rsi: Float,
+    pub prev_value: Float,
+    pub avg_gain: Float,
+    pub avg_loss: Float,
     pub period: usize,
 }
 
 impl RsiState {
-    pub fn next(&self, new_value: f64) -> Result<RsiState, TechalysisError> {
+    pub fn next(&self, new_value: Float) -> Result<RsiState, TechalysisError> {
         rsi_next(
             new_value,
             self.prev_value,
@@ -35,7 +35,7 @@ impl RsiState {
 }
 
 #[inline(always)]
-fn calculate_rsi(avg_gain: f64, avg_loss: f64) -> f64 {
+fn calculate_rsi(avg_gain: Float, avg_loss: Float) -> Float {
     if avg_loss == 0.0 {
         if avg_gain == 0.0 {
             return 50.0;
@@ -46,7 +46,7 @@ fn calculate_rsi(avg_gain: f64, avg_loss: f64) -> f64 {
     100.0 - (100.0 / (1.0 + rs))
 }
 
-pub fn rsi(data_array: &[f64], window_size: usize) -> Result<RsiResult, TechalysisError> {
+pub fn rsi(data_array: &[Float], window_size: usize) -> Result<RsiResult, TechalysisError> {
     let size: usize = data_array.len();
     let mut output = vec![0.0; size];
     let rsi_state = rsi_into(data_array, window_size, output.as_mut_slice())?;
@@ -57,12 +57,12 @@ pub fn rsi(data_array: &[f64], window_size: usize) -> Result<RsiResult, Techalys
 }
 
 pub fn rsi_into(
-    data: &[f64],
+    data: &[Float],
     period: usize,
-    output_rsi: &mut [f64],
+    output_rsi: &mut [Float],
 ) -> Result<RsiState, TechalysisError> {
     let len = data.len();
-    let period_as_float = period as f64;
+    let period_as_float = period as Float;
     if period == 0 || period + 1 > len {
         return Err(TechalysisError::InsufficientData);
     }
@@ -79,9 +79,9 @@ pub fn rsi_into(
         ));
     }
 
-    let mut avg_gain: f64 = 0.0;
-    let mut avg_loss: f64 = 0.0;
-    output_rsi[0] = f64::NAN;
+    let mut avg_gain: Float = 0.0;
+    let mut avg_loss: Float = 0.0;
+    output_rsi[0] = Float::NAN;
     for i in 1..=period {
         let delta = data[i] - data[i - 1];
         if !delta.is_finite() {
@@ -95,7 +95,7 @@ pub fn rsi_into(
         } else {
             avg_loss -= delta;
         }
-        output_rsi[i] = f64::NAN;
+        output_rsi[i] = Float::NAN;
     }
     avg_gain /= period_as_float;
     avg_loss /= period_as_float;
@@ -122,10 +122,10 @@ pub fn rsi_into(
 }
 
 pub fn rsi_next(
-    new_value: f64,
-    prev_value: f64,
-    prev_avg_gain: f64,
-    prev_avg_loss: f64,
+    new_value: Float,
+    prev_value: Float,
+    prev_avg_gain: Float,
+    prev_avg_loss: Float,
     period: usize,
 ) -> Result<RsiState, TechalysisError> {
     if period <= 1 {
@@ -159,7 +159,7 @@ pub fn rsi_next(
         new_value - prev_value,
         prev_avg_gain,
         prev_avg_loss,
-        period as f64,
+        period as Float,
     );
     Ok(RsiState {
         rsi,
@@ -172,11 +172,11 @@ pub fn rsi_next(
 
 #[inline(always)]
 pub fn rsi_next_unchecked(
-    delta: f64,
-    prev_avg_gain: f64,
-    prev_avg_loss: f64,
-    period: f64,
-) -> (f64, f64, f64) {
+    delta: Float,
+    prev_avg_gain: Float,
+    prev_avg_loss: Float,
+    period: Float,
+) -> (Float, Float, Float) {
     let k = 1.0 / period;
     let one_minus_k = 1.0 - k;
     let (avg_gain, avg_loss) = if delta > 0.0 {

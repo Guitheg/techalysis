@@ -1,11 +1,10 @@
 use crate::assert_vec_float_eq;
 use crate::helper::{
-    assert::{approx_eq_f64_custom, assert_vec_close},
+    assert::{approx_eq_float, assert_vec_close},
     generated::{assert_vec_eq_gen_data, load_generated_csv},
 };
 use proptest::{prop_assert, prop_assert_eq, proptest};
-use techalysis::errors::TechalysisError;
-use techalysis::indicators::rsi::rsi;
+use techalysis::{errors::TechalysisError, indicators::rsi::rsi, types::Float};
 
 #[test]
 fn generated() {
@@ -38,13 +37,13 @@ fn no_lookahead() {
     assert_vec_eq_gen_data(&output.values[0..len - 1], &result_minus_1.values);
     let next_state = result_minus_1.state.next(last_input).unwrap();
     assert!(
-        approx_eq_f64_custom(next_state.rsi, last_expected, 1e-8),
+        approx_eq_float(next_state.rsi, last_expected, 1e-8),
         "Expected last value to be {}, but got {}",
         expected[len - 1],
         next_state.rsi
     );
     assert!(
-        approx_eq_f64_custom(next_state.rsi, output.state.rsi, 1e-8),
+        approx_eq_float(next_state.rsi, output.state.rsi, 1e-8),
         "Expected last value to be {}, but got {}",
         output.state.rsi,
         next_state.rsi
@@ -53,7 +52,7 @@ fn no_lookahead() {
 
 #[test]
 fn empty_input() {
-    let data: [f64; 0] = [];
+    let data: [Float; 0] = [];
     let period = 14;
     let result = rsi(&data, period);
     assert!(result.is_err());
@@ -91,7 +90,7 @@ fn period_1() {
 fn min_data_for_one_value_mixed() {
     let data = &[10.0, 11.0, 10.0];
     let period = 2;
-    let expected = vec![f64::NAN, f64::NAN, 50.0];
+    let expected = vec![Float::NAN, Float::NAN, 50.0];
     let result = rsi(data, period).unwrap().values;
     assert_vec_close(&result, &expected);
 }
@@ -100,7 +99,7 @@ fn min_data_for_one_value_mixed() {
 fn alternating_up_down() {
     let data = &[10.0, 12.0, 10.0, 12.0, 10.0, 12.0];
     let period = 2;
-    let expected = vec![f64::NAN, f64::NAN, 50.0, 75.0, 37.5, 68.75];
+    let expected = vec![Float::NAN, Float::NAN, 50.0, 75.0, 37.5, 68.75];
     let result = rsi(data, period).unwrap().values;
     assert_vec_close(&result, &expected);
 }
@@ -112,9 +111,9 @@ fn all_values_approximatelly_same() {
     ];
     let period = 3;
     let expected = vec![
-        f64::NAN,
-        f64::NAN,
-        f64::NAN,
+        Float::NAN,
+        Float::NAN,
+        Float::NAN,
         60.0,
         46.15384615,
         49.64028777,
@@ -133,7 +132,7 @@ fn all_values_approximatelly_same() {
 fn all_values_same() {
     let data = &[10.0, 10.0, 10.0, 10.0, 10.0];
     let period = 3;
-    let expected = vec![f64::NAN, f64::NAN, f64::NAN, 50.0, 50.0];
+    let expected = vec![Float::NAN, Float::NAN, Float::NAN, 50.0, 50.0];
     let result = rsi(data, period).unwrap().values;
     assert_vec_close(&result, &expected);
 }
@@ -142,7 +141,7 @@ fn all_values_same() {
 fn all_increasing() {
     let data = &[1.0, 2.0, 3.0, 4.0, 5.0];
     let period = 3;
-    let expected = vec![f64::NAN, f64::NAN, f64::NAN, 100.0, 100.0];
+    let expected = vec![Float::NAN, Float::NAN, Float::NAN, 100.0, 100.0];
     let result = rsi(data, period).unwrap().values;
     assert_vec_close(&result, &expected);
 }
@@ -151,14 +150,14 @@ fn all_increasing() {
 fn all_decreasing() {
     let data = &[5.0, 4.0, 3.0, 2.0, 1.0];
     let period = 3;
-    let expected = vec![f64::NAN, f64::NAN, f64::NAN, 0.0, 0.0];
+    let expected = vec![Float::NAN, Float::NAN, Float::NAN, 0.0, 0.0];
     let result = rsi(data, period).unwrap().values;
     assert_vec_close(&result, &expected);
 }
 
 #[test]
 fn input_with_nans() {
-    let data = &[1.0, 2.0, f64::NAN, 4.0, 5.0];
+    let data = &[1.0, 2.0, Float::NAN, 4.0, 5.0];
     let period = 2;
     let result = rsi(data, period);
     assert!(result.is_err());
@@ -176,7 +175,7 @@ fn period_zero() {
 
 #[test]
 fn unexpected_nan_err() {
-    let data = vec![1.0, 2.0, 3.0, f64::NAN, 5.0, 6.0, 7.0];
+    let data = vec![1.0, 2.0, 3.0, Float::NAN, 5.0, 6.0, 7.0];
     let result = rsi(&data, 3);
     assert!(result.is_err());
     assert!(matches!(result, Err(TechalysisError::DataNonFinite(_))));
@@ -184,7 +183,7 @@ fn unexpected_nan_err() {
 
 #[test]
 fn non_finite_err() {
-    let data = vec![1.0, 2.0, 3.0, f64::INFINITY, 5.0, 6.0, 7.0];
+    let data = vec![1.0, 2.0, 3.0, Float::INFINITY, 5.0, 6.0, 7.0];
     let result = rsi(&data, 3);
     assert!(result.is_err());
     assert!(matches!(result, Err(TechalysisError::DataNonFinite(_))));

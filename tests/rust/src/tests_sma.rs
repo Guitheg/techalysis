@@ -1,11 +1,10 @@
 use crate::helper::{
-    assert::{approx_eq_f64, approx_eq_f64_custom},
+    assert::approx_eq_float,
     generated::{assert_vec_eq_gen_data, load_generated_csv},
 };
 
 use proptest::{collection::vec, prelude::*};
-use techalysis::errors::TechalysisError;
-use techalysis::indicators::sma::sma;
+use techalysis::{errors::TechalysisError, indicators::sma::sma, types::Float};
 
 #[test]
 fn generated() {
@@ -37,7 +36,7 @@ fn no_lookahead() {
     );
     let new_state = new_output.unwrap();
     assert!(
-        approx_eq_f64_custom(new_state.sma, expected[expected.len() - 1], 1e-8),
+        approx_eq_float(new_state.sma, expected[expected.len() - 1], 1e-8),
         "Expected last value to be {}, but got {}",
         expected[expected.len() - 1],
         new_state.sma
@@ -46,8 +45,13 @@ fn no_lookahead() {
 
 #[test]
 fn extremum_value_injection_without_panic() {
-    use std::f64;
-    let data = vec![f64::MAX / 2.0, f64::MAX / 2.0, f64::MIN_POSITIVE, -0.0, 0.0];
+    let data = vec![
+        Float::MAX / 2.0,
+        Float::MAX / 2.0,
+        Float::MIN_POSITIVE,
+        -0.0,
+        0.0,
+    ];
     let out = sma(&data, 2)
         .expect("sma must not error on finite extremes")
         .values;
@@ -82,7 +86,7 @@ fn period_higher_bound() {
 
 #[test]
 fn unexpected_nan_err() {
-    let data = vec![1.0, 2.0, 3.0, f64::NAN, 1.0, 2.0, 3.0];
+    let data = vec![1.0, 2.0, 3.0, Float::NAN, 1.0, 2.0, 3.0];
     let result = sma(&data, 3);
     assert!(result.is_err());
     assert!(matches!(result, Err(TechalysisError::DataNonFinite(_))));
@@ -90,7 +94,7 @@ fn unexpected_nan_err() {
 
 #[test]
 fn non_finite_err() {
-    let data = vec![1.0, 2.0, f64::INFINITY, 1.0, 2.0, 3.0];
+    let data = vec![1.0, 2.0, Float::INFINITY, 1.0, 2.0, 3.0];
     let result = sma(&data, 3);
     assert!(
         result.is_err(),
@@ -116,15 +120,15 @@ fn period_1() {
     assert!(matches!(result, Err(TechalysisError::BadParam(_))));
 }
 
-fn slow_sma(data: &[f64], window: usize) -> Vec<f64> {
-    let mut out = vec![f64::NAN; data.len()];
+fn slow_sma(data: &[Float], window: usize) -> Vec<Float> {
+    let mut out = vec![Float::NAN; data.len()];
     if window == 0 || window > data.len() {
         return out;
     }
 
     for i in window - 1..data.len() {
         let slice = &data[i + 1 - window..=i];
-        out[i] = slice.iter().sum::<f64>() / window as f64;
+        out[i] = slice.iter().sum::<Float>() / window as Float;
     }
     out
 }
@@ -153,7 +157,7 @@ proptest! {
                 if o.is_nan() || expect.is_nan() {
                     prop_assert!(o.is_nan() && expect.is_nan());
                 } else {
-                    prop_assert!(approx_eq_f64(*o, expect));
+                    prop_assert!(approx_eq_float(*o, expect, 1e-8));
                 }
             }
 
@@ -166,7 +170,7 @@ proptest! {
                 if o.is_nan() {
                     prop_assert!(scaled.is_nan());
                 } else {
-                    prop_assert!(approx_eq_f64(scaled, o * k));
+                    prop_assert!(approx_eq_float(scaled, o * k, 1e-8));
                 }
             }
         }

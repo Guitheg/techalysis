@@ -1,28 +1,29 @@
 use numpy::{IntoPyArray, PyArray1, PyArrayMethods, PyReadonlyArray1, PyUntypedArrayMethods};
 use pyo3::{exceptions::PyValueError, pyclass, pyfunction, pymethods, Py, PyResult, Python};
 use techalysis::indicators::bbands::{bbands_into, BBandsMA, BBandsState};
+use techalysis::types::Float;
 
 #[pyclass(name = "BBandsState")]
 #[derive(Debug, Clone)]
 pub struct PyBBandsState {
     #[pyo3(get)]
-    pub upper: f64,
+    pub upper: Float,
     #[pyo3(get)]
-    pub middle: f64,
+    pub middle: Float,
     #[pyo3(get)]
-    pub lower: f64,
+    pub lower: Float,
     #[pyo3(get)]
-    pub mean_sma: f64,
+    pub mean_sma: Float,
     #[pyo3(get)]
-    pub mean_sq: f64,
+    pub mean_sq: Float,
     #[pyo3(get)]
-    pub window: Vec<f64>,
+    pub window: Vec<Float>,
     #[pyo3(get)]
     pub period: usize,
     #[pyo3(get)]
-    pub std_up: f64,
+    pub std_up: Float,
     #[pyo3(get)]
-    pub std_down: f64,
+    pub std_down: Float,
     #[pyo3(get)]
     pub ma_type: PyBBandsMA,
 }
@@ -38,15 +39,15 @@ pub enum PyBBandsMA {
 impl PyBBandsState {
     #[new]
     pub fn new(
-        upper: f64,
-        middle: f64,
-        lower: f64,
-        mean_sma: f64,
-        mean_sq: f64,
-        window: Vec<f64>,
+        upper: Float,
+        middle: Float,
+        lower: Float,
+        mean_sma: Float,
+        mean_sq: Float,
+        window: Vec<Float>,
         period: usize,
-        std_up: f64,
-        std_down: f64,
+        std_up: Float,
+        std_down: Float,
         ma_type: PyBBandsMA,
     ) -> Self {
         PyBBandsState {
@@ -129,16 +130,16 @@ impl From<BBandsMA> for PyBBandsMA {
 #[pyfunction(signature = (data, period = 20, std_up = 2.0, std_down = 2.0, ma_type = PyBBandsMA::SMA, release_gil = false))]
 pub(crate) fn bbands(
     py: Python,
-    data: PyReadonlyArray1<f64>,
+    data: PyReadonlyArray1<Float>,
     period: usize,
-    std_up: f64,
-    std_down: f64,
+    std_up: Float,
+    std_down: Float,
     ma_type: PyBBandsMA,
     release_gil: bool,
 ) -> PyResult<(
-    Py<PyArray1<f64>>,
-    Py<PyArray1<f64>>,
-    Py<PyArray1<f64>>,
+    Py<PyArray1<Float>>,
+    Py<PyArray1<Float>>,
+    Py<PyArray1<Float>>,
     PyBBandsState,
 )> {
     let len = data.len();
@@ -171,13 +172,13 @@ pub(crate) fn bbands(
             state.into(),
         ))
     } else {
-        let py_out_upper = PyArray1::<f64>::zeros(py, [len], false);
+        let py_out_upper = PyArray1::<Float>::zeros(py, [len], false);
         let py_out_upper_slice = unsafe { py_out_upper.as_slice_mut()? };
 
-        let py_out_middle = PyArray1::<f64>::zeros(py, [len], false);
+        let py_out_middle = PyArray1::<Float>::zeros(py, [len], false);
         let py_out_middle_slice = unsafe { py_out_middle.as_slice_mut()? };
 
-        let py_out_lower = PyArray1::<f64>::zeros(py, [len], false);
+        let py_out_lower = PyArray1::<Float>::zeros(py, [len], false);
         let py_out_lower_slice = unsafe { py_out_lower.as_slice_mut()? };
 
         let state = bbands_into(
@@ -202,7 +203,10 @@ pub(crate) fn bbands(
 }
 
 #[pyfunction(signature = (new_value, bbands_state))]
-pub(crate) fn bbands_next(new_value: f64, bbands_state: PyBBandsState) -> PyResult<PyBBandsState> {
+pub(crate) fn bbands_next(
+    new_value: Float,
+    bbands_state: PyBBandsState,
+) -> PyResult<PyBBandsState> {
     let bbands_state: BBandsState = bbands_state.into();
     let bbands_state = bbands_state
         .next(new_value)

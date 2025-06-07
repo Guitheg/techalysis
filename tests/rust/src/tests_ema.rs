@@ -1,11 +1,12 @@
 use crate::helper::{
-    assert::{approx_eq_f64, approx_eq_f64_custom},
+    assert::approx_eq_float,
     generated::{assert_vec_eq_gen_data, load_generated_csv},
 };
 use proptest::{collection::vec, prelude::*};
 use techalysis::{
     errors::TechalysisError,
     indicators::ema::{ema, period_to_alpha},
+    types::Float,
 };
 
 #[test]
@@ -33,7 +34,7 @@ fn no_lookahead() {
     assert!(new_output.is_ok());
     let new_state = new_output.unwrap();
     assert!(
-        approx_eq_f64(new_state.ema, expected[expected.len() - 1]),
+        approx_eq_float(new_state.ema, expected[expected.len() - 1], 1e-8),
         "Expected last value to be {}, but got {}",
         expected[expected.len() - 1],
         new_state.ema
@@ -42,8 +43,13 @@ fn no_lookahead() {
 
 #[test]
 fn extremum_value_injection_without_panic() {
-    use std::f64;
-    let data = vec![f64::MAX / 2.0, f64::MAX / 2.0, f64::MIN_POSITIVE, -0.0, 0.0];
+    let data = vec![
+        Float::MAX / 2.0,
+        Float::MAX / 2.0,
+        Float::MIN_POSITIVE,
+        -0.0,
+        0.0,
+    ];
     let out = ema(&data, 2, None)
         .expect("sma must not error on finite extremes")
         .values;
@@ -78,7 +84,7 @@ fn period_higher_bound() {
 
 #[test]
 fn unexpected_nan_err() {
-    let data = vec![1.0, 2.0, 3.0, f64::NAN];
+    let data = vec![1.0, 2.0, 3.0, Float::NAN];
     let result = ema(&data, 3, None);
     assert!(result.is_err());
     assert!(matches!(result, Err(TechalysisError::DataNonFinite(_))));
@@ -86,7 +92,7 @@ fn unexpected_nan_err() {
 
 #[test]
 fn non_finite_err() {
-    let data = vec![1.0, 2.0, 3.0, f64::INFINITY, 5.0, 6.0, 7.0];
+    let data = vec![1.0, 2.0, 3.0, Float::INFINITY, 5.0, 6.0, 7.0];
     let result = ema(&data, 3, None);
     assert!(result.is_err());
     assert!(matches!(result, Err(TechalysisError::DataNonFinite(_))));
@@ -119,7 +125,7 @@ fn test_period_to_alpha() {
 proptest! {
     #[test]
     fn proptest(
-        input  in vec(-1e12f64..1e12, 2..200),
+        input  in vec(-1e12 as Float..1e12 as Float, 2..200),
         window in 2usize..50
     ) {
         prop_assume!(window <= input.len());
@@ -135,7 +141,7 @@ proptest! {
             prop_assert_eq!(out.len(), input.len());
             prop_assert!(out[..window-1].iter().all(|v| v.is_nan()));
 
-            let k = 7.0_f64;
+            let k = 7.0 as Float;
             let scaled_input: Vec<_> = input.iter().map(|v| v*k).collect();
             let scaled_fast = ema(&scaled_input, window, None).unwrap().values;
 
@@ -144,7 +150,7 @@ proptest! {
                     prop_assert!(scaled.is_nan());
                 } else {
                     let target = *orig * k;
-                    prop_assert!(approx_eq_f64_custom(target, *scaled, 1e-8),
+                    prop_assert!(approx_eq_float(target, *scaled, 1e-8),
                         "scaling fails: ema={}, k*ema={}, got={}", orig, target, scaled);
                 }
             }

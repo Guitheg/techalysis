@@ -1,7 +1,7 @@
-use techalysis::{errors::TechalysisError, indicators::macd::macd};
+use techalysis::{errors::TechalysisError, indicators::macd::macd, types::Float};
 
 use crate::helper::{
-    assert::approx_eq_f64_custom,
+    assert::approx_eq_float,
     generated::{assert_vec_eq_gen_data, load_generated_csv},
 };
 
@@ -59,19 +59,19 @@ fn no_lookahead() {
 
     let next_state = result_minus.state.next(input[last_index]).unwrap();
     assert!(
-        approx_eq_f64_custom(next_state.macd, expected_macd[last_index], 1e-8),
+        approx_eq_float(next_state.macd, expected_macd[last_index], 1e-8),
         "Expected last MACD value to be {}, but got {}",
         expected_macd[last_index],
         next_state.macd
     );
     assert!(
-        approx_eq_f64_custom(next_state.signal, expected_signal[last_index], 1e-8),
+        approx_eq_float(next_state.signal, expected_signal[last_index], 1e-8),
         "Expected last Signal value to be {}, but got {}",
         expected_signal[last_index],
         next_state.signal
     );
     assert!(
-        approx_eq_f64_custom(next_state.histogram, expected_histogram[last_index], 1e-8),
+        approx_eq_float(next_state.histogram, expected_histogram[last_index], 1e-8),
         "Expected last Histogram value to be {}, but got {}",
         expected_histogram[last_index],
         next_state.histogram
@@ -104,7 +104,7 @@ fn generated_signal32() {
 
 #[test]
 fn empty_input() {
-    let input: Vec<f64> = vec![];
+    let input: Vec<Float> = vec![];
     let output = macd(&input, 12, 26, 9);
     assert!(output.is_err());
     assert!(
@@ -115,7 +115,7 @@ fn empty_input() {
 
 #[test]
 fn uniform_data() {
-    let input: Vec<f64> = vec![100.0; 50];
+    let input: Vec<Float> = vec![100.0; 50];
     let output = macd(&input, 12, 26, 9);
     assert!(output.is_ok());
     let out = output.unwrap();
@@ -129,7 +129,7 @@ fn uniform_data() {
 
 #[test]
 fn insufficient_data() {
-    let input: Vec<f64> = (1..=20).map(|x| x as f64).collect();
+    let input: Vec<Float> = (1..=20).map(|x| x as Float).collect();
     let output = macd(&input, 12, 26, 9);
     assert!(output.is_err());
     assert!(
@@ -140,7 +140,7 @@ fn insufficient_data() {
 
 #[test]
 fn fast_greater_than_slow() {
-    let input: Vec<f64> = (1..=50).map(|x| x as f64).collect();
+    let input: Vec<Float> = (1..=50).map(|x| x as Float).collect();
     let output = macd(&input, 30, 20, 9);
     assert!(output.is_err());
     assert!(matches!(output, Err(TechalysisError::BadParam(_))));
@@ -148,8 +148,8 @@ fn fast_greater_than_slow() {
 
 #[test]
 fn unexpected_nan_err() {
-    let mut input: Vec<f64> = (1..=50).map(|x| x as f64).collect();
-    input[10] = f64::NAN;
+    let mut input: Vec<Float> = (1..=50).map(|x| x as Float).collect();
+    input[10] = Float::NAN;
     let output = macd(&input, 12, 26, 9);
     assert!(output.is_err());
     assert!(matches!(output, Err(TechalysisError::DataNonFinite(_))));
@@ -157,8 +157,8 @@ fn unexpected_nan_err() {
 
 #[test]
 fn non_finite_err() {
-    let mut input: Vec<f64> = (1..=50).map(|x| x as f64).collect();
-    input[10] = f64::INFINITY;
+    let mut input: Vec<Float> = (1..=50).map(|x| x as Float).collect();
+    input[10] = Float::INFINITY;
     let output = macd(&input, 12, 26, 9);
     assert!(output.is_err());
     assert!(matches!(output, Err(TechalysisError::DataNonFinite(_))));
