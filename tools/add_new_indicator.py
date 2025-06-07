@@ -152,7 +152,7 @@ def add_maptypes(indicator_name: str):
     logger.info(f"🔄 Updated {MAPTYPES_PYTHON}")
 
 def add_rust_benchmark(indicator_name: str):
-    with open(BENCH_RUST, 'w') as f:
+    with open(BENCH_RUST, 'r') as f:
         lines = f.readlines()
     insert_position = next((i for i, line in enumerate(lines) if line.startswith("criterion::criterion_main! {")), len(lines))
     lines.insert(insert_position + 1, f"indicators::bench_{indicator_name}::bench,")
@@ -163,7 +163,7 @@ def add_rust_benchmark(indicator_name: str):
     logger.info(f"🔄 Updated {BENCH_RUST}")
 
 def add_rust_benchmark_to_mod(indicator_name: str):
-    with open(BENCH_RUST_MOD, 'w') as f:
+    with open(BENCH_RUST_MOD, 'r') as f:
         lines = f.readlines()
     lines.insert(len(lines), f"pub(crate) mod bench_{indicator_name};")
 
