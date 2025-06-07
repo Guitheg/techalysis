@@ -147,10 +147,19 @@ fn fast_greater_than_slow() {
 }
 
 #[test]
-fn unexpected_nan() {
+fn unexpected_nan_err() {
     let mut input: Vec<f64> = (1..=50).map(|x| x as f64).collect();
-    input[10] = f64::NAN; // Introduce NaN
+    input[10] = f64::NAN;
     let output = macd(&input, 12, 26, 9);
     assert!(output.is_err());
-    assert!(matches!(output, Err(TechalysisError::UnexpectedNan)));
+    assert!(matches!(output, Err(TechalysisError::DataNonFinite(_))));
+}
+
+#[test]
+fn non_finite_err() {
+    let mut input: Vec<f64> = (1..=50).map(|x| x as f64).collect();
+    input[10] = f64::INFINITY;
+    let output = macd(&input, 12, 26, 9);
+    assert!(output.is_err());
+    assert!(matches!(output, Err(TechalysisError::DataNonFinite(_))));
 }

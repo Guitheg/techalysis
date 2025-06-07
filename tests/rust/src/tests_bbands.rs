@@ -157,7 +157,7 @@ fn nan_input_err() {
     input.push(f64::NAN);
     let output = bbands(&input, 3, 2.0, 2.0, BBandsMA::SMA);
     assert!(output.is_err());
-    assert!(matches!(output, Err(TechalysisError::UnexpectedNan)));
+    assert!(matches!(output, Err(TechalysisError::DataNonFinite(_))));
 }
 
 #[test]
@@ -182,4 +182,20 @@ fn insufficient_data_err() {
     let output = bbands(&input, 5, 2.0, 2.0, BBandsMA::SMA);
     assert!(output.is_err());
     assert!(matches!(output, Err(TechalysisError::InsufficientData)),);
+}
+
+#[test]
+fn unexpected_nan_err() {
+    let data = vec![1.0, 2.0, 3.0, f64::NAN, 5.0, 6.0, 7.0];
+    let result = bbands(&data, 3, 2.0, 2.0, BBandsMA::SMA);
+    assert!(result.is_err());
+    assert!(matches!(result, Err(TechalysisError::DataNonFinite(_))));
+}
+
+#[test]
+fn non_finite_err() {
+    let data = vec![1.0, 2.0, 3.0, f64::INFINITY, 5.0, 6.0, 7.0];
+    let result = bbands(&data, 3, 2.0, 2.0, BBandsMA::SMA);
+    assert!(result.is_err());
+    assert!(matches!(result, Err(TechalysisError::DataNonFinite(_))));
 }

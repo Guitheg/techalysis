@@ -77,15 +77,23 @@ fn period_higher_bound() {
 }
 
 #[test]
-fn unexpected_nan() {
+fn unexpected_nan_err() {
     let data = vec![1.0, 2.0, 3.0, f64::NAN];
     let result = ema(&data, 3, None);
     assert!(result.is_err());
-    assert!(matches!(result, Err(TechalysisError::UnexpectedNan)));
+    assert!(matches!(result, Err(TechalysisError::DataNonFinite(_))));
 }
 
 #[test]
-fn insufficient_data() {
+fn non_finite_err() {
+    let data = vec![1.0, 2.0, 3.0, f64::INFINITY, 5.0, 6.0, 7.0];
+    let result = ema(&data, 3, None);
+    assert!(result.is_err());
+    assert!(matches!(result, Err(TechalysisError::DataNonFinite(_))));
+}
+
+#[test]
+fn insufficient_data_err() {
     let data = vec![1.0, 2.0, 3.0];
     let result = ema(&data, 4, None);
     assert!(matches!(result, Err(TechalysisError::InsufficientData)));
@@ -120,7 +128,7 @@ proptest! {
 
         if has_nan {
             prop_assert!(out.is_err());
-            prop_assert!(matches!(out, Err(TechalysisError::UnexpectedNan)));
+            prop_assert!(matches!(out, Err(TechalysisError::DataNonFinite(_))));
         } else {
             let out = out.unwrap().values;
 

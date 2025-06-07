@@ -37,13 +37,13 @@ pub fn sma(data_array: &[f64], period: usize) -> Result<SmaResult, TechalysisErr
 }
 
 pub fn sma_into(
-    data_array: &[f64],
+    data: &[f64],
     period: usize,
     output: &mut [f64],
 ) -> Result<SmaState, TechalysisError> {
-    let size = data_array.len();
+    let len = data.len();
     let inv_period = 1.0 / (period as f64);
-    if period == 0 || period > size {
+    if period == 0 || period > len {
         return Err(TechalysisError::InsufficientData);
     }
 
@@ -53,29 +53,28 @@ pub fn sma_into(
         ));
     }
 
-    if output.len() < size {
+    if output.len() < len {
         return Err(TechalysisError::BadParam(
             "Output array must be at least as long as the input data array".to_string(),
         ));
     }
 
-    init_sma_unchecked(data_array, period, inv_period, output)?;
+    init_sma_unchecked(data, period, inv_period, output)?;
 
-    for idx in period..size {
-        if data_array[idx].is_nan() {
-            return Err(TechalysisError::UnexpectedNan);
+    for idx in period..len {
+        if !data[idx].is_finite() {
+            return Err(TechalysisError::DataNonFinite(format!(
+                "data[{idx}] = {:?}",
+                data[idx]
+            )));
         }
-        output[idx] = sma_next_unchecked(
-            data_array[idx],
-            data_array[idx - period],
-            output[idx - 1],
-            inv_period,
-        );
+        output[idx] =
+            sma_next_unchecked(data[idx], data[idx - period], output[idx - 1], inv_period);
     }
     Ok(SmaState {
-        sma: output[size - 1],
+        sma: output[len - 1],
         period,
-        window: VecDeque::from(data_array[size - period..size].to_vec()),
+        window: VecDeque::from(data[len - period..len].to_vec()),
     })
 }
 
@@ -90,20 +89,27 @@ pub fn sma_next(
             "SMA period must be greater than 1".to_string(),
         ));
     }
-
-    if new_value.is_nan() || prev_sma.is_nan() {
-        return Err(TechalysisError::UnexpectedNan);
+    if !new_value.is_finite() {
+        return Err(TechalysisError::DataNonFinite(format!(
+            "new_value = {new_value:?}"
+        )));
     }
-
+    if !prev_sma.is_finite() {
+        return Err(TechalysisError::DataNonFinite(format!(
+            "prev_sma = {prev_sma:?}"
+        )));
+    }
     if window.len() != period {
         return Err(TechalysisError::BadParam(
             "Window length must match the SMA period".to_string(),
         ));
     }
 
-    for &value in window {
-        if value.is_nan() {
-            return Err(TechalysisError::UnexpectedNan);
+    for (idx, &value) in window.iter().enumerate() {
+        if !value.is_finite() {
+            return Err(TechalysisError::DataNonFinite(format!(
+                "window[{idx}] = {value:?}"
+            )));
         }
     }
 
@@ -136,8 +142,10 @@ pub(crate) fn init_sma_unchecked(
     let mut sum: f64 = 0.0;
     for idx in 0..period {
         let value = &data_array[idx];
-        if value.is_nan() {
-            return Err(TechalysisError::UnexpectedNan);
+        if !value.is_finite() {
+            return Err(TechalysisError::DataNonFinite(format!(
+                "data_array[{idx}] = {value:?}"
+            )));
         } else {
             sum += value;
         }

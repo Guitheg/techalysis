@@ -2,6 +2,6 @@
 pub enum TechalysisError {
     BadParam(String),
     InsufficientData,
-    UnexpectedNan,
+    DataNonFinite(String),
     NotImplementedYet,
 }

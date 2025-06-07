@@ -70,20 +70,52 @@ pub fn bbands_next(
             "SMA period must be greater than 1".to_string(),
         ));
     }
-
-    if new_value.is_nan() || prev_ma.is_nan() || prev_ma_sq.is_nan() {
-        return Err(TechalysisError::UnexpectedNan);
+    if !new_value.is_finite() {
+        return Err(TechalysisError::DataNonFinite(format!(
+            "new_value = {new_value:?}"
+        )));
     }
-
+    if std_up <= 0.0 || std_down <= 0.0 {
+        return Err(TechalysisError::BadParam(
+            "Standard deviations must be greater than 0".to_string(),
+        ));
+    }
+    if !prev_sma.is_finite() {
+        return Err(TechalysisError::DataNonFinite(format!(
+            "prev_sma = {prev_sma:?}"
+        )));
+    }
+    if !prev_ma.is_finite() {
+        return Err(TechalysisError::DataNonFinite(format!(
+            "prev_ma = {prev_ma:?}"
+        )));
+    }
+    if !prev_ma_sq.is_finite() {
+        return Err(TechalysisError::DataNonFinite(format!(
+            "prev_ma_sq = {prev_ma_sq:?}"
+        )));
+    }
+    if !std_up.is_finite() {
+        return Err(TechalysisError::DataNonFinite(format!(
+            "std_up = {std_up:?}"
+        )));
+    }
+    if !std_down.is_finite() {
+        return Err(TechalysisError::DataNonFinite(format!(
+            "std_down = {std_down:?}"
+        )));
+    }
     if window.len() != period {
         return Err(TechalysisError::BadParam(
             "Window length must match the SMA period".to_string(),
         ));
     }
 
-    for &value in window {
-        if value.is_nan() {
-            return Err(TechalysisError::UnexpectedNan);
+    for (idx, &value) in window.iter().enumerate() {
+        if !value.is_finite() {
+            return Err(TechalysisError::DataNonFinite(format!(
+                "window[{idx}] = {value:?}"
+            )));
         }
     }
 
@@ -169,7 +201,7 @@ pub fn bbands(
 }
 
 pub fn bbands_into(
-    data_array: &[f64],
+    data: &[f64],
     period: usize,
     std_up: f64,
     std_down: f64,
@@ -178,7 +210,7 @@ pub fn bbands_into(
     output_middle: &mut [f64],
     output_lower: &mut [f64],
 ) -> Result<BBandsState, TechalysisError> {
-    let len = data_array.len();
+    let len = data.len();
     let inv_period = 1.0 / (period as f64);
     if period > len {
         return Err(TechalysisError::InsufficientData);
@@ -203,7 +235,7 @@ pub fn bbands_into(
     }
 
     let mut ma_sq = init_state_unchecked(
-        data_array,
+        data,
         period,
         inv_period,
         std_up,
@@ -217,8 +249,11 @@ pub fn bbands_into(
     match ma_type {
         BBandsMA::SMA => {
             for idx in period..len {
-                if data_array[idx].is_nan() {
-                    return Err(TechalysisError::UnexpectedNan);
+                if !data[idx].is_finite() {
+                    return Err(TechalysisError::DataNonFinite(format!(
+                        "data[{idx}] = {:?}",
+                        data[idx]
+                    )));
                 }
                 (
                     output_upper[idx],
@@ -227,8 +262,8 @@ pub fn bbands_into(
                     ma_sq,
                     sma,
                 ) = bbands_sma_next_unchecked(
-                    data_array[idx],
-                    data_array[idx - period],
+                    data[idx],
+                    data[idx - period],
                     output_middle[idx - 1],
                     ma_sq,
                     std_up,
@@ -244,8 +279,11 @@ pub fn bbands_into(
                 alpha.unwrap()
             };
             for idx in period..len {
-                if data_array[idx].is_nan() {
-                    return Err(TechalysisError::UnexpectedNan);
+                if !data[idx].is_finite() {
+                    return Err(TechalysisError::DataNonFinite(format!(
+                        "data[{idx}] = {:?}",
+                        data[idx]
+                    )));
                 }
                 (
                     output_upper[idx],
@@ -254,8 +292,8 @@ pub fn bbands_into(
                     ma_sq,
                     sma,
                 ) = bbands_ema_next_unchecked(
-                    data_array[idx],
-                    data_array[idx - period],
+                    data[idx],
+                    data[idx - period],
                     sma,
                     output_middle[idx - 1],
                     ma_sq,
@@ -274,7 +312,7 @@ pub fn bbands_into(
         lower: output_lower[len - 1],
         sma,
         ma_sq,
-        window: VecDeque::from(data_array[len - period..len].to_vec()),
+        window: VecDeque::from(data[len - period..len].to_vec()),
         period,
         std_up,
         std_down,
@@ -335,7 +373,7 @@ fn bands(middle: f64, mean: f64, mean_sq: f64, std_up: f64, std_down: f64) -> (f
 
 #[inline(always)]
 fn init_state_unchecked(
-    data_array: &[f64],
+    data: &[f64],
     period: usize,
     inv_period: f64,
     std_up: f64,
@@ -346,9 +384,12 @@ fn init_state_unchecked(
 ) -> Result<f64, TechalysisError> {
     let (mut sum, mut sum_sq) = (0.0, 0.0);
     for idx in 0..period {
-        let value = &data_array[idx];
-        if value.is_nan() {
-            return Err(TechalysisError::UnexpectedNan);
+        let value = &data[idx];
+        if !value.is_finite() {
+            return Err(TechalysisError::DataNonFinite(format!(
+                "data[{idx}] = {:?}",
+                value
+            )));
         } else {
             sum += value;
             sum_sq += value * value;

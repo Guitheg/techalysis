@@ -57,13 +57,13 @@ pub fn rsi(data_array: &[f64], window_size: usize) -> Result<RsiResult, Techalys
 }
 
 pub fn rsi_into(
-    data_array: &[f64],
+    data: &[f64],
     period: usize,
     output_rsi: &mut [f64],
 ) -> Result<RsiState, TechalysisError> {
-    let size = data_array.len();
+    let len = data.len();
     let period_as_float = period as f64;
-    if period == 0 || period + 1 > size {
+    if period == 0 || period + 1 > len {
         return Err(TechalysisError::InsufficientData);
     }
 
@@ -73,7 +73,7 @@ pub fn rsi_into(
         ));
     }
 
-    if output_rsi.len() != size {
+    if output_rsi.len() != len {
         return Err(TechalysisError::BadParam(
             "Output RSI length must match input data length".to_string(),
         ));
@@ -83,9 +83,12 @@ pub fn rsi_into(
     let mut avg_loss: f64 = 0.0;
     output_rsi[0] = f64::NAN;
     for i in 1..=period {
-        let delta = data_array[i] - data_array[i - 1];
-        if delta.is_nan() {
-            return Err(TechalysisError::UnexpectedNan);
+        let delta = data[i] - data[i - 1];
+        if !delta.is_finite() {
+            return Err(TechalysisError::DataNonFinite(format!(
+                "data[{}] = {:?}",
+                i, data[i]
+            )));
         }
         if delta > 0.0 {
             avg_gain += delta;
@@ -98,21 +101,20 @@ pub fn rsi_into(
     avg_loss /= period_as_float;
     output_rsi[period] = calculate_rsi(avg_gain, avg_loss);
 
-    for i in (period + 1)..size {
-        let delta = data_array[i] - data_array[i - 1];
-        if delta.is_nan() {
-            return Err(TechalysisError::UnexpectedNan);
+    for i in (period + 1)..len {
+        let delta = data[i] - data[i - 1];
+        if !delta.is_finite() {
+            return Err(TechalysisError::DataNonFinite(format!(
+                "data[{}] = {:?}",
+                i, data[i]
+            )));
         }
-        (output_rsi[i], avg_gain, avg_loss) = rsi_next_unchecked(
-            data_array[i] - data_array[i - 1],
-            avg_gain,
-            avg_loss,
-            period_as_float,
-        );
+        (output_rsi[i], avg_gain, avg_loss) =
+            rsi_next_unchecked(data[i] - data[i - 1], avg_gain, avg_loss, period_as_float);
     }
     Ok(RsiState {
-        rsi: output_rsi[size - 1],
-        prev_value: data_array[size - 1],
+        rsi: output_rsi[len - 1],
+        prev_value: data[len - 1],
         avg_gain,
         avg_loss,
         period,
@@ -132,9 +134,25 @@ pub fn rsi_next(
         ));
     }
 
-    if new_value.is_nan() || prev_value.is_nan() || prev_avg_gain.is_nan() || prev_avg_loss.is_nan()
-    {
-        return Err(TechalysisError::UnexpectedNan);
+    if !new_value.is_finite() {
+        return Err(TechalysisError::DataNonFinite(format!(
+            "new_value = {new_value:?}",
+        )));
+    }
+    if !prev_value.is_finite() {
+        return Err(TechalysisError::DataNonFinite(format!(
+            "prev_value = {prev_value:?}",
+        )));
+    }
+    if !prev_avg_gain.is_finite() {
+        return Err(TechalysisError::DataNonFinite(format!(
+            "prev_avg_gain = {prev_avg_gain:?}",
+        )));
+    }
+    if !prev_avg_loss.is_finite() {
+        return Err(TechalysisError::DataNonFinite(format!(
+            "prev_avg_loss = {prev_avg_loss:?}",
+        )));
     }
 
     let (rsi, avg_gain, avg_loss) = rsi_next_unchecked(

@@ -73,7 +73,7 @@ pub fn macd(
 }
 
 pub fn macd_into(
-    data_array: &[f64],
+    data: &[f64],
     fast_period: usize,
     slow_period: usize,
     signal_period: usize,
@@ -87,6 +87,12 @@ pub fn macd_into(
         ));
     }
 
+    if fast_period <= 1 || slow_period <= 1 || signal_period <= 1 {
+        return Err(TechalysisError::BadParam(
+            "Periods must be greater than 1".to_string(),
+        ));
+    }
+
     // The calculation is not necessary and can be simplify but it's conceptually descriptive
     let skip_period = slow_period + signal_period;
     let slow_ema_start_idx = 0;
@@ -94,9 +100,9 @@ pub fn macd_into(
     let signal_start_idx = slow_period;
     let macd_start_idx = (slow_period - 1) + (signal_period - 1);
 
-    let size: usize = data_array.len();
+    let len: usize = data.len();
 
-    if size < skip_period {
+    if len < skip_period {
         return Err(TechalysisError::InsufficientData);
     }
 
@@ -111,24 +117,30 @@ pub fn macd_into(
     let mut fast_sum = 0.0;
     let mut slow_sum = 0.0;
 
-    for value in data_array
+    for (idx, value) in data
         .iter()
         .take(fast_ema_start_idx)
         .skip(slow_ema_start_idx)
+        .enumerate()
     {
-        if value.is_nan() {
-            return Err(TechalysisError::UnexpectedNan);
+        if !value.is_finite() {
+            return Err(TechalysisError::DataNonFinite(format!(
+                "data[{idx}] = {value:?}",
+            )));
         }
         slow_sum += value;
     }
 
-    for value in data_array
+    for (idx, value) in data
         .iter()
         .take(signal_start_idx)
         .skip(fast_ema_start_idx)
+        .enumerate()
     {
-        if value.is_nan() {
-            return Err(TechalysisError::UnexpectedNan);
+        if !value.is_finite() {
+            return Err(TechalysisError::DataNonFinite(format!(
+                "data[{idx}] = {value:?}"
+            )));
         }
         slow_sum += value;
         fast_sum += value;
@@ -137,30 +149,35 @@ pub fn macd_into(
     let mut slow_ema = slow_sum / slow_period as f64;
     let mut sum_macd = fast_ema - slow_ema;
 
-    for value in data_array
+    for (idx, value) in data
         .iter()
         .take(macd_start_idx)
         .skip(signal_start_idx)
+        .enumerate()
     {
-        if value.is_nan() {
-            return Err(TechalysisError::UnexpectedNan);
+        if !value.is_finite() {
+            return Err(TechalysisError::DataNonFinite(format!(
+                "data[{idx}] = {value:?}"
+            )));
         }
         fast_ema = ema_next_unchecked(*value, fast_ema, fast_alpha);
         slow_ema = ema_next_unchecked(*value, slow_ema, slow_alpha);
         sum_macd += fast_ema - slow_ema;
     }
 
-    fast_ema = ema_next_unchecked(data_array[macd_start_idx], fast_ema, fast_alpha);
-    slow_ema = ema_next_unchecked(data_array[macd_start_idx], slow_ema, slow_alpha);
+    fast_ema = ema_next_unchecked(data[macd_start_idx], fast_ema, fast_alpha);
+    slow_ema = ema_next_unchecked(data[macd_start_idx], slow_ema, slow_alpha);
     output_macd[macd_start_idx] = fast_ema - slow_ema;
     sum_macd += output_macd[macd_start_idx];
     output_signal[macd_start_idx] = sum_macd / signal_period as f64;
     output_histogram[macd_start_idx] = output_macd[macd_start_idx] - output_signal[macd_start_idx];
 
-    for idx in macd_start_idx + 1..size {
-        let data = data_array[idx];
-        if data.is_nan() {
-            return Err(TechalysisError::UnexpectedNan);
+    for idx in macd_start_idx + 1..len {
+        let data = data[idx];
+        if !data.is_finite() {
+            return Err(TechalysisError::DataNonFinite(format!(
+                "data[{idx}] = {data:?}"
+            )));
         }
         (
             fast_ema,
@@ -182,9 +199,9 @@ pub fn macd_into(
     Ok(MacdState {
         fast_ema,
         slow_ema,
-        macd: output_macd[size - 1],
-        signal: output_signal[size - 1],
-        histogram: output_histogram[size - 1],
+        macd: output_macd[len - 1],
+        signal: output_signal[len - 1],
+        histogram: output_histogram[len - 1],
         fast_period,
         slow_period,
         signal_period,
@@ -210,12 +227,30 @@ pub fn macd_next(
     let slow_alpha = period_to_alpha(slow_period, None)?;
     let signal_alpha = period_to_alpha(signal_period, None)?;
 
-    if new_value.is_nan()
-        || prev_fast_ema.is_nan()
-        || prev_slow_ema.is_nan()
-        || prev_signal.is_nan()
-    {
-        return Err(TechalysisError::UnexpectedNan);
+    if !new_value.is_finite() {
+        return Err(TechalysisError::DataNonFinite(format!(
+            "new_value = {new_value:?}",
+        )));
+    }
+    if !prev_fast_ema.is_finite() {
+        return Err(TechalysisError::DataNonFinite(format!(
+            "prev_fast_ema = {prev_fast_ema:?}",
+        )));
+    }
+    if !prev_slow_ema.is_finite() {
+        return Err(TechalysisError::DataNonFinite(format!(
+            "prev_slow_ema = {prev_slow_ema:?}",
+        )));
+    }
+    if !prev_signal.is_finite() {
+        return Err(TechalysisError::DataNonFinite(format!(
+            "prev_signal = {prev_signal:?}",
+        )));
+    }
+    if fast_period <= 1 || slow_period <= 1 || signal_period <= 1 {
+        return Err(TechalysisError::BadParam(
+            "Periods must be greater than 1".to_string(),
+        ));
     }
 
     let (fast_ema, slow_ema, macd, signal, histogram) = macd_next_unchecked(

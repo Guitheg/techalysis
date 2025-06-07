@@ -1,6 +1,6 @@
 use criterion::BenchmarkId;
 use rand::{rngs::StdRng, Rng, SeedableRng};
-use techalysis::indicators::bbands::bbands;
+use techalysis::indicators::bbands::{bbands, BBandsMA};
 
 fn bench_bbands(c: &mut criterion::Criterion) {
     let mut bench_group = c.benchmark_group("bbands");
@@ -16,7 +16,7 @@ fn bench_bbands(c: &mut criterion::Criterion) {
             &period,
             |b, &period| {
                 b.iter(|| {
-                    let _ = bbands(&data, period, 2.0, 2.0);
+                    let _ = bbands(&data, period, 2.0, 2.0, BBandsMA::SMA);
                 })
             },
         );

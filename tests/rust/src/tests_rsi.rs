@@ -162,7 +162,7 @@ fn input_with_nans() {
     let period = 2;
     let result = rsi(data, period);
     assert!(result.is_err());
-    assert!(matches!(result, Err(TechalysisError::UnexpectedNan)));
+    assert!(matches!(result, Err(TechalysisError::DataNonFinite(_))));
 }
 
 #[test]
@@ -172,6 +172,22 @@ fn period_zero() {
     let result = rsi(data, period);
     assert!(result.is_err());
     assert!(matches!(result, Err(TechalysisError::InsufficientData)));
+}
+
+#[test]
+fn unexpected_nan_err() {
+    let data = vec![1.0, 2.0, 3.0, f64::NAN, 5.0, 6.0, 7.0];
+    let result = rsi(&data, 3);
+    assert!(result.is_err());
+    assert!(matches!(result, Err(TechalysisError::DataNonFinite(_))));
+}
+
+#[test]
+fn non_finite_err() {
+    let data = vec![1.0, 2.0, 3.0, f64::INFINITY, 5.0, 6.0, 7.0];
+    let result = rsi(&data, 3);
+    assert!(result.is_err());
+    assert!(matches!(result, Err(TechalysisError::DataNonFinite(_))));
 }
 
 proptest! {

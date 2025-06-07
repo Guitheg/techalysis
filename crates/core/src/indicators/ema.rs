@@ -64,14 +64,14 @@ pub fn ema(
 }
 
 pub fn ema_into(
-    data_array: &[f64],
+    data: &[f64],
     period: usize,
     alpha: Option<f64>,
     output: &mut [f64],
 ) -> Result<EmaState, TechalysisError> {
-    let size = data_array.len();
+    let len = data.len();
     let inv_period = 1.0 / period as f64;
-    if period == 0 || size < period {
+    if period == 0 || len < period {
         return Err(TechalysisError::InsufficientData);
     }
 
@@ -86,17 +86,20 @@ pub fn ema_into(
         None => period_to_alpha(period, None)?,
     };
 
-    init_sma_unchecked(data_array, period, inv_period, output)?;
+    init_sma_unchecked(data, period, inv_period, output)?;
 
-    for idx in period..size {
-        if data_array[idx].is_nan() {
-            return Err(TechalysisError::UnexpectedNan);
+    for idx in period..len {
+        if !data[idx].is_finite() {
+            return Err(TechalysisError::DataNonFinite(format!(
+                "data[{idx}] = {:?}",
+                data[idx]
+            )));
         }
-        output[idx] = ema_next_unchecked(data_array[idx], output[idx - 1], alpha);
+        output[idx] = ema_next_unchecked(data[idx], output[idx - 1], alpha);
     }
 
     Ok(EmaState {
-        ema: output[size - 1],
+        ema: output[len - 1],
         period,
         alpha,
     })
@@ -112,14 +115,27 @@ pub fn ema_next(
         Some(alpha) => alpha,
         None => period_to_alpha(period, None)?,
     };
+
     if period <= 1 {
         return Err(TechalysisError::BadParam(
             "Period must be greater than 1".to_string(),
         ));
     }
 
-    if new_value.is_nan() || prev_ema.is_nan() || alpha.is_nan() {
-        return Err(TechalysisError::UnexpectedNan);
+    if !new_value.is_finite() {
+        return Err(TechalysisError::DataNonFinite(format!(
+            "new_value = {new_value:?}",
+        )));
+    }
+
+    if !prev_ema.is_finite() {
+        return Err(TechalysisError::DataNonFinite(format!(
+            "prev_ema = {prev_ema:?}",
+        )));
+    }
+
+    if !alpha.is_finite() {
+        return Err(TechalysisError::DataNonFinite(format!("alpha = {alpha:?}")));
     }
 
     let ema = ema_next_unchecked(new_value, prev_ema, alpha);
