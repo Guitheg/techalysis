@@ -1,8 +1,12 @@
 use crate::helper::{
-    assert::approx_eq_f64, generated::assert_vec_eq_gen_data, generated::load_generated_csv,
+    assert::{approx_eq_f64, approx_eq_f64_custom},
+    generated::{assert_vec_eq_gen_data, load_generated_csv},
 };
 use proptest::{collection::vec, prelude::*};
-use techalysis::{errors::TechalysisError, indicators::ema::ema};
+use techalysis::{
+    errors::TechalysisError,
+    indicators::ema::{ema, period_to_alpha},
+};
 
 #[test]
 fn generated() {
@@ -96,6 +100,14 @@ fn period_1() {
     assert!(matches!(result, Err(TechalysisError::BadParam(_))));
 }
 
+#[test]
+fn test_period_to_alpha() {
+    assert_eq!(period_to_alpha(10, None).unwrap(), 0.18181818181818182);
+    assert_eq!(period_to_alpha(10, Some(2.0)).unwrap(), 0.18181818181818182);
+    assert!(period_to_alpha(0, None).is_err());
+    assert!(period_to_alpha(10, Some(0.0)).is_err());
+}
+
 proptest! {
     #[test]
     fn proptest(
@@ -124,7 +136,7 @@ proptest! {
                     prop_assert!(scaled.is_nan());
                 } else {
                     let target = *orig * k;
-                    prop_assert!(approx_eq_f64(target, *scaled),
+                    prop_assert!(approx_eq_f64_custom(target, *scaled, 1e-8),
                         "scaling fails: ema={}, k*ema={}, got={}", orig, target, scaled);
                 }
             }

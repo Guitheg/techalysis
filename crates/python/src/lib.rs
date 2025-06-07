@@ -27,6 +27,7 @@ fn _core(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(py_bbands::bbands, m)?)?;
     m.add_function(wrap_pyfunction!(py_bbands::bbands_next, m)?)?;
     m.add_class::<py_bbands::PyBBandsState>()?;
+    m.add_class::<py_bbands::PyBBandsMA>()?;
 
     Ok(())
 }

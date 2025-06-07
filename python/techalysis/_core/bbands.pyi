@@ -1,6 +1,7 @@
 
 from dataclasses import dataclass
 from typing import NamedTuple, Tuple, List
+from enum import Enum
 
 from numpy.typing import NDArray
 
@@ -10,7 +11,8 @@ class BBandsState:
     upper: float
     middle: float
     lower: float
-    sum_sq: float
+    mean_sma: float
+    mean_sq: float
     window: List
     period: int
     std_up: float
@@ -24,17 +26,21 @@ class BBandsResult(NamedTuple):
     lower: NDArray
     state: BBandsState
 
+class BBandsMA(Enum):
+    SMA = 0
+    EMA = 1
+
 def bbands(
     data: NDArray,
     period: int = 20,
     std_up: float = 2.0,
     std_down: float = 2.0,
+    ma_type: BBandsMA = BBandsMA.SMA,
     release_gil: bool = False
 ) -> BBandsResult | Tuple[NDArray, BBandsState]:
     """
     BBands: Bollinger Bands computation.
     ----------
-    The current moving average is : SMA
 
     Parameters
     ----------
@@ -49,6 +55,12 @@ def bbands(
 
     std_down : float, default 2.0
         The multiplier of standard deviations for the lower band.
+    
+    ma_type : BBandsMA, default BBandsMA.SMA
+        The type of moving average to use for the middle band.
+        Options:
+        - BBandsMA.SMA: Simple Moving Average
+        - BBandsMA.EMA: Exponential Moving Average
 
     release_gil : bool, default False
         If ``True``, the GIL is released during the computation.
@@ -61,7 +73,7 @@ def bbands(
         - upper: **NDArray** with the upper Bollinger Band values.
         - middle: **NDArray** with the middle Bollinger Band values (moving average).
         - lower: **NDArray** with the lower Bollinger Band values.
-        - state: **BBandsState** with (upper, middle, lower, sum_sq, window, period, std_up, std_down)
+        - state: **BBandsState** with (upper, middle, lower, mean_sma, mean_sq, window, period, std_up, std_down)
     """
     ...
 
