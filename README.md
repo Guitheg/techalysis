@@ -28,25 +28,70 @@ Built for developers and quants who need the performance of Rust with the ease o
   Supports macOS, Linux, and Windows
 
 - 📊 Supported Indicators
-  | **Category**     | **Name**                                        | **Status** |
-  | ---------------- | ---------------------------------------------               | ---------- |
-  | **_Trend_**      |                                                             |            |
-  || **SMA** - Simple Moving Average                                               | ✅         |
-  || **EMA** - Exponential Moving Average                                          | ✅         |
-  || *Work in progress...*                                                         | 🚧         |
-  | **_Momentum_**   |                                                             |            |
-  || **RSI** - Relative Strength Index                                             | ✅         |
-  || **MACD** - Moving Average Convergence Divergence                              | ✅         |
-  || *Work in progress...*                                                         | 🚧         |
-  | **_Volatility_** |                                                             |            |
-  || Bollinger Bands (BBANDS)                                                      | ✅         |
-  || *Work in progress...*                                                         | 🚧         |
-  | **_Volume_**     |                                                             |            |
-  || *Work in progress...*                                                         | 🚧         |
-  | **_Oscillators_**|                                                             |            |
-  || *Work in progress...*                                                         | 🚧         |
-  | **_Other_**      |                                                             |            |
-  || *Work in progress...*                                                         | 🚧         |
+  | **Category**              | **Function name - Name**                                        | **Status** |
+  | ----------------          | ---------------------------------------------                   | ---------- |
+  | **_Overlap_**             |||   
+  |                           | **ichimoku** - Ichimoku kinkō hyō                               | ⬜        |
+  |                           | **bbands** - Bollinger Bands                                    | ✅        |
+  |                           | **sar** - Parabolic SAR                                         | ⬜        |
+  |                           | **sarext** - Parabolic SAR, Extended                            | ⬜        |
+  |                           | **ht_trend** - Hilbert Transform, Instantaneous Trendline       | ⬜        |
+  |                           | **midpoint** - MidPoint over period                             | ⬜        |
+  |                           | **midprice** - Midpoint Price over period                       | ⬜        |
+  | _Moving Average_          | **sma** - Simple Moving Average                                 | ✅        |
+  |                           | **ema** - Exponential Moving Average                            | ✅        |
+  |                           | **wma** - Weighted Moving Average                               | ⬜        |
+  |                           | **dema** - Double Exponential Moving Average                    | ⬜        |
+  |                           | **tema** - Triple Exponential Moving Average                    | ⬜        |
+  |                           | **trima** - Triandular Moving Average                           | ⬜        |
+  |                           | **t3** - Triple Exponential Moving Average                      | ⬜        |
+  |                           | **kama** - Kaufman Adaptive Moving Average                      | ⬜        |
+  |                           | **mama** - MESA Adaptive Moving Average                         | ⬜        |
+  |                           | **mavp** - Moving Average with Variable Period                  | ⬜        |
+  | **_Momentum_**            |||   
+  |                           | **macd** - Moving Average Convergence Divergence                | ✅        |
+  |                           | **adx** - Average Directional Movement Index                    | ⬜        |
+  |                           | **adxr** - Average Directional Movement Index Rating            | ⬜        |
+  |                           | **aroon** - Aroon                                               | ⬜        |
+  |                           | **bop** - Balance Of Power                                      | ⬜        |
+  |                           | **cci** - Commodity Channel Index                               | ⬜        |
+  |                           | **dx** - Directional Movement Index                             | ⬜        |
+  |                           | **minus_di** - Minus Directional Indicator                      | ⬜        |
+  |                           | **minus_dm** - Minus Directional Movement                       | ⬜        |
+  |                           | **plus_di** - Plus Directional Indicator                        | ⬜        |
+  |                           | **plus_dm** - Plus Directional Movement                         | ⬜        |
+  |                           | **roc** - Rate of change                                        | ⬜        |
+  |                           | **rocp** - Rate of change Percentage                            | ⬜        |
+  |                           | **rocr** - Rate of change ratio                                 | ⬜        |
+  |                           | **rocr100** - Rate of change ratio 100 scale                    | ⬜        |
+  |                           | **trix** - 1-day Rate-Of-Change (ROC) of a Triple Smooth EMA    | ⬜        |
+  |  _Oscillator_             | **rsi** - Relative Strength Index                               | ✅        |
+  |                           | **aroonosc** - Aroon Oscillator                                 | ⬜        |
+  |                           | **cmo** - Chande Momentum Oscillator                            | ⬜        |
+  |                           | **mfi** - Money Flow Index                                      | ⬜        |
+  |                           | **ppo** - Percentage Price Oscillator                           | ⬜        |
+  |                           | **stoch** - Stochastic                                          | ⬜        |
+  |                           | **stochf** - Stochastic Fast                                    | ⬜        |
+  |                           | **stochrsi** - Stochastic Relative Strength Index               | ⬜        |
+  |                           | **ultosc** - Ultimate Oscillator                                | ⬜        |
+  |                           | **willr** - Williams' %R                                        | ⬜        |
+  |                           | **apo** - Absolute Price Oscillator                             | ⬜        |
+  | **_Volume_**              |||   
+  |                           | **ad** - Chaikin A/D Line                                       | ⬜        |
+  |                           | **adosc** - Chaikin A/D Oscillator                              | ⬜        |
+  |                           | **obv** - On Balance Volume                                     | ⬜        |
+  | **_Cycle_**               |||   
+  |                           | _Work in progress..._                                           | ⬜        |
+  | **_Price Transform_**     |||   
+  |                           | _Work in progress..._                                           | ⬜        |
+  | **_Volatility_**          |||   
+  |                           | **atr** - Average True Range                                    | ⬜        |
+  |                           | **natr** - Normalized Average True Range                        | ⬜        |
+  |                           | **trange** - True Range                                         | ⬜        |
+  | **_Pattern Recognition_** |||   
+  |                           | _Work in progress..._                                           | ⬜        |
+  | **_Statistic_**           |||   
+  |                           | _Work in progress..._                                           | ⬜        |
 
 ## 📦 Installation
 
