@@ -40,7 +40,7 @@ Built for developers and quants who need the performance of Rust with the ease o
   |                           | **midprice** - Midpoint Price over period                       | ⬜        |
   | _Moving Average_          | **sma** - Simple Moving Average                                 | ✅        |
   |                           | **ema** - Exponential Moving Average                            | ✅        |
-  |                           | **wma** - Weighted Moving Average                               | ⬜        |
+  |                           | **wma** - Weighted Moving Average                               | ✅        |
   |                           | **dema** - Double Exponential Moving Average                    | ⬜        |
   |                           | **tema** - Triple Exponential Moving Average                    | ⬜        |
   |                           | **trima** - Triandular Moving Average                           | ⬜        |
