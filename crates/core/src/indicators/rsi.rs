@@ -100,6 +100,9 @@ pub fn rsi_into(
     avg_gain /= period_as_float;
     avg_loss /= period_as_float;
     output_rsi[period] = calculate_rsi(avg_gain, avg_loss);
+    if !output_rsi[period].is_finite() {
+        return Err(TechalysisError::Overflow(period, output_rsi[period]));
+    }
 
     for i in (period + 1)..len {
         let delta = data[i] - data[i - 1];
@@ -111,6 +114,9 @@ pub fn rsi_into(
         }
         (output_rsi[i], avg_gain, avg_loss) =
             rsi_next_unchecked(data[i] - data[i - 1], avg_gain, avg_loss, period_as_float);
+        if !output_rsi[i].is_finite() {
+            return Err(TechalysisError::Overflow(i, output_rsi[i]));
+        }
     }
     Ok(RsiState {
         rsi: output_rsi[len - 1],
@@ -161,6 +167,9 @@ pub fn rsi_next(
         prev_avg_loss,
         period as Float,
     );
+    if !rsi.is_finite() {
+        return Err(TechalysisError::Overflow(0, rsi));
+    }
     Ok(RsiState {
         rsi,
         prev_value: new_value,

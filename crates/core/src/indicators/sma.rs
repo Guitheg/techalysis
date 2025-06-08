@@ -71,6 +71,9 @@ pub fn sma_into(
         }
         output[idx] =
             sma_next_unchecked(data[idx], data[idx - period], output[idx - 1], inv_period);
+        if !output[idx].is_finite() {
+            return Err(TechalysisError::Overflow(idx, output[idx]));
+        }
     }
     Ok(SmaState {
         sma: output[len - 1],
@@ -120,9 +123,12 @@ pub fn sma_next(
         .pop_front()
         .ok_or(TechalysisError::InsufficientData)?;
     window.push_back(new_value);
-
+    let sma = sma_next_unchecked(new_value, old_value, prev_sma, 1.0 / (period as Float));
+    if !sma.is_finite() {
+        return Err(TechalysisError::Overflow(0, sma));
+    }
     Ok(SmaState {
-        sma: sma_next_unchecked(new_value, old_value, prev_sma, 1.0 / (period as Float)),
+        sma,
         period,
         window,
     })
@@ -158,5 +164,8 @@ pub(crate) fn init_sma_unchecked(
         output[idx] = Float::NAN;
     }
     output[period - 1] = sum * inv_period;
+    if !output[period - 1].is_finite() {
+        return Err(TechalysisError::Overflow(period - 1, output[period - 1]));
+    }
     Ok(sum)
 }

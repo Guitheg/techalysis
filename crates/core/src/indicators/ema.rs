@@ -97,6 +97,9 @@ pub fn ema_into(
             )));
         }
         output[idx] = ema_next_unchecked(data[idx], output[idx - 1], alpha);
+        if !output[idx].is_finite() {
+            return Err(TechalysisError::Overflow(idx, output[idx]));
+        }
     }
 
     Ok(EmaState {
@@ -140,6 +143,9 @@ pub fn ema_next(
     }
 
     let ema = ema_next_unchecked(new_value, prev_ema, alpha);
+    if !ema.is_finite() {
+        return Err(TechalysisError::Overflow(0, ema));
+    }
     Ok(EmaState { ema, period, alpha })
 }
 

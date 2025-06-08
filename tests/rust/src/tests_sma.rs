@@ -3,8 +3,13 @@ use crate::helper::{
     generated::{assert_vec_eq_gen_data, load_generated_csv},
 };
 
+use crate::expect_err_overflow_or_ok_with;
 use proptest::{collection::vec, prelude::*};
-use techalysis::{errors::TechalysisError, indicators::sma::sma, types::Float};
+use techalysis::{
+    errors::TechalysisError,
+    indicators::sma::{sma, SmaResult, SmaState},
+    types::Float,
+};
 
 #[test]
 fn generated() {
@@ -44,25 +49,32 @@ fn no_lookahead() {
 }
 
 #[test]
-fn extremum_value_injection_without_panic() {
+fn finite_extreme_err_overflow_or_ok_all_finite() {
     let data = vec![
-        Float::MAX / 2.0,
-        Float::MAX / 2.0,
-        Float::MIN_POSITIVE,
-        -0.0,
-        0.0,
+        Float::MAX - 3.0,
+        Float::MAX - 2.0,
+        Float::MAX - 5.0,
+        Float::MAX - 6.0,
+        Float::MAX - 8.0,
+        Float::MAX - 1.0,
     ];
-    let out = sma(&data, 2)
-        .expect("sma must not error on finite extremes")
-        .values;
-    assert_eq!(out.len(), data.len());
-    for (i, v) in out.iter().enumerate() {
-        if i < 1 {
-            assert!(v.is_nan());
-        } else {
-            assert!(v.is_finite(), "value at {i} is not finite: {v}");
-        }
-    }
+    let period = 3;
+    expect_err_overflow_or_ok_with!(sma(&data, period), |result: SmaResult| {
+        assert!(
+            result.values.iter().skip(period).all(|v| v.is_finite()),
+            "Expected all values to be finite"
+        );
+    });
+}
+
+#[test]
+fn next_with_finite_neg_extreme_err_overflow_or_ok_all_finite() {
+    let data = vec![5.0, 10.0, 30.0, 3.0, 5.0, 6.0, 8.0];
+    let period = 3;
+    let result = sma(&data, period).unwrap();
+    expect_err_overflow_or_ok_with!(result.state.next(Float::MIN + 5.0), |state: SmaState| {
+        assert!(state.sma.is_finite(), "Expected all values to be finite");
+    });
 }
 
 #[test]

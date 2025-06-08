@@ -91,6 +91,10 @@ pub fn wma_next(
         inv_weight_sum,
     );
 
+    if !wma.is_finite() {
+        return Err(TechalysisError::Overflow(0, wma));
+    }
+
     Ok(WmaState {
         wma,
         period,
@@ -151,6 +155,9 @@ pub fn wma_into(
             period_sum,
             inv_weight_sum,
         );
+        if !output[idx].is_finite() {
+            return Err(TechalysisError::Overflow(idx, output[idx]));
+        }
     }
     Ok(WmaState {
         wma: output[len - 1],
@@ -201,6 +208,9 @@ pub(crate) fn init_wma_unchecked(
         output[idx] = Float::NAN;
     }
     output[period - 1] = (period_sum + period_sub) * inv_weight_sum;
+    if !output[period - 1].is_finite() {
+        return Err(TechalysisError::Overflow(period - 1, output[period - 1]));
+    }
     Ok((period_sub, period_sum))
 }
 

@@ -1,10 +1,14 @@
-use crate::assert_vec_float_eq;
 use crate::helper::{
     assert::{approx_eq_float, assert_vec_close},
     generated::{assert_vec_eq_gen_data, load_generated_csv},
 };
+use crate::{assert_vec_float_eq, expect_err_overflow_or_ok_with};
 use proptest::{prop_assert, prop_assert_eq, proptest};
-use techalysis::{errors::TechalysisError, indicators::rsi::rsi, types::Float};
+use techalysis::{
+    errors::TechalysisError,
+    indicators::rsi::{rsi, RsiResult, RsiState},
+    types::Float,
+};
 
 #[test]
 fn generated() {
@@ -187,6 +191,35 @@ fn non_finite_err() {
     let result = rsi(&data, 3);
     assert!(result.is_err());
     assert!(matches!(result, Err(TechalysisError::DataNonFinite(_))));
+}
+
+#[test]
+fn finite_extreme_err_overflow_or_ok_all_finite() {
+    let data = vec![
+        Float::MAX - 3.0,
+        Float::MAX - 2.0,
+        Float::MAX - 5.0,
+        Float::MAX - 6.0,
+        Float::MAX - 8.0,
+        Float::MAX - 1.0,
+    ];
+    let period = 3;
+    expect_err_overflow_or_ok_with!(rsi(&data, period), |result: RsiResult| {
+        assert!(
+            result.values.iter().skip(period).all(|v| v.is_finite()),
+            "Expected all values to be finite"
+        );
+    });
+}
+
+#[test]
+fn next_with_finite_neg_extreme_err_overflow_or_ok_all_finite() {
+    let data = vec![5.0, 10.0, 30.0, 3.0, 5.0, 6.0, 8.0];
+    let period = 3;
+    let result = rsi(&data, period).unwrap();
+    expect_err_overflow_or_ok_with!(result.state.next(Float::MIN + 5.0), |result: RsiState| {
+        assert!(result.rsi.is_finite(), "Expected all values to be finite");
+    });
 }
 
 proptest! {

@@ -4,62 +4,133 @@ use crate::helper::{
 };
 
 use proptest::{collection::vec, prelude::*};
-use techalysis::errors::TechalysisError;
-use techalysis::indicators::${indicator_name}::${indicator_name};
+use techalysis::{
+    errors::TechalysisError,
+    indicators::${indicator_name}::{
+        ${indicator_name},
+        ${IndicatorName}Result,
+        ${IndicatorName}State
+    }
+};
+use crate::expect_ok_or_err_variant_with;
 
 #[test]
 fn generated() {
+    // TODO: COMPLETE DATA INPUT AND OUTPUTS
     let columns = load_generated_csv("${indicator_name}.csv").unwrap();
-    // TODO: GET INPUTS DATA
-    // let input = columns.get("close").unwrap();
 
-    // TODO: GET EXPECTED DATA
-    // let expected = columns.get("out").unwrap();
+    let input = columns.get("close").unwrap();
 
-    // TODO: PERFORM CALCULATION
-    // let output = ${indicator_name}(input);
-    // assert!(output.is_ok());
-    // let result = output.unwrap();
+    let out = columns.get("out").unwrap();
 
-    // TODO COMPARE WITH EXPECTED
-    // assert_vec_eq_gen_data(&out.values, expected);
-    // assert!(out.values.len() == input.len());
+    let output = ${indicator_name}(input, ...); // TODO: COMPLETE ARGS
+    assert!(output.is_ok());
+    let result = output.unwrap();
+
+    assert_vec_eq_gen_data(out, &result.values);
 }
 
 #[test]
 fn no_lookahead() {
+    // TODO: COMPLETE DATA INPUT AND OUPUTS
     let columns = load_generated_csv("${indicator_name}.csv").unwrap();
 
-    // TODO: GET INPUTS DATA
-    // let input = columns.get("close").unwrap();
+    let input = columns.get("close").unwrap();
 
-    // TODO: LEN DATA
-    // let len = input.len();
+    let len = input.len();
+    let last_idx = len - 3;
 
-    // TODO: LAST IDX
-    // let last_idx = len - 1;
+    let out = columns.get("out").unwrap();
 
-    // TODO: GET EXPECTED DATA
-    // let expected = columns.get("out").unwrap();
+    let input_prev = &input[0..last_idx];
 
-    // TODO: IMPLEMENTS INPUTS PREV DATA
-    // let input_prev = &input[0..last_idx-1];
+    let result = ${indicator_name}(input_prev, ...).unwrap(); // TODO: COMPLETE ARGS
 
-    // TODO: PERFORM CALCULATION
-    // let output = ${indicator_name}(input_prev);
-    // assert!(output.is_ok());
-    // let result = output.unwrap();
+    assert_vec_eq_gen_data(&out[0..last_idx], &result.values);
 
-    // TODO: COMPARE
-    // assert_vec_eq_gen_data(&result.values, &expected[0..last_idx]);
+    let new_state = result.state.next(input[last_idx]).unwrap();
+    assert!(
+        approx_eq_float(new_state.value, out[last_idx], 1e-8),
+        "Expected last value to be {}, but got {}",
+        out[last_idx],
+        new_state.value
+    );
+    let new_state = new_state.next(input[last_idx + 1]).unwrap();
+    assert!(
+        approx_eq_float(new_state.value, out[last_idx + 1], 1e-8),
+        "Expected last value to be {}, but got {}",
+        out[last_idx],
+        new_state.value
+    );
+}
 
-    // let new_state = result.state.next(input[last_idx]).unwrap();
-    // assert!(
-    //     approx_eq_float(new_state.sma, expected[last_idx], 1e-8),
-    //     "Expected last value to be {}, but got {}",
-    //     expected[last_idx],
-    //     new_state.sma
-    // );
+// TODO: IMPLEMENTS ERR TESTS
+#[test]
+fn finite_extreme_err_overflow_or_ok_all_finite() {
+    // TODO: DEFINE DATA INPUTS
+    let data = vec![
+        Float::MAX - 3.0,
+        Float::MAX - 2.0,
+        Float::MAX - 5.0,
+        Float::MAX - 6.0,
+        Float::MAX - 8.0,
+        Float::MAX - 1.0,
+    ];
+    let period = 3;
+    expect_ok_or_err_variant_with!(
+        ${indicator_name}(&data, period),
+        TechalysisError::Overflow,
+        |result: ${IndicatorName}Result| {
+            assert!(
+                result.values.iter().skip(period).all(|v| v.is_finite()),
+                "Expected all values to be finite"
+            );
+        }
+    );
+}
+
+#[test]
+fn next_with_finite_neg_extreme_err_overflow_or_ok_all_finite() {
+    let data = vec![5.0, 10.0, 30.0, 3.0, 5.0, 6.0, 8.0];
+    let period = 3;
+    let result = ${indicator_name}(&data, period).unwrap();
+    expect_err_overflow_or_ok_with!(result.state.next(Float::MIN + 5.0), |state: ${IndicatorName}State| {
+        assert!(state.${indicator_name}.is_finite(), "Expected all values to be finite");
+    });
+}
+
+#[test]
+fn unexpected_nan_err() {
+    //TODO: COMPLETE DATA INPUT
+    let data = vec![1.0, 2.0, 3.0, Float::NAN, 1.0, 2.0, 3.0];
+    let period = 3;
+    let result = ${indicator_name}(&data, period);
+    assert!(result.is_err());
+    assert!(matches!(result, Err(TechalysisError::DataNonFinite(_))));
+}
+
+#[test]
+fn non_finite_err() {
+    //TODO: COMPLETE DATA INPUT
+    let data = vec![1.0, 2.0, Float::INFINITY, 1.0, 2.0, 3.0];
+    let period = 3;
+    let result =  ${indicator_name}(&data, period);
+    assert!(
+        result.is_err(),
+        "Expected an error for non-finite data, got: {:?}",
+        result
+    );
+    assert!(matches!(result, Err(TechalysisError::DataNonFinite(_))));
+}
+
+#[test]
+fn empty_input_err() {
+    //TODO: COMPLETE DATA INPUT
+    let data: [Float; 0] = [];
+    let period = 14;
+    let result = ${indicator_name}(&data, period);
+    assert!(result.is_err());
+    assert!(matches!(result, Err(TechalysisError::InsufficientData)));
 }
 
 // TODO: IMPLEMENTS OTHER TESTS

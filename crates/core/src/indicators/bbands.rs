@@ -7,9 +7,9 @@ use crate::types::Float;
 
 #[derive(Debug)]
 pub struct BBandsResult {
-    pub upper_band: Vec<Float>,
-    pub middle_band: Vec<Float>,
-    pub lower_band: Vec<Float>,
+    pub upper: Vec<Float>,
+    pub middle: Vec<Float>,
+    pub lower: Vec<Float>,
     pub state: BBandsState,
 }
 
@@ -35,7 +35,7 @@ pub enum BBandsMA {
 
 impl From<BBandsResult> for (Vec<Float>, Vec<Float>, Vec<Float>) {
     fn from(result: BBandsResult) -> Self {
-        (result.upper_band, result.middle_band, result.lower_band)
+        (result.upper, result.middle, result.lower)
     }
 }
 
@@ -157,6 +157,16 @@ pub fn bbands_next(
         }
     };
 
+    if !upper.is_finite() {
+        return Err(TechalysisError::Overflow(0, upper));
+    }
+    if !middle.is_finite() {
+        return Err(TechalysisError::Overflow(0, middle));
+    }
+    if !lower.is_finite() {
+        return Err(TechalysisError::Overflow(0, lower));
+    }
+
     Ok(BBandsState {
         upper,
         middle,
@@ -194,9 +204,9 @@ pub fn bbands(
     )?;
 
     Ok(BBandsResult {
-        upper_band: output_upper,
-        middle_band: output_middle,
-        lower_band: output_lower,
+        upper: output_upper,
+        middle: output_middle,
+        lower: output_lower,
         state: bbands_state,
     })
 }
@@ -303,6 +313,15 @@ pub fn bbands_into(
                     std_down,
                     inv_period,
                 );
+                if !output_upper[idx].is_finite() {
+                    return Err(TechalysisError::Overflow(idx, output_upper[idx]));
+                }
+                if !output_middle[idx].is_finite() {
+                    return Err(TechalysisError::Overflow(idx, output_middle[idx]));
+                }
+                if !output_lower[idx].is_finite() {
+                    return Err(TechalysisError::Overflow(idx, output_lower[idx]));
+                }
             }
         }
     }
@@ -414,5 +433,23 @@ fn init_state_unchecked(
         std_up,
         std_down,
     );
+    if !output_middle[period - 1].is_finite() {
+        return Err(TechalysisError::Overflow(
+            period - 1,
+            output_middle[period - 1],
+        ));
+    }
+    if !output_upper[period - 1].is_finite() {
+        return Err(TechalysisError::Overflow(
+            period - 1,
+            output_upper[period - 1],
+        ));
+    }
+    if !output_lower[period - 1].is_finite() {
+        return Err(TechalysisError::Overflow(
+            period - 1,
+            output_lower[period - 1],
+        ));
+    }
     Ok(ma_sq)
 }

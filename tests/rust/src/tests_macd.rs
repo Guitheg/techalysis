@@ -1,8 +1,15 @@
-use techalysis::{errors::TechalysisError, indicators::macd::macd, types::Float};
+use techalysis::{
+    errors::TechalysisError,
+    indicators::macd::{macd, MacdResult, MacdState},
+    types::Float,
+};
 
-use crate::helper::{
-    assert::approx_eq_float,
-    generated::{assert_vec_eq_gen_data, load_generated_csv},
+use crate::{
+    expect_err_overflow_or_ok_with,
+    helper::{
+        assert::approx_eq_float,
+        generated::{assert_vec_eq_gen_data, load_generated_csv},
+    },
 };
 
 #[test]
@@ -162,4 +169,69 @@ fn non_finite_err() {
     let output = macd(&input, 12, 26, 9);
     assert!(output.is_err());
     assert!(matches!(output, Err(TechalysisError::DataNonFinite(_))));
+}
+
+#[test]
+fn finite_extreme_err_overflow_or_ok_all_finite() {
+    let data = vec![
+        Float::MAX - 3.0,
+        Float::MAX - 2.0,
+        Float::MAX - 5.0,
+        Float::MAX - 6.0,
+        Float::MAX - 8.0,
+        Float::MAX - 1.0,
+        Float::MAX - 5.0,
+        Float::MAX - 5.0,
+        Float::MAX - 6.0,
+        Float::MAX - 8.0,
+        Float::MAX - 1.0,
+    ];
+    let fast_period = 3;
+    let slow_period = 4;
+    let signal_period = 2;
+    let skip_period = slow_period + signal_period - 2;
+
+    expect_err_overflow_or_ok_with!(
+        macd(&data, fast_period, slow_period, signal_period),
+        |result: MacdResult| {
+            assert!(
+                result.macd.iter().skip(skip_period).all(|v| v.is_finite()),
+                "Expected all values to be finite"
+            );
+            assert!(
+                result
+                    .signal
+                    .iter()
+                    .skip(skip_period)
+                    .all(|v| v.is_finite()),
+                "Expected all values to be finite"
+            );
+            assert!(
+                result
+                    .histogram
+                    .iter()
+                    .skip(skip_period)
+                    .all(|v| v.is_finite()),
+                "Expected all values to be finite"
+            );
+        }
+    );
+}
+
+#[test]
+fn next_with_finite_neg_extreme_err_overflow_or_ok_all_finite() {
+    let data = vec![5.0, 10.0, 30.0, 3.0, 5.0, 6.0, 8.0, 30.0, 3.0, 5.0, 6.0];
+    let fast_period = 3;
+    let slow_period = 4;
+    let signal_period = 2;
+
+    let result = macd(&data, fast_period, slow_period, signal_period).unwrap();
+    expect_err_overflow_or_ok_with!(result.state.next(Float::MIN + 5.0), |state: MacdState| {
+        assert!(state.macd.is_finite(), "Expected all values to be finite");
+        assert!(state.signal.is_finite(), "Expected all values to be finite");
+        assert!(
+            state.histogram.is_finite(),
+            "Expected all values to be finite"
+        );
+    });
 }

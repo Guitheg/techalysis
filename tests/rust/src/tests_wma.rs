@@ -1,9 +1,16 @@
-use crate::helper::{
-    assert::approx_eq_float,
-    generated::{assert_vec_eq_gen_data, load_generated_csv},
+use crate::{
+    expect_err_overflow_or_ok_with,
+    helper::{
+        assert::approx_eq_float,
+        generated::{assert_vec_eq_gen_data, load_generated_csv},
+    },
 };
 
-use techalysis::{errors::TechalysisError, indicators::wma::wma};
+use techalysis::{
+    errors::TechalysisError,
+    indicators::wma::{wma, WmaResult, WmaState},
+    types::Float,
+};
 
 #[test]
 fn generated() {
@@ -80,4 +87,33 @@ fn non_finite_err() {
     let result = wma(&input, 3);
     assert!(result.is_err());
     assert!(matches!(result, Err(TechalysisError::DataNonFinite(_))));
+}
+
+#[test]
+fn finite_extreme_err_overflow_or_ok_all_finite() {
+    let data = vec![
+        Float::MAX - 3.0,
+        Float::MAX - 2.0,
+        Float::MAX - 5.0,
+        Float::MAX - 6.0,
+        Float::MAX - 8.0,
+        Float::MAX - 1.0,
+    ];
+    let period = 3;
+    expect_err_overflow_or_ok_with!(wma(&data, period), |result: WmaResult| {
+        assert!(
+            result.values.iter().skip(period).all(|v| v.is_finite()),
+            "Expected all values to be finite"
+        );
+    });
+}
+
+#[test]
+fn next_with_finite_neg_extreme_err_overflow_or_ok_all_finite() {
+    let data = vec![5.0, 10.0, 30.0, 3.0, 5.0, 6.0, 8.0];
+    let period = 3;
+    let result = wma(&data, period).unwrap();
+    expect_err_overflow_or_ok_with!(result.state.next(Float::MIN + 5.0), |state: WmaState| {
+        assert!(state.wma.is_finite(), "Expected all values to be finite");
+    });
 }

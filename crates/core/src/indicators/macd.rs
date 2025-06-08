@@ -195,6 +195,15 @@ pub fn macd_into(
             slow_alpha,
             signal_alpha,
         );
+        if !output_macd[idx].is_finite() {
+            return Err(TechalysisError::Overflow(idx, output_macd[idx]));
+        }
+        if !output_signal[idx].is_finite() {
+            return Err(TechalysisError::Overflow(idx, output_signal[idx]));
+        }
+        if !output_histogram[idx].is_finite() {
+            return Err(TechalysisError::Overflow(idx, output_histogram[idx]));
+        }
     }
 
     Ok(MacdState {
@@ -263,6 +272,16 @@ pub fn macd_next(
         slow_alpha,
         signal_alpha,
     );
+
+    if !macd.is_finite() {
+        return Err(TechalysisError::Overflow(0, macd));
+    }
+    if !signal.is_finite() {
+        return Err(TechalysisError::Overflow(0, signal));
+    }
+    if !histogram.is_finite() {
+        return Err(TechalysisError::Overflow(0, histogram));
+    }
 
     Ok(MacdState {
         fast_ema,

@@ -1,11 +1,14 @@
-use crate::helper::{
-    assert::approx_eq_float,
-    generated::{assert_vec_eq_gen_data, load_generated_csv},
+use crate::{
+    expect_err_overflow_or_ok_with,
+    helper::{
+        assert::approx_eq_float,
+        generated::{assert_vec_eq_gen_data, load_generated_csv},
+    },
 };
 use proptest::{collection::vec, prelude::*};
 use techalysis::{
     errors::TechalysisError,
-    indicators::ema::{ema, period_to_alpha},
+    indicators::ema::{ema, period_to_alpha, EmaResult, EmaState},
     types::Float,
 };
 
@@ -39,28 +42,6 @@ fn no_lookahead() {
         expected[expected.len() - 1],
         new_state.ema
     );
-}
-
-#[test]
-fn extremum_value_injection_without_panic() {
-    let data = vec![
-        Float::MAX / 2.0,
-        Float::MAX / 2.0,
-        Float::MIN_POSITIVE,
-        -0.0,
-        0.0,
-    ];
-    let out = ema(&data, 2, None)
-        .expect("sma must not error on finite extremes")
-        .values;
-    assert_eq!(out.len(), data.len());
-    for (i, v) in out.iter().enumerate() {
-        if i < 1 {
-            assert!(v.is_nan());
-        } else {
-            assert!(v.is_finite(), "value at {i} is not finite: {v}");
-        }
-    }
 }
 
 #[test]
@@ -120,6 +101,35 @@ fn test_period_to_alpha() {
     assert_eq!(period_to_alpha(10, Some(2.0)).unwrap(), 0.18181818181818182);
     assert!(period_to_alpha(0, None).is_err());
     assert!(period_to_alpha(10, Some(0.0)).is_err());
+}
+
+#[test]
+fn finite_extreme_err_overflow_or_ok_all_finite() {
+    let data = vec![
+        Float::MAX - 3.0,
+        Float::MAX - 2.0,
+        Float::MAX - 5.0,
+        Float::MAX - 6.0,
+        Float::MAX - 8.0,
+        Float::MAX - 1.0,
+    ];
+    let period = 3;
+    expect_err_overflow_or_ok_with!(ema(&data, period, None), |result: EmaResult| {
+        assert!(
+            result.values.iter().skip(period).all(|v| v.is_finite()),
+            "Expected all values to be finite"
+        );
+    });
+}
+
+#[test]
+fn next_with_finite_neg_extreme_err_overflow_or_ok_all_finite() {
+    let data = vec![5.0, 10.0, 30.0, 3.0, 5.0, 6.0, 8.0];
+    let period = 3;
+    let result = ema(&data, period, None).unwrap();
+    expect_err_overflow_or_ok_with!(result.state.next(Float::MIN + 5.0), |state: EmaState| {
+        assert!(state.ema.is_finite(), "Expected all values to be finite");
+    });
 }
 
 proptest! {
