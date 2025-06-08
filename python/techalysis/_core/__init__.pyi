@@ -3,6 +3,7 @@ from typing import NamedTuple, Optional
 from numpy.typing import NDArray
 from typing import Tuple
 
+from .tema import *
 from .dema import *
 from .wma import *
 from .bbands import *

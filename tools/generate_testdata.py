@@ -28,6 +28,7 @@ CONFIG_DICT = {
     "BBANDS": Configuration(talib, "BBANDS", ["close"], dict(timeperiod=20, nbdevup=2, nbdevdn=2, matype=0), ["upper", "middle", "lower"]),
     "WMA": Configuration(talib, "WMA", ["close"], dict(timeperiod=30), ["out"]),
     "DEMA": Configuration(talib, "DEMA", ["close"], dict(timeperiod=30), ["out"]),
+    "TEMA": Configuration(talib, "TEMA", ["close"], dict(timeperiod=30), ["out"]),
 }
 
 def generate_test_data(filename: str, configuration: Configuration, seed: int):
@@ -87,7 +88,7 @@ def dict_to_posix_filename(d: dict) -> str:
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--name", type=str)
+    parser.add_argument("-n", "--name", type=str)
     parser.add_argument("--seed", type=int, default=5)
     parser.add_argument("--args", nargs='*', action=ParseKwargs)
     return parser.parse_args()
