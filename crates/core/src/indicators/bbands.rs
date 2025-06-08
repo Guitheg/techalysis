@@ -1,9 +1,8 @@
-use std::collections::VecDeque;
-
 use crate::errors::TechalysisError;
 use crate::indicators::ema::{ema_next_unchecked, period_to_alpha};
 use crate::indicators::sma::sma_next_unchecked;
 use crate::types::Float;
+use std::collections::VecDeque;
 
 #[derive(Debug)]
 pub struct BBandsResult {
@@ -18,13 +17,23 @@ pub struct BBandsState {
     pub upper: Float,
     pub middle: Float,
     pub lower: Float,
-    pub sma: Float,
-    pub ma_sq: Float,
+    pub ma: MovingAverageState,
     pub window: VecDeque<Float>,
     pub period: usize,
-    pub std_up: Float,
-    pub std_down: Float,
+    pub std: DeviationMulipliers,
     pub ma_type: BBandsMA,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct DeviationMulipliers {
+    pub up: Float,
+    pub down: Float,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct MovingAverageState {
+    pub sma: Float,
+    pub ma_sq: Float,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -43,13 +52,11 @@ impl BBandsState {
     pub fn next(&self, new_value: Float) -> Result<BBandsState, TechalysisError> {
         bbands_next(
             new_value,
-            self.sma,
             self.middle,
-            self.ma_sq,
+            self.ma,
             &self.window,
             self.period,
-            self.std_up,
-            self.std_down,
+            self.std,
             self.ma_type,
         )
     }
@@ -57,13 +64,11 @@ impl BBandsState {
 
 pub fn bbands_next(
     new_value: Float,
-    prev_sma: Float,
-    prev_ma: Float,
-    prev_ma_sq: Float,
+    prev_middle: Float,
+    moving_avgs: MovingAverageState,
     window: &VecDeque<Float>,
     period: usize,
-    std_up: Float,
-    std_down: Float,
+    std: DeviationMulipliers,
     ma_type: BBandsMA,
 ) -> Result<BBandsState, TechalysisError> {
     if period <= 1 {
@@ -76,34 +81,38 @@ pub fn bbands_next(
             "new_value = {new_value:?}"
         )));
     }
-    if std_up <= 0.0 || std_down <= 0.0 {
+    if std.up <= 0.0 || std.down <= 0.0 {
         return Err(TechalysisError::BadParam(
             "Standard deviations must be greater than 0".to_string(),
         ));
     }
-    if !prev_sma.is_finite() {
+    if !moving_avgs.sma.is_finite() {
         return Err(TechalysisError::DataNonFinite(format!(
-            "prev_sma = {prev_sma:?}"
+            "prev_sma = {:?}",
+            moving_avgs.sma
         )));
     }
-    if !prev_ma.is_finite() {
+    if !prev_middle.is_finite() {
         return Err(TechalysisError::DataNonFinite(format!(
-            "prev_ma = {prev_ma:?}"
+            "prev_ma = {prev_middle:?}"
         )));
     }
-    if !prev_ma_sq.is_finite() {
+    if !moving_avgs.ma_sq.is_finite() {
         return Err(TechalysisError::DataNonFinite(format!(
-            "prev_ma_sq = {prev_ma_sq:?}"
+            "prev_ma_sq = {:?}",
+            moving_avgs.ma_sq
         )));
     }
-    if !std_up.is_finite() {
+    if !std.up.is_finite() {
         return Err(TechalysisError::DataNonFinite(format!(
-            "std_up = {std_up:?}"
+            "std_up = {:?}",
+            std.up
         )));
     }
-    if !std_down.is_finite() {
+    if !std.down.is_finite() {
         return Err(TechalysisError::DataNonFinite(format!(
-            "std_down = {std_down:?}"
+            "std_down = {:?}",
+            std.down
         )));
     }
     if window.len() != period {
@@ -131,27 +140,24 @@ pub fn bbands_next(
         BBandsMA::SMA => bbands_sma_next_unchecked(
             new_value,
             old_value,
-            prev_ma,
-            prev_ma_sq,
-            std_up,
-            std_down,
+            prev_middle,
+            moving_avgs.ma_sq,
+            std,
             1.0 / period as Float,
         ),
         BBandsMA::EMA(alpha) => {
-            let alpha = if alpha.is_none() {
-                period_to_alpha(period, None)?
+            let alpha = if let Some(value) = alpha {
+                value
             } else {
-                alpha.unwrap()
+                period_to_alpha(period, None)?
             };
             bbands_ema_next_unchecked(
                 new_value,
                 old_value,
-                prev_sma,
-                prev_ma,
-                prev_ma_sq,
+                prev_middle,
+                moving_avgs,
                 alpha,
-                std_up,
-                std_down,
+                std,
                 1.0 / period as Float,
             )
         }
@@ -171,12 +177,10 @@ pub fn bbands_next(
         upper,
         middle,
         lower,
-        sma,
-        ma_sq,
+        ma: MovingAverageState { sma, ma_sq },
         window,
         period,
-        std_up: std_up,
-        std_down: std_down,
+        std,
         ma_type,
     })
 }
@@ -184,8 +188,7 @@ pub fn bbands_next(
 pub fn bbands(
     data_array: &[Float],
     period: usize,
-    std_up: Float,
-    std_down: Float,
+    std: DeviationMulipliers,
     ma_type: BBandsMA,
 ) -> Result<BBandsResult, TechalysisError> {
     let mut output_upper = vec![0.0; data_array.len()];
@@ -195,8 +198,7 @@ pub fn bbands(
     let bbands_state = bbands_into(
         data_array,
         period,
-        std_up,
-        std_down,
+        std,
         ma_type,
         output_upper.as_mut_slice(),
         output_middle.as_mut_slice(),
@@ -214,8 +216,7 @@ pub fn bbands(
 pub fn bbands_into(
     data: &[Float],
     period: usize,
-    std_up: Float,
-    std_down: Float,
+    std: DeviationMulipliers,
     ma_type: BBandsMA,
     output_upper: &mut [Float],
     output_middle: &mut [Float],
@@ -233,7 +234,7 @@ pub fn bbands_into(
         ));
     }
 
-    if std_up <= 0.0 || std_down <= 0.0 {
+    if std.up <= 0.0 || std.down <= 0.0 {
         return Err(TechalysisError::BadParam(
             "Standard deviations must be greater than 0".to_string(),
         ));
@@ -245,18 +246,20 @@ pub fn bbands_into(
         ));
     }
 
-    let mut ma_sq = init_state_unchecked(
+    let ma_sq = init_state_unchecked(
         data,
         period,
         inv_period,
-        std_up,
-        std_down,
+        std,
         output_upper,
         output_middle,
         output_lower,
     )?;
 
-    let mut sma = output_middle[period - 1];
+    let mut ma = MovingAverageState {
+        sma: output_middle[period - 1],
+        ma_sq,
+    };
     match ma_type {
         BBandsMA::SMA => {
             for idx in period..len {
@@ -270,24 +273,23 @@ pub fn bbands_into(
                     output_upper[idx],
                     output_middle[idx],
                     output_lower[idx],
-                    ma_sq,
-                    sma,
+                    ma.ma_sq,
+                    ma.sma,
                 ) = bbands_sma_next_unchecked(
                     data[idx],
                     data[idx - period],
                     output_middle[idx - 1],
-                    ma_sq,
-                    std_up,
-                    std_down,
+                    ma.ma_sq,
+                    std,
                     inv_period,
                 );
             }
         }
         BBandsMA::EMA(alpha) => {
-            let alpha = if alpha.is_none() {
-                period_to_alpha(period, None)?
+            let alpha = if let Some(value) = alpha {
+                value
             } else {
-                alpha.unwrap()
+                period_to_alpha(period, None)?
             };
             for idx in period..len {
                 if !data[idx].is_finite() {
@@ -300,17 +302,15 @@ pub fn bbands_into(
                     output_upper[idx],
                     output_middle[idx],
                     output_lower[idx],
-                    ma_sq,
-                    sma,
+                    ma.ma_sq,
+                    ma.sma,
                 ) = bbands_ema_next_unchecked(
                     data[idx],
                     data[idx - period],
-                    sma,
                     output_middle[idx - 1],
-                    ma_sq,
+                    ma,
                     alpha,
-                    std_up,
-                    std_down,
+                    std,
                     inv_period,
                 );
                 if !output_upper[idx].is_finite() {
@@ -330,12 +330,10 @@ pub fn bbands_into(
         upper: output_upper[len - 1],
         middle: output_middle[len - 1],
         lower: output_lower[len - 1],
-        sma,
-        ma_sq,
+        ma,
         window: VecDeque::from(data[len - period..len].to_vec()),
         period,
-        std_up,
-        std_down,
+        std,
         ma_type,
     })
 }
@@ -346,8 +344,7 @@ pub fn bbands_sma_next_unchecked(
     old_value: Float,
     prev_ma: Float,
     prev_ma_sq: Float,
-    std_up: Float,
-    std_down: Float,
+    std: DeviationMulipliers,
     inv_period: Float,
 ) -> (Float, Float, Float, Float, Float) {
     let ma_sq = sma_next_unchecked(
@@ -357,7 +354,7 @@ pub fn bbands_sma_next_unchecked(
         inv_period,
     );
     let middle = sma_next_unchecked(new_value, old_value, prev_ma, inv_period);
-    let (upper, lower) = bands(middle, middle, ma_sq, std_up, std_down);
+    let (upper, lower) = bands(middle, middle, ma_sq, std.up, std.down);
     (upper, middle, lower, ma_sq, middle)
 }
 
@@ -365,23 +362,21 @@ pub fn bbands_sma_next_unchecked(
 pub fn bbands_ema_next_unchecked(
     new_value: Float,
     old_value: Float,
-    prev_sma: Float,
-    prev_ema: Float,
-    prev_sma_sq: Float,
+    prev_middle: Float,
+    moving_avgs: MovingAverageState,
     alpha: Float,
-    std_up: Float,
-    std_down: Float,
+    std: DeviationMulipliers,
     inv_period: Float,
 ) -> (Float, Float, Float, Float, Float) {
     let sma_sq = sma_next_unchecked(
         new_value * new_value,
         old_value * old_value,
-        prev_sma_sq,
+        moving_avgs.ma_sq,
         inv_period,
     );
-    let sma: Float = sma_next_unchecked(new_value, old_value, prev_sma, inv_period);
-    let middle = ema_next_unchecked(new_value, prev_ema, alpha);
-    let (upper, lower) = bands(middle, sma, sma_sq, std_up, std_down);
+    let sma: Float = sma_next_unchecked(new_value, old_value, moving_avgs.sma, inv_period);
+    let middle = ema_next_unchecked(new_value, prev_middle, alpha);
+    let (upper, lower) = bands(middle, sma, sma_sq, std.up, std.down);
     (upper, middle, lower, sma_sq, sma)
 }
 
@@ -402,8 +397,7 @@ fn init_state_unchecked(
     data: &[Float],
     period: usize,
     inv_period: Float,
-    std_up: Float,
-    std_down: Float,
+    std: DeviationMulipliers,
     output_upper: &mut [Float],
     output_middle: &mut [Float],
     output_lower: &mut [Float],
@@ -430,8 +424,8 @@ fn init_state_unchecked(
         output_middle[period - 1],
         output_middle[period - 1],
         ma_sq,
-        std_up,
-        std_down,
+        std.up,
+        std.down,
     );
     if !output_middle[period - 1].is_finite() {
         return Err(TechalysisError::Overflow(

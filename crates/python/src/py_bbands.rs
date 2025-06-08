@@ -1,6 +1,8 @@
 use numpy::{IntoPyArray, PyArray1, PyArrayMethods, PyReadonlyArray1, PyUntypedArrayMethods};
 use pyo3::{exceptions::PyValueError, pyclass, pyfunction, pymethods, Py, PyResult, Python};
-use techalysis::indicators::bbands::{bbands_into, BBandsMA, BBandsState};
+use techalysis::indicators::bbands::{
+    bbands_into, BBandsMA, BBandsState, DeviationMulipliers, MovingAverageState,
+};
 use techalysis::types::Float;
 
 #[pyclass(name = "BBandsState")]
@@ -81,12 +83,12 @@ impl From<BBandsState> for PyBBandsState {
             upper: state.upper,
             middle: state.middle,
             lower: state.lower,
-            mean_sma: state.sma,
-            mean_sq: state.ma_sq,
+            mean_sma: state.ma.sma,
+            mean_sq: state.ma.ma_sq,
             window: state.window.into(),
             period: state.period,
-            std_up: state.std_up,
-            std_down: state.std_down,
+            std_up: state.std.up,
+            std_down: state.std.down,
             ma_type: state.ma_type.into(),
         }
     }
@@ -98,12 +100,16 @@ impl From<PyBBandsState> for BBandsState {
             upper: py_state.upper,
             middle: py_state.middle,
             lower: py_state.lower,
-            sma: py_state.mean_sma,
-            ma_sq: py_state.mean_sq,
+            ma: MovingAverageState {
+                sma: py_state.mean_sma,
+                ma_sq: py_state.mean_sq,
+            },
             window: py_state.window.into(),
             period: py_state.period,
-            std_up: py_state.std_up,
-            std_down: py_state.std_down,
+            std: DeviationMulipliers {
+                up: py_state.std_up,
+                down: py_state.std_down,
+            },
             ma_type: py_state.ma_type.into(),
         }
     }
@@ -155,8 +161,10 @@ pub(crate) fn bbands(
                 bbands_into(
                     input_slice,
                     period,
-                    std_up,
-                    std_down,
+                    DeviationMulipliers {
+                        up: std_up,
+                        down: std_down,
+                    },
                     ma_type.into(),
                     output_upper.as_mut_slice(),
                     output_middle.as_mut_slice(),
@@ -184,8 +192,10 @@ pub(crate) fn bbands(
         let state = bbands_into(
             input_slice,
             period,
-            std_up,
-            std_down,
+            DeviationMulipliers {
+                up: std_up,
+                down: std_down,
+            },
             ma_type.into(),
             py_out_upper_slice,
             py_out_middle_slice,

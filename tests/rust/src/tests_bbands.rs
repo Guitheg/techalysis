@@ -8,7 +8,7 @@ use crate::{
 
 use techalysis::{
     errors::TechalysisError,
-    indicators::bbands::{bbands, BBandsMA, BBandsResult, BBandsState},
+    indicators::bbands::{bbands, BBandsMA, BBandsResult, BBandsState, DeviationMulipliers},
     types::Float,
 };
 
@@ -22,7 +22,12 @@ fn generated() {
     let middle = columns.get("middle").unwrap();
     let lower = columns.get("lower").unwrap();
 
-    let output = bbands(input, 20, 2.0, 2.0, BBandsMA::SMA);
+    let output = bbands(
+        input,
+        20,
+        DeviationMulipliers { up: 2.0, down: 2.0 },
+        BBandsMA::SMA,
+    );
     assert!(output.is_ok());
     let result = output.unwrap();
 
@@ -41,7 +46,12 @@ fn generated_ema() {
     let middle = columns.get("middle").unwrap();
     let lower = columns.get("lower").unwrap();
 
-    let output = bbands(input, 20, 2.0, 2.0, BBandsMA::EMA(None));
+    let output = bbands(
+        input,
+        20,
+        DeviationMulipliers { up: 2.0, down: 2.0 },
+        BBandsMA::EMA(None),
+    );
     assert!(output.is_ok());
     let result = output.unwrap();
 
@@ -65,7 +75,13 @@ fn no_lookahead() {
 
     let input_prev = &input[0..last_idx];
 
-    let result = bbands(input_prev, 20, 2.0, 2.0, BBandsMA::SMA).unwrap();
+    let result = bbands(
+        input_prev,
+        20,
+        DeviationMulipliers { up: 2.0, down: 2.0 },
+        BBandsMA::SMA,
+    )
+    .unwrap();
 
     assert_vec_eq_gen_data(&upper[0..last_idx], &result.upper);
     assert_vec_eq_gen_data(&middle[0..last_idx], &result.middle);
@@ -95,7 +111,13 @@ fn no_lookahead_ema() {
 
     let input_prev = &input[0..last_idx];
 
-    let result = bbands(input_prev, 20, 2.0, 2.0, BBandsMA::EMA(None)).unwrap();
+    let result = bbands(
+        input_prev,
+        20,
+        DeviationMulipliers { up: 2.0, down: 2.0 },
+        BBandsMA::EMA(None),
+    )
+    .unwrap();
 
     assert_vec_eq_gen_data(&upper[0..last_idx], &result.upper);
     assert_vec_eq_gen_data(&middle[0..last_idx], &result.middle);
@@ -121,7 +143,13 @@ fn no_lookahead_ema() {
 fn all_zeros() {
     let n = 30;
     let input = vec![0.0; n];
-    let result = bbands(&input, 10, 2.0, 2.0, BBandsMA::SMA).unwrap();
+    let result = bbands(
+        &input,
+        10,
+        DeviationMulipliers { up: 2.0, down: 2.0 },
+        BBandsMA::SMA,
+    )
+    .unwrap();
     let expected = vec![Float::NAN; 9]
         .into_iter()
         .chain(vec![0.0; n - 9])
@@ -134,7 +162,13 @@ fn all_zeros() {
 #[test]
 fn linear_series_stability() {
     let input: Vec<Float> = (0..50).map(|x| x as Float).collect();
-    let result = bbands(&input, 5, 1.5, 1.5, BBandsMA::SMA).unwrap();
+    let result = bbands(
+        &input,
+        5,
+        DeviationMulipliers { up: 1.5, down: 1.5 },
+        BBandsMA::SMA,
+    )
+    .unwrap();
     for i in 5..result.middle.len() {
         let diff = result.middle[i] - result.middle[i - 1];
         assert!((diff - 1.0).abs() < 1e-6);
@@ -144,12 +178,18 @@ fn linear_series_stability() {
 #[test]
 fn breakout_detection() {
     let mut input: Vec<Float> = vec![100.0; 20];
-    for i in 0..20 {
-        input[i] += i as Float;
+    for (i, item) in input.iter_mut().enumerate().take(20) {
+        *item += i as Float;
     }
     input.push(200.0); // sudden spike
     let len = input.len();
-    let result = bbands(&input, 20, 1.0, 1.0, BBandsMA::SMA).unwrap();
+    let result = bbands(
+        &input,
+        20,
+        DeviationMulipliers { up: 1.0, down: 1.0 },
+        BBandsMA::SMA,
+    )
+    .unwrap();
     let last_price = input[len - 1];
     let upper = result.upper[len - 1];
     assert!(last_price > upper, "Expected breakout above upper band");
@@ -159,7 +199,12 @@ fn breakout_detection() {
 fn nan_input_err() {
     let mut input = vec![1.0, 2.0, 3.0];
     input.push(Float::NAN);
-    let output = bbands(&input, 3, 2.0, 2.0, BBandsMA::SMA);
+    let output = bbands(
+        &input,
+        3,
+        DeviationMulipliers { up: 2.0, down: 2.0 },
+        BBandsMA::SMA,
+    );
     assert!(output.is_err());
     assert!(matches!(output, Err(TechalysisError::DataNonFinite(_))));
 }
@@ -167,15 +212,36 @@ fn nan_input_err() {
 #[test]
 fn invalid_params_err() {
     let data = vec![1.0, 2.0, 3.0];
-    let output = bbands(&data, 0, 2.0, 2.0, BBandsMA::SMA);
+    let output = bbands(
+        &data,
+        0,
+        DeviationMulipliers { up: 2.0, down: 2.0 },
+        BBandsMA::SMA,
+    );
     assert!(output.is_err()); // length = 0
     assert!(matches!(output, Err(TechalysisError::BadParam(_))));
 
-    let output = bbands(&data, 3, -1.0, 2.0, BBandsMA::SMA);
+    let output = bbands(
+        &data,
+        3,
+        DeviationMulipliers {
+            up: -1.0,
+            down: 2.0,
+        },
+        BBandsMA::SMA,
+    );
     assert!(output.is_err()); // negative std_dev mult
     assert!(matches!(output, Err(TechalysisError::BadParam(_))));
 
-    let output = bbands(&data, 3, 2.0, -1.0, BBandsMA::SMA);
+    let output = bbands(
+        &data,
+        3,
+        DeviationMulipliers {
+            up: 2.0,
+            down: -1.0,
+        },
+        BBandsMA::SMA,
+    );
     assert!(output.is_err()); // negative lower mult
     assert!(matches!(output, Err(TechalysisError::BadParam(_))));
 }
@@ -183,7 +249,12 @@ fn invalid_params_err() {
 #[test]
 fn insufficient_data_err() {
     let input = vec![1.0, 2.0, 3.0];
-    let output = bbands(&input, 5, 2.0, 2.0, BBandsMA::SMA);
+    let output = bbands(
+        &input,
+        5,
+        DeviationMulipliers { up: 2.0, down: 2.0 },
+        BBandsMA::SMA,
+    );
     assert!(output.is_err());
     assert!(matches!(output, Err(TechalysisError::InsufficientData)),);
 }
@@ -191,7 +262,12 @@ fn insufficient_data_err() {
 #[test]
 fn unexpected_nan_err() {
     let data = vec![1.0, 2.0, 3.0, Float::NAN, 5.0, 6.0, 7.0];
-    let result = bbands(&data, 3, 2.0, 2.0, BBandsMA::SMA);
+    let result = bbands(
+        &data,
+        3,
+        DeviationMulipliers { up: 2.0, down: 2.0 },
+        BBandsMA::SMA,
+    );
     assert!(result.is_err());
     assert!(matches!(result, Err(TechalysisError::DataNonFinite(_))));
 }
@@ -199,7 +275,12 @@ fn unexpected_nan_err() {
 #[test]
 fn non_finite_err() {
     let data = vec![1.0, 2.0, 3.0, Float::INFINITY, 5.0, 6.0, 7.0];
-    let result = bbands(&data, 3, 2.0, 2.0, BBandsMA::SMA);
+    let result = bbands(
+        &data,
+        3,
+        DeviationMulipliers { up: 2.0, down: 2.0 },
+        BBandsMA::SMA,
+    );
     assert!(result.is_err());
     assert!(matches!(result, Err(TechalysisError::DataNonFinite(_))));
 }
@@ -209,7 +290,13 @@ fn next_with_finite_extreme_err_overflow_or_ok_all_finite() {
     let data = vec![5.0, 10.0, 30.0, 3.0, 5.0, 6.0, 8.0];
     let period = 3;
 
-    let result = bbands(&data, period, 2.0, 2.0, BBandsMA::SMA).unwrap();
+    let result = bbands(
+        &data,
+        period,
+        DeviationMulipliers { up: 2.0, down: 2.0 },
+        BBandsMA::SMA,
+    )
+    .unwrap();
     expect_err_overflow_or_ok_with!(result.state.next(Float::MAX - 5.0), |state: BBandsState| {
         assert!(state.upper.is_finite(), "Expected all values to be finite");
         assert!(state.middle.is_finite(), "Expected all values to be finite");
@@ -229,7 +316,12 @@ fn finite_neg_extreme_err_overflow_or_ok_all_finite() {
     ];
     let period = 3;
     expect_err_overflow_or_ok_with!(
-        bbands(&data, period, 2.0, 2.0, BBandsMA::SMA),
+        bbands(
+            &data,
+            period,
+            DeviationMulipliers { up: 2.0, down: 2.0 },
+            BBandsMA::SMA
+        ),
         |result: BBandsResult| {
             assert!(
                 result.upper.iter().skip(period).all(|v| v.is_finite()),
