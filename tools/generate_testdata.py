@@ -13,12 +13,13 @@ DATA_DIR.mkdir(parents=True, exist_ok=True)
 RAND = np.random.default_rng(seed=42)
 
 class Configuration():
-    def __init__(self, module: object, fct_name: str, input_names: List[str], parameters: dict, output_names: List[str]):
+    def __init__(self, module: object, fct_name: str, input_names: List[str], parameters: dict, output_names: List[str], sample_size: int = 1000):
         self.module = module
         self.fct_name = fct_name
         self.input_names = input_names
         self.parameters = parameters
         self.output_names = output_names
+        self.sample_size = sample_size
 
 CONFIG_DICT = {
     "EMA": Configuration(talib, "EMA", ["close"], dict(timeperiod=30), ["out"]),
@@ -29,11 +30,12 @@ CONFIG_DICT = {
     "WMA": Configuration(talib, "WMA", ["close"], dict(timeperiod=30), ["out"]),
     "DEMA": Configuration(talib, "DEMA", ["close"], dict(timeperiod=30), ["out"]),
     "TEMA": Configuration(talib, "TEMA", ["close"], dict(timeperiod=30), ["out"]),
+    "TRIMA": Configuration(talib, "TRIMA", ["close"], dict(timeperiod=30), ["out"]),
 }
 
 def generate_test_data(filename: str, configuration: Configuration, seed: int):
     logger.info(f"📊 ({configuration.fct_name}) Generating test data with parameters: {configuration.parameters}")
-    generated_data = ohlcv.random_walk(1000, scale=1.5, start_offset = 50, seed = seed)
+    generated_data = ohlcv.random_walk(configuration.sample_size, scale=1.5, start_offset = 50, seed = seed)
     output_data = getattr(configuration.module, configuration.fct_name).__call__(
         *[generated_data[name].values for name in configuration.input_names],
         **configuration.parameters
@@ -91,6 +93,7 @@ def parse_args():
     parser.add_argument("-n", "--name", type=str)
     parser.add_argument("--seed", type=int, default=5)
     parser.add_argument("--args", nargs='*', action=ParseKwargs)
+    parser.add_argument("--size", type=int, default=1000, help="Sample size for the generated data.")
     return parser.parse_args()
 
 def main():
@@ -99,12 +102,14 @@ def main():
         if args.args is not None:
             logger.warning("Ignoring args, generating all test data.")
         for configuration in CONFIG_DICT.values():
+            configuration.sample_size = args.size
             generate_test_data(configuration.fct_name.lower(), configuration, args.seed)
     else:
         config = CONFIG_DICT.get(args.name)
         file_name = args.name.lower()
         if args.args is not None:
             config.parameters.update(args.args)
+            config.sample_size = args.size
             file_name += f"_{dict_to_posix_filename(args.args)}"
         generate_test_data(file_name, config, args.seed)
 

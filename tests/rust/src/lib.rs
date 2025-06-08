@@ -17,3 +17,5 @@ pub(crate) mod tests_wma;
 pub(crate) mod tests_dema;
 #[cfg(test)]
 pub(crate) mod tests_tema;
+#[cfg(test)]
+pub(crate) mod tests_trima;

@@ -134,7 +134,7 @@ fn no_lookahead_ema() {
     assert!(
         approx_eq_float(new_state.upper, upper[last_idx + 1], 1e-8),
         "Expected last value to be {}, but got {}",
-        upper[last_idx],
+        upper[last_idx + 1],
         new_state.upper
     );
 }
