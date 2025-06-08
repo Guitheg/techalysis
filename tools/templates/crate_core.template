@@ -14,7 +14,7 @@ pub struct ${IndicatorName}State {
     // pub ...
 }
 
-impl From<${IndicatorName}Result> for Vec<f64> {
+impl From<${IndicatorName}Result> for Vec<Float> {
     fn from(result: ${IndicatorName}Result) -> Self {
         // TODO: IMPLEMENTS FROM IMPL
     }
@@ -68,6 +68,6 @@ pub fn ${indicator_name}_into(
 #[inline(always)]
 pub fn ${indicator_name}_next_unchecked(
     // TODO: CORE ARGUMENTS FOR INCREMENTAL
-) -> f64 {
+) -> Float {
     // TODO: IMPLEMENTS CORE INCREMENTAL LOGIC
 }

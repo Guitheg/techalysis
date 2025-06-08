@@ -65,7 +65,7 @@ pub(crate) fn ${indicator_name}(
         
         // TODO: IMPL WITH GIL RELEASE
         // let state = py
-        //     .allow_threads(|| ${indicator_name}_into(input_slice, output.as_mut_slice()))
+        //     .allow_threads(|| ${indicator_name}_into(input_slice, ..., output.as_mut_slice()))
         //     .map_err(|e| PyValueError::new_err(format!("{:?}", e)))?;
 
         // TODO: RETURN OUTPUTS
@@ -75,11 +75,11 @@ pub(crate) fn ${indicator_name}(
         // ))
     } else {
         // TODO: DEFINE OUTPUTS (PYTHON HEAP)
-        // let py_array_out = PyArray1::<f64>::zeros(py, [slice.len()], false);
+        // let py_array_out = PyArray1::<Float>::zeros(py, [len], false);
         // let py_array_ptr = unsafe { py_array_out.as_slice_mut()? };
 
         // TODO: IMPL WITHOUT GIL RELEASE
-        // let state = ${indicator_name}_into(input_slice, period, py_array_ptr)
+        // let state = ${indicator_name}_into(input_slice, ..., py_array_ptr)
         //     .map_err(|e| PyValueError::new_err(format!("{:?}", e)))?;
 
         // TODO: RETURN OUTPUTS

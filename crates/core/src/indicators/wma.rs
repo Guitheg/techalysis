@@ -18,7 +18,7 @@ pub struct WmaState {
     pub window: VecDeque<Float>,
 }
 
-impl From<WmaResult> for Vec<f64> {
+impl From<WmaResult> for Vec<Float> {
     fn from(result: WmaResult) -> Self {
         result.values
     }

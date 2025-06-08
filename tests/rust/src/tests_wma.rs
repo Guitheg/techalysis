@@ -67,7 +67,7 @@ fn period_1_err() {
 
 #[test]
 fn empty_input_err() {
-    let data: [f64; 0] = [];
+    let data: [Float; 0] = [];
     let result = wma(&data, 3);
     assert!(result.is_err());
     assert!(matches!(result, Err(TechalysisError::InsufficientData)));
@@ -75,7 +75,7 @@ fn empty_input_err() {
 
 #[test]
 fn unexpected_nan_err() {
-    let input = vec![1.0, 2.0, f64::NAN, 4.0];
+    let input = vec![1.0, 2.0, Float::NAN, 4.0];
     let result = wma(&input, 3);
     assert!(result.is_err());
     assert!(matches!(result, Err(TechalysisError::DataNonFinite(_))));
@@ -83,7 +83,7 @@ fn unexpected_nan_err() {
 
 #[test]
 fn non_finite_err() {
-    let input = vec![1.0, 2.0, f64::INFINITY, 4.0];
+    let input = vec![1.0, 2.0, Float::INFINITY, 4.0];
     let result = wma(&input, 3);
     assert!(result.is_err());
     assert!(matches!(result, Err(TechalysisError::DataNonFinite(_))));

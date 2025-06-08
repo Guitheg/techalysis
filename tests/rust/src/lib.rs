@@ -13,3 +13,5 @@ pub(crate) mod tests_sma;
 pub(crate) mod tests_bbands;
 #[cfg(test)]
 pub(crate) mod tests_wma;
+#[cfg(test)]
+pub(crate) mod tests_dema;

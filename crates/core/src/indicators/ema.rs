@@ -10,17 +10,17 @@ pub struct EmaResult {
     pub state: EmaState,
 }
 
-impl From<EmaResult> for Vec<Float> {
-    fn from(result: EmaResult) -> Self {
-        result.values
-    }
-}
-
 #[derive(Debug, Clone, Copy)]
 pub struct EmaState {
     pub ema: Float,
     pub period: usize,
     pub alpha: Float,
+}
+
+impl From<EmaResult> for Vec<Float> {
+    fn from(result: EmaResult) -> Self {
+        result.values
+    }
 }
 
 impl EmaState {
@@ -87,7 +87,10 @@ pub fn ema_into(
         None => period_to_alpha(period, None)?,
     };
 
-    init_sma_unchecked(data, period, inv_period, output)?;
+    output[period - 1] = init_sma_unchecked(data, period, inv_period, output)?;
+    if !output[period - 1].is_finite() {
+        return Err(TechalysisError::Overflow(period - 1, output[period - 1]));
+    }
 
     for idx in period..len {
         if !data[idx].is_finite() {

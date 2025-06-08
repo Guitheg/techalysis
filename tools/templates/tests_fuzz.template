@@ -1,7 +1,7 @@
 #![no_main]
 
 use libfuzzer_sys::fuzz_target;
-use techalysis::indicators::${indicator_name}::${indicator_name};
+use techalysis::{indicators::${indicator_name}::${indicator_name}, types::Float};
 
 fuzz_target!(|data: (...)| {
     // TODO: INPUT ARGUMENTS

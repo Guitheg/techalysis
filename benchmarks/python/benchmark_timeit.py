@@ -1,4 +1,5 @@
 import argparse
+from timeit_bench.dema import benchmark_dema
 from timeit_bench.wma import benchmark_wma
 from timeit_bench.bbands import benchmark_bbands
 from timeit_bench.rsi import benchmark_rsi
@@ -7,6 +8,7 @@ from timeit_bench.ema import benchmark_ema
 from timeit_bench.macd import benchmark_macd
 
 BENCHMARKS = {
+    'dema': benchmark_dema,
     'wma': benchmark_wma,
     'bbands': benchmark_bbands,
     'sma': benchmark_sma,

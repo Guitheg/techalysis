@@ -60,7 +60,10 @@ pub fn sma_into(
         ));
     }
 
-    init_sma_unchecked(data, period, inv_period, output)?;
+    output[period - 1] = init_sma_unchecked(data, period, inv_period, output)?;
+    if !output[period - 1].is_finite() {
+        return Err(TechalysisError::Overflow(period - 1, output[period - 1]));
+    }
 
     for idx in period..len {
         if !data[idx].is_finite() {
@@ -163,9 +166,5 @@ pub(crate) fn init_sma_unchecked(
         }
         output[idx] = Float::NAN;
     }
-    output[period - 1] = sum * inv_period;
-    if !output[period - 1].is_finite() {
-        return Err(TechalysisError::Overflow(period - 1, output[period - 1]));
-    }
-    Ok(sum)
+    Ok(sum * inv_period)
 }

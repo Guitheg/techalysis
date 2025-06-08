@@ -10,9 +10,10 @@ use techalysis::{
         ${indicator_name},
         ${IndicatorName}Result,
         ${IndicatorName}State
-    }
+    },
+    types::Float,
 };
-use crate::expect_ok_or_err_variant_with;
+use crate::expect_err_overflow_or_ok_with;
 
 #[test]
 fn generated() {
@@ -77,9 +78,8 @@ fn finite_extreme_err_overflow_or_ok_all_finite() {
         Float::MAX - 1.0,
     ];
     let period = 3;
-    expect_ok_or_err_variant_with!(
+    expect_err_overflow_or_ok_with!(
         ${indicator_name}(&data, period),
-        TechalysisError::Overflow,
         |result: ${IndicatorName}Result| {
             assert!(
                 result.values.iter().skip(period).all(|v| v.is_finite()),

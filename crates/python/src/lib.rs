@@ -1,5 +1,6 @@
 use pyo3::prelude::*;
 
+mod py_dema;
 mod py_wma;
 mod py_bbands;
 mod py_ema;
@@ -33,6 +34,10 @@ fn _core(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(py_wma::wma, m)?)?;
     m.add_function(wrap_pyfunction!(py_wma::wma_next, m)?)?;
     m.add_class::<py_wma::PyWmaState>()?;
+
+    m.add_function(wrap_pyfunction!(py_dema::dema, m)?)?;
+    m.add_function(wrap_pyfunction!(py_dema::dema_next, m)?)?;
+    m.add_class::<py_dema::PyDemaState>()?;
 
     Ok(())
 }
