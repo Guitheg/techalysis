@@ -1,16 +1,17 @@
 use super::ema::period_to_alpha;
 use crate::errors::TechalysisError;
 use crate::indicators::ema::ema_next_unchecked;
+use crate::types::Float;
 
 #[derive(Debug)]
 pub struct MacdResult {
-    pub macd: Vec<f64>,
-    pub signal: Vec<f64>,
-    pub histogram: Vec<f64>,
+    pub macd: Vec<Float>,
+    pub signal: Vec<Float>,
+    pub histogram: Vec<Float>,
     pub state: MacdState,
 }
 
-impl From<MacdResult> for (Vec<f64>, Vec<f64>, Vec<f64>) {
+impl From<MacdResult> for (Vec<Float>, Vec<Float>, Vec<Float>) {
     fn from(result: MacdResult) -> Self {
         (result.macd, result.signal, result.histogram)
     }
@@ -18,18 +19,18 @@ impl From<MacdResult> for (Vec<f64>, Vec<f64>, Vec<f64>) {
 
 #[derive(Debug, Clone, Copy)]
 pub struct MacdState {
-    pub fast_ema: f64,
-    pub slow_ema: f64,
-    pub macd: f64,
-    pub signal: f64,
-    pub histogram: f64,
+    pub fast_ema: Float,
+    pub slow_ema: Float,
+    pub macd: Float,
+    pub signal: Float,
+    pub histogram: Float,
     pub fast_period: usize,
     pub slow_period: usize,
     pub signal_period: usize,
 }
 
 impl MacdState {
-    pub fn next(&self, new_value: f64) -> Result<MacdState, TechalysisError> {
+    pub fn next(&self, new_value: Float) -> Result<MacdState, TechalysisError> {
         macd_next(
             new_value,
             self.fast_ema,
@@ -43,7 +44,7 @@ impl MacdState {
 }
 
 pub fn macd(
-    data_array: &[f64],
+    data_array: &[Float],
     fast_period: usize,
     slow_period: usize,
     signal_period: usize,
@@ -73,17 +74,23 @@ pub fn macd(
 }
 
 pub fn macd_into(
-    data_array: &[f64],
+    data: &[Float],
     fast_period: usize,
     slow_period: usize,
     signal_period: usize,
-    output_macd: &mut [f64],
-    output_signal: &mut [f64],
-    output_histogram: &mut [f64],
+    output_macd: &mut [Float],
+    output_signal: &mut [Float],
+    output_histogram: &mut [Float],
 ) -> Result<MacdState, TechalysisError> {
     if fast_period >= slow_period {
         return Err(TechalysisError::BadParam(
             "Fast period must be less than slow period".to_string(),
+        ));
+    }
+
+    if fast_period <= 1 || slow_period <= 1 || signal_period <= 1 {
+        return Err(TechalysisError::BadParam(
+            "Periods must be greater than 1".to_string(),
         ));
     }
 
@@ -94,15 +101,15 @@ pub fn macd_into(
     let signal_start_idx = slow_period;
     let macd_start_idx = (slow_period - 1) + (signal_period - 1);
 
-    let size: usize = data_array.len();
+    let len: usize = data.len();
 
-    if size < skip_period {
+    if len < skip_period {
         return Err(TechalysisError::InsufficientData);
     }
 
-    output_macd[..macd_start_idx].fill(f64::NAN);
-    output_signal[..macd_start_idx].fill(f64::NAN);
-    output_histogram[..macd_start_idx].fill(f64::NAN);
+    output_macd[..macd_start_idx].fill(Float::NAN);
+    output_signal[..macd_start_idx].fill(Float::NAN);
+    output_histogram[..macd_start_idx].fill(Float::NAN);
 
     let fast_alpha = period_to_alpha(fast_period, None)?;
     let slow_alpha = period_to_alpha(slow_period, None)?;
@@ -111,56 +118,67 @@ pub fn macd_into(
     let mut fast_sum = 0.0;
     let mut slow_sum = 0.0;
 
-    for value in data_array
+    for (idx, value) in data
         .iter()
         .take(fast_ema_start_idx)
         .skip(slow_ema_start_idx)
+        .enumerate()
     {
-        if value.is_nan() {
-            return Err(TechalysisError::UnexpectedNan);
+        if !value.is_finite() {
+            return Err(TechalysisError::DataNonFinite(format!(
+                "data[{idx}] = {value:?}",
+            )));
         }
         slow_sum += value;
     }
 
-    for value in data_array
+    for (idx, value) in data
         .iter()
         .take(signal_start_idx)
         .skip(fast_ema_start_idx)
+        .enumerate()
     {
-        if value.is_nan() {
-            return Err(TechalysisError::UnexpectedNan);
+        if !value.is_finite() {
+            return Err(TechalysisError::DataNonFinite(format!(
+                "data[{idx}] = {value:?}"
+            )));
         }
         slow_sum += value;
         fast_sum += value;
     }
-    let mut fast_ema = fast_sum / fast_period as f64;
-    let mut slow_ema = slow_sum / slow_period as f64;
+    let mut fast_ema = fast_sum / fast_period as Float;
+    let mut slow_ema = slow_sum / slow_period as Float;
     let mut sum_macd = fast_ema - slow_ema;
 
-    for value in data_array
+    for (idx, value) in data
         .iter()
         .take(macd_start_idx)
         .skip(signal_start_idx)
+        .enumerate()
     {
-        if value.is_nan() {
-            return Err(TechalysisError::UnexpectedNan);
+        if !value.is_finite() {
+            return Err(TechalysisError::DataNonFinite(format!(
+                "data[{idx}] = {value:?}"
+            )));
         }
         fast_ema = ema_next_unchecked(*value, fast_ema, fast_alpha);
         slow_ema = ema_next_unchecked(*value, slow_ema, slow_alpha);
         sum_macd += fast_ema - slow_ema;
     }
 
-    fast_ema = ema_next_unchecked(data_array[macd_start_idx], fast_ema, fast_alpha);
-    slow_ema = ema_next_unchecked(data_array[macd_start_idx], slow_ema, slow_alpha);
+    fast_ema = ema_next_unchecked(data[macd_start_idx], fast_ema, fast_alpha);
+    slow_ema = ema_next_unchecked(data[macd_start_idx], slow_ema, slow_alpha);
     output_macd[macd_start_idx] = fast_ema - slow_ema;
     sum_macd += output_macd[macd_start_idx];
-    output_signal[macd_start_idx] = sum_macd / signal_period as f64;
+    output_signal[macd_start_idx] = sum_macd / signal_period as Float;
     output_histogram[macd_start_idx] = output_macd[macd_start_idx] - output_signal[macd_start_idx];
 
-    for idx in macd_start_idx + 1..size {
-        let data = data_array[idx];
-        if data.is_nan() {
-            return Err(TechalysisError::UnexpectedNan);
+    for idx in macd_start_idx + 1..len {
+        let data = data[idx];
+        if !data.is_finite() {
+            return Err(TechalysisError::DataNonFinite(format!(
+                "data[{idx}] = {data:?}"
+            )));
         }
         (
             fast_ema,
@@ -177,14 +195,23 @@ pub fn macd_into(
             slow_alpha,
             signal_alpha,
         );
+        if !output_macd[idx].is_finite() {
+            return Err(TechalysisError::Overflow(idx, output_macd[idx]));
+        }
+        if !output_signal[idx].is_finite() {
+            return Err(TechalysisError::Overflow(idx, output_signal[idx]));
+        }
+        if !output_histogram[idx].is_finite() {
+            return Err(TechalysisError::Overflow(idx, output_histogram[idx]));
+        }
     }
 
     Ok(MacdState {
         fast_ema,
         slow_ema,
-        macd: output_macd[size - 1],
-        signal: output_signal[size - 1],
-        histogram: output_histogram[size - 1],
+        macd: output_macd[len - 1],
+        signal: output_signal[len - 1],
+        histogram: output_histogram[len - 1],
         fast_period,
         slow_period,
         signal_period,
@@ -192,10 +219,10 @@ pub fn macd_into(
 }
 
 pub fn macd_next(
-    new_value: f64,
-    prev_fast_ema: f64,
-    prev_slow_ema: f64,
-    prev_signal: f64,
+    new_value: Float,
+    prev_fast_ema: Float,
+    prev_slow_ema: Float,
+    prev_signal: Float,
     fast_period: usize,
     slow_period: usize,
     signal_period: usize,
@@ -210,12 +237,30 @@ pub fn macd_next(
     let slow_alpha = period_to_alpha(slow_period, None)?;
     let signal_alpha = period_to_alpha(signal_period, None)?;
 
-    if new_value.is_nan()
-        || prev_fast_ema.is_nan()
-        || prev_slow_ema.is_nan()
-        || prev_signal.is_nan()
-    {
-        return Err(TechalysisError::UnexpectedNan);
+    if !new_value.is_finite() {
+        return Err(TechalysisError::DataNonFinite(format!(
+            "new_value = {new_value:?}",
+        )));
+    }
+    if !prev_fast_ema.is_finite() {
+        return Err(TechalysisError::DataNonFinite(format!(
+            "prev_fast_ema = {prev_fast_ema:?}",
+        )));
+    }
+    if !prev_slow_ema.is_finite() {
+        return Err(TechalysisError::DataNonFinite(format!(
+            "prev_slow_ema = {prev_slow_ema:?}",
+        )));
+    }
+    if !prev_signal.is_finite() {
+        return Err(TechalysisError::DataNonFinite(format!(
+            "prev_signal = {prev_signal:?}",
+        )));
+    }
+    if fast_period <= 1 || slow_period <= 1 || signal_period <= 1 {
+        return Err(TechalysisError::BadParam(
+            "Periods must be greater than 1".to_string(),
+        ));
     }
 
     let (fast_ema, slow_ema, macd, signal, histogram) = macd_next_unchecked(
@@ -227,6 +272,16 @@ pub fn macd_next(
         slow_alpha,
         signal_alpha,
     );
+
+    if !macd.is_finite() {
+        return Err(TechalysisError::Overflow(0, macd));
+    }
+    if !signal.is_finite() {
+        return Err(TechalysisError::Overflow(0, signal));
+    }
+    if !histogram.is_finite() {
+        return Err(TechalysisError::Overflow(0, histogram));
+    }
 
     Ok(MacdState {
         fast_ema,
@@ -242,14 +297,14 @@ pub fn macd_next(
 
 #[inline(always)]
 pub fn macd_next_unchecked(
-    new_value: f64,
-    prev_fast_ema: f64,
-    prev_slow_ema: f64,
-    prev_signal: f64,
-    fast_alpha: f64,
-    slow_alpha: f64,
-    signal_alpha: f64,
-) -> (f64, f64, f64, f64, f64) {
+    new_value: Float,
+    prev_fast_ema: Float,
+    prev_slow_ema: Float,
+    prev_signal: Float,
+    fast_alpha: Float,
+    slow_alpha: Float,
+    signal_alpha: Float,
+) -> (Float, Float, Float, Float, Float) {
     let fast_ema = ema_next_unchecked(new_value, prev_fast_ema, fast_alpha);
     let slow_ema = ema_next_unchecked(new_value, prev_slow_ema, slow_alpha);
     let macd = fast_ema - slow_ema;

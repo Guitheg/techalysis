@@ -14,6 +14,8 @@ INSERT_TO_FUZZ_CARGO = ROOT / "tools" / "templates" / "insert_fuzz_cargo.templat
 # WILL BE MODIFIED
 #   BENCHMARKS
 BENCH_PYTHON_TIMEIT = ROOT / "benchmarks/python/benchmark_timeit.py"
+BENCH_RUST = ROOT / "benchmarks/rust/bench.rs"
+BENCH_RUST_MOD = ROOT / "benchmarks/rust/indicators/mod.rs"
 #   CRATES
 CORE_LIB_PATH =  ROOT / "crates/core/src/indicators/mod.rs"
 PYBINDING_LIB_PATH = ROOT / "crates/python/src/lib.rs"
@@ -149,6 +151,27 @@ def add_maptypes(indicator_name: str):
     
     logger.info(f"🔄 Updated {MAPTYPES_PYTHON}")
 
+def add_rust_benchmark(indicator_name: str):
+    with open(BENCH_RUST, 'r') as f:
+        lines = f.readlines()
+    insert_position = next((i for i, line in enumerate(lines) if line.startswith("criterion::criterion_main! {")), len(lines))
+    lines.insert(insert_position + 1, f"indicators::bench_{indicator_name}::bench,")
+
+    with open(BENCH_RUST, 'w') as f:
+        f.writelines(lines)
+    
+    logger.info(f"🔄 Updated {BENCH_RUST}")
+
+def add_rust_benchmark_to_mod(indicator_name: str):
+    with open(BENCH_RUST_MOD, 'r') as f:
+        lines = f.readlines()
+    lines.insert(len(lines), f"pub(crate) mod bench_{indicator_name};")
+
+    with open(BENCH_RUST_MOD, 'w') as f:
+        f.writelines(lines)
+    
+    logger.info(f"🔄 Updated {BENCH_RUST_MOD}")
+
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("name", type=str)
@@ -170,6 +193,8 @@ def main():
     add_to_core(args.name)
     add_to_pybindings(args.name, args.camel_case)
     add_maptypes(args.name)
+    add_rust_benchmark(args.name)
+    add_rust_benchmark_to_mod(args.name)
     logger.info(f"✅ Successfully added new indicator template: {args.name}")
 
 if __name__ == "__main__":

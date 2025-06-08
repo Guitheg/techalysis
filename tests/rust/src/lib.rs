@@ -9,3 +9,7 @@ pub(crate) mod tests_macd;
 pub(crate) mod tests_rsi;
 #[cfg(test)]
 pub(crate) mod tests_sma;
+#[cfg(test)]
+pub(crate) mod tests_bbands;
+#[cfg(test)]
+pub(crate) mod tests_wma;

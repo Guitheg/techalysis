@@ -1,18 +1,19 @@
 use numpy::{IntoPyArray, PyArray1, PyArrayMethods, PyUntypedArrayMethods};
 use pyo3::{exceptions::PyValueError, pyclass, pyfunction, pymethods, Py, PyResult, Python};
 use techalysis::indicators::rsi::{rsi_into, rsi_next as core_rsi_next, RsiState};
+use techalysis::types::Float;
 
 #[pyclass(name = "RsiState")]
 #[derive(Debug, Clone)]
 pub struct PyRsiState {
     #[pyo3(get)]
-    pub rsi: f64,
+    pub rsi: Float,
     #[pyo3(get)]
-    pub prev_value: f64,
+    pub prev_value: Float,
     #[pyo3(get)]
-    pub avg_gain: f64,
+    pub avg_gain: Float,
     #[pyo3(get)]
-    pub avg_loss: f64,
+    pub avg_loss: Float,
     #[pyo3(get)]
     pub period: usize,
 }
@@ -20,7 +21,13 @@ pub struct PyRsiState {
 #[pymethods]
 impl PyRsiState {
     #[new]
-    pub fn new(rsi: f64, prev_value: f64, avg_gain: f64, avg_loss: f64, period: usize) -> Self {
+    pub fn new(
+        rsi: Float,
+        prev_value: Float,
+        avg_gain: Float,
+        avg_loss: Float,
+        period: usize,
+    ) -> Self {
         PyRsiState {
             rsi,
             prev_value,
@@ -58,10 +65,10 @@ impl From<RsiState> for PyRsiState {
 #[pyfunction(signature = (data, period = 14, release_gil = false))]
 pub(crate) fn rsi(
     py: Python,
-    data: numpy::PyReadonlyArray1<f64>,
+    data: numpy::PyReadonlyArray1<Float>,
     period: usize,
     release_gil: bool,
-) -> PyResult<(Py<PyArray1<f64>>, PyRsiState)> {
+) -> PyResult<(Py<PyArray1<Float>>, PyRsiState)> {
     let len: usize = data.len();
     let input_slice = data.as_slice()?;
 
@@ -73,7 +80,7 @@ pub(crate) fn rsi(
 
         return Ok((output.into_pyarray(py).into(), rsi_state.into()));
     } else {
-        let output_array = PyArray1::<f64>::zeros(py, [len], false);
+        let output_array = PyArray1::<Float>::zeros(py, [len], false);
         let output_slice = unsafe { output_array.as_slice_mut()? };
 
         let rsi_state = rsi_into(input_slice, period, output_slice)
@@ -84,7 +91,7 @@ pub(crate) fn rsi(
 }
 
 #[pyfunction(signature = (new_value, rsi_state))]
-pub(crate) fn rsi_next(new_value: f64, rsi_state: PyRsiState) -> PyResult<PyRsiState> {
+pub(crate) fn rsi_next(new_value: Float, rsi_state: PyRsiState) -> PyResult<PyRsiState> {
     let state = core_rsi_next(
         new_value,
         rsi_state.prev_value,

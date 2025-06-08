@@ -1,11 +1,15 @@
 use crate::helper::{
-    assert::{approx_eq_f64, approx_eq_f64_custom},
+    assert::approx_eq_float,
     generated::{assert_vec_eq_gen_data, load_generated_csv},
 };
 
+use crate::expect_err_overflow_or_ok_with;
 use proptest::{collection::vec, prelude::*};
-use techalysis::errors::TechalysisError;
-use techalysis::indicators::sma::sma;
+use techalysis::{
+    errors::TechalysisError,
+    indicators::sma::{sma, SmaResult, SmaState},
+    types::Float,
+};
 
 #[test]
 fn generated() {
@@ -37,7 +41,7 @@ fn no_lookahead() {
     );
     let new_state = new_output.unwrap();
     assert!(
-        approx_eq_f64_custom(new_state.sma, expected[expected.len() - 1], 1e-8),
+        approx_eq_float(new_state.sma, expected[expected.len() - 1], 1e-8),
         "Expected last value to be {}, but got {}",
         expected[expected.len() - 1],
         new_state.sma
@@ -45,20 +49,32 @@ fn no_lookahead() {
 }
 
 #[test]
-fn extremum_value_injection_without_panic() {
-    use std::f64;
-    let data = vec![f64::MAX / 2.0, f64::MAX / 2.0, f64::MIN_POSITIVE, -0.0, 0.0];
-    let out = sma(&data, 2)
-        .expect("sma must not error on finite extremes")
-        .values;
-    assert_eq!(out.len(), data.len());
-    for (i, v) in out.iter().enumerate() {
-        if i < 1 {
-            assert!(v.is_nan());
-        } else {
-            assert!(v.is_finite(), "value at {i} is not finite: {v}");
-        }
-    }
+fn finite_extreme_err_overflow_or_ok_all_finite() {
+    let data = vec![
+        Float::MAX - 3.0,
+        Float::MAX - 2.0,
+        Float::MAX - 5.0,
+        Float::MAX - 6.0,
+        Float::MAX - 8.0,
+        Float::MAX - 1.0,
+    ];
+    let period = 3;
+    expect_err_overflow_or_ok_with!(sma(&data, period), |result: SmaResult| {
+        assert!(
+            result.values.iter().skip(period).all(|v| v.is_finite()),
+            "Expected all values to be finite"
+        );
+    });
+}
+
+#[test]
+fn next_with_finite_neg_extreme_err_overflow_or_ok_all_finite() {
+    let data = vec![5.0, 10.0, 30.0, 3.0, 5.0, 6.0, 8.0];
+    let period = 3;
+    let result = sma(&data, period).unwrap();
+    expect_err_overflow_or_ok_with!(result.state.next(Float::MIN + 5.0), |state: SmaState| {
+        assert!(state.sma.is_finite(), "Expected all values to be finite");
+    });
 }
 
 #[test]
@@ -81,15 +97,27 @@ fn period_higher_bound() {
 }
 
 #[test]
-fn unexpected_nan() {
-    let data = vec![1.0, 2.0, 3.0, f64::NAN];
+fn unexpected_nan_err() {
+    let data = vec![1.0, 2.0, 3.0, Float::NAN, 1.0, 2.0, 3.0];
     let result = sma(&data, 3);
     assert!(result.is_err());
-    assert!(matches!(result, Err(TechalysisError::UnexpectedNan)));
+    assert!(matches!(result, Err(TechalysisError::DataNonFinite(_))));
 }
 
 #[test]
-fn insufficient_data() {
+fn non_finite_err() {
+    let data = vec![1.0, 2.0, Float::INFINITY, 1.0, 2.0, 3.0];
+    let result = sma(&data, 3);
+    assert!(
+        result.is_err(),
+        "Expected an error for non-finite data, got: {:?}",
+        result
+    );
+    assert!(matches!(result, Err(TechalysisError::DataNonFinite(_))));
+}
+
+#[test]
+fn insufficient_data_err() {
     let data = vec![1.0, 2.0, 3.0];
     let result = sma(&data, 4);
     assert!(matches!(result, Err(TechalysisError::InsufficientData)));
@@ -104,15 +132,15 @@ fn period_1() {
     assert!(matches!(result, Err(TechalysisError::BadParam(_))));
 }
 
-fn slow_sma(data: &[f64], window: usize) -> Vec<f64> {
-    let mut out = vec![f64::NAN; data.len()];
+fn slow_sma(data: &[Float], window: usize) -> Vec<Float> {
+    let mut out = vec![Float::NAN; data.len()];
     if window == 0 || window > data.len() {
         return out;
     }
 
     for i in window - 1..data.len() {
         let slice = &data[i + 1 - window..=i];
-        out[i] = slice.iter().sum::<f64>() / window as f64;
+        out[i] = slice.iter().sum::<Float>() / window as Float;
     }
     out
 }
@@ -129,7 +157,7 @@ proptest! {
 
         if has_nan {
             prop_assert!(out.is_err());
-            prop_assert!(matches!(out, Err(TechalysisError::UnexpectedNan)));
+            prop_assert!(matches!(out, Err(TechalysisError::DataNonFinite(_))));
         } else {
             let out = out.unwrap().values;
             prop_assert_eq!(out.len(), input.len());
@@ -141,7 +169,7 @@ proptest! {
                 if o.is_nan() || expect.is_nan() {
                     prop_assert!(o.is_nan() && expect.is_nan());
                 } else {
-                    prop_assert!(approx_eq_f64(*o, expect));
+                    prop_assert!(approx_eq_float(*o, expect, 1e-8));
                 }
             }
 
@@ -154,7 +182,7 @@ proptest! {
                 if o.is_nan() {
                     prop_assert!(scaled.is_nan());
                 } else {
-                    prop_assert!(approx_eq_f64(scaled, o * k));
+                    prop_assert!(approx_eq_float(scaled, o * k, 1e-8));
                 }
             }
         }

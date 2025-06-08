@@ -59,7 +59,7 @@ def macd(
         - macd: **1-D array** of the same length as *data* containing the MACD line values.
         - signal: **1-D array** of the same length as *data* containing the signal line values.
         - histogram: **1-D array** of the same length as *data* containing the MACD histogram values.
-        - state: **MacdState** object containing the last MACD, signal, histogram, fast EMA, slow EMA, and periods used in the computation.
+        - state: **MacdState** (fast_ema: float, slow_ema: float, macd: float, signal: float, histogram: float, fast_period: int, slow_period: int, signal_period: int)
     """
     ...
 

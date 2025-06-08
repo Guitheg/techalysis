@@ -19,3 +19,8 @@ rand = "0.9.1"
 name = "bench"
 harness = false
 path = "../../benchmarks/rust/bench.rs"
+
+[features]
+default = ["f64"]
+f64 = []
+f32 = []

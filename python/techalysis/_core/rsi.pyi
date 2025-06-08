@@ -25,7 +25,7 @@ class RsiResult(NamedTuple):
 
 def rsi(
     data: NDArray,
-    period: int,
+    period: int = 14,
     release_gil: bool = False
 ) -> Tuple[NDArray, RsiState]:
     """
@@ -49,7 +49,7 @@ def rsi(
     RsiResult
         A named tuple containing the result of the RSI computation.
         - values: **1-D array** of the same length as *data* containing the RSI.
-        - state: **RsiState** object containing the last RSI value, average gain, average loss, and period used in the computation.
+        - state: **RsiState** (rsi: float, avg_gain: float, avg_loss: float, period: int)
     """
     ...
 

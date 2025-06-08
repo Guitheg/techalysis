@@ -1,7 +1,10 @@
+use crate::types::Float;
+
 #[derive(Debug)]
 pub enum TechalysisError {
     BadParam(String),
     InsufficientData,
-    UnexpectedNan,
+    DataNonFinite(String),
+    Overflow(usize, Float),
     NotImplementedYet,
 }

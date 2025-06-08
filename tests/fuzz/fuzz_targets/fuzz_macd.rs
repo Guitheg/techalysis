@@ -2,8 +2,9 @@
 
 use libfuzzer_sys::fuzz_target;
 use techalysis::indicators::macd::macd;
+use techalysis::types::Float;
 
-fuzz_target!(|data: (Vec<f64>, u8, u8, u8)| {
+fuzz_target!(|data: (Vec<Float>, u8, u8, u8)| {
     let (values, fastperiod, slowperiod, signalperiod) = data;
     let fastperiod = (fastperiod as usize % values.len().saturating_add(1)).max(1);
     let slowperiod = (slowperiod as usize % values.len().saturating_add(1)).max(1);

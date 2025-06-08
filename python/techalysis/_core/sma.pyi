@@ -18,7 +18,7 @@ class SmaResult(NamedTuple):
 
 def sma(
     data: NDArray,
-    period: int,
+    period: int = 14,
     release_gil: bool = False
 ) -> SmaResult | Tuple[NDArray, SmaState]:
     """
@@ -42,7 +42,7 @@ def sma(
     SmaResult
         A named tuple containing the result of the SMA computation.
         - values: **1-D array** of the same length as *data* containing the SMA.
-        - state: **SmaState** object containing the last SMA value and period used in the computation.
+        - state: **SmaState** (sma: float, period: int, window: List[float])
 
     """
     ...

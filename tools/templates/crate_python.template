@@ -1,11 +1,14 @@
 use numpy::{IntoPyArray, PyArray1, PyArrayMethods, PyReadonlyArray1, PyUntypedArrayMethods};
 use pyo3::{pymethods, exceptions::PyValueError, pyclass, pyfunction, Py, PyResult, Python};
 use techalysis::indicators::${indicator_name}::{${indicator_name}_into, ${IndicatorName}State};
+use techalysis::types::Float;
 
 #[pyclass(name = "${IndicatorName}State")]
 #[derive(Debug, Clone)]
 pub struct Py${IndicatorName}State {
     // TODO: DEFINE ATTRIBUTES
+    // #[pyo3(get)]
+    // pub ...
 }
 #[pymethods]
 impl Py${IndicatorName}State {
