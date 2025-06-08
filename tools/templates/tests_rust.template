@@ -1,5 +1,5 @@
 use crate::helper::{
-    assert::{approx_eq_f64, approx_eq_f64_custom},
+    assert::approx_eq_float,
     generated::{assert_vec_eq_gen_data, load_generated_csv},
 };
 
@@ -55,7 +55,7 @@ fn no_lookahead() {
 
     // let new_state = result.state.next(input[last_idx]).unwrap();
     // assert!(
-    //     approx_eq_f64_custom(new_state.sma, expected[last_idx], 1e-8),
+    //     approx_eq_float(new_state.sma, expected[last_idx], 1e-8),
     //     "Expected last value to be {}, but got {}",
     //     expected[last_idx],
     //     new_state.sma

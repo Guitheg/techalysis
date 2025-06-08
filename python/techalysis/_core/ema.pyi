@@ -19,7 +19,7 @@ class EmaResult(NamedTuple):
 
 def ema(
     data: NDArray,
-    period: int,
+    period: int = 14,
     alpha: Optional[float] = None,
     release_gil: bool = False
 ) -> EmaResult | Tuple[NDArray, EmaState]:
@@ -47,7 +47,7 @@ def ema(
     EmaResult
         A named tuple containing the result of the EMA computation.
         - values: **1-D array** of the same length as *data* containing the EMA.
-        - state: **EmaState** object containing the last EMA value, period used in the computation, and alpha value.
+        - state: **EmaState** (ema: float, period: int, alpha: float)
     """
     ...
 

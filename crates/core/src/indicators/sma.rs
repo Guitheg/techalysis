@@ -8,17 +8,17 @@ pub struct SmaResult {
     pub state: SmaState,
 }
 
-impl From<SmaResult> for Vec<Float> {
-    fn from(result: SmaResult) -> Self {
-        result.values
-    }
-}
-
 #[derive(Debug, Clone)]
 pub struct SmaState {
     pub sma: Float,
     pub period: usize,
     pub window: VecDeque<Float>,
+}
+
+impl From<SmaResult> for Vec<Float> {
+    fn from(result: SmaResult) -> Self {
+        result.values
+    }
 }
 
 impl SmaState {
@@ -27,10 +27,10 @@ impl SmaState {
     }
 }
 
-pub fn sma(data_array: &[Float], period: usize) -> Result<SmaResult, TechalysisError> {
-    let size = data_array.len();
-    let mut output = vec![0.0; size];
-    let sma_state = sma_into(data_array, period, &mut output)?;
+pub fn sma(data: &[Float], period: usize) -> Result<SmaResult, TechalysisError> {
+    let len = data.len();
+    let mut output = vec![0.0; len];
+    let sma_state = sma_into(data, period, &mut output)?;
     Ok(SmaResult {
         values: output,
         state: sma_state,
@@ -140,14 +140,14 @@ pub fn sma_next_unchecked(
 
 #[inline(always)]
 pub(crate) fn init_sma_unchecked(
-    data_array: &[Float],
+    data: &[Float],
     period: usize,
     inv_period: Float,
     output: &mut [Float],
 ) -> Result<Float, TechalysisError> {
     let mut sum: Float = 0.0;
     for idx in 0..period {
-        let value = &data_array[idx];
+        let value = &data[idx];
         if !value.is_finite() {
             return Err(TechalysisError::DataNonFinite(format!(
                 "data_array[{idx}] = {value:?}"

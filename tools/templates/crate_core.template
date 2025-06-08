@@ -1,4 +1,5 @@
 use crate::errors::TechalysisError;
+use crate::types::Float;
 
 #[derive(Debug)]
 pub struct ${IndicatorName}Result {

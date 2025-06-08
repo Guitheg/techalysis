@@ -11,3 +11,5 @@ pub(crate) mod tests_rsi;
 pub(crate) mod tests_sma;
 #[cfg(test)]
 pub(crate) mod tests_bbands;
+#[cfg(test)]
+pub(crate) mod tests_wma;

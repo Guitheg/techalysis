@@ -13,7 +13,7 @@ class BBandsState:
     lower: float
     mean_sma: float
     mean_sq: float
-    window: List
+    window: List[float]
     period: int
     std_up: float
     std_down: float
@@ -73,7 +73,7 @@ def bbands(
         - upper: **NDArray** with the upper Bollinger Band values.
         - middle: **NDArray** with the middle Bollinger Band values (moving average).
         - lower: **NDArray** with the lower Bollinger Band values.
-        - state: **BBandsState** with (upper, middle, lower, mean_sma, mean_sq, window, period, std_up, std_down)
+        - state: **BBandsState** with (upper: float, middle: float, lower: float, mean_sma: float, mean_sq: float, window: List[float], period: int, std_up: float, std_down: float)
     """
     ...
 

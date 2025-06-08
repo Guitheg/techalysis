@@ -1,3 +1,4 @@
+pub mod wma;
 pub mod bbands;
 pub mod ema;
 pub mod macd;

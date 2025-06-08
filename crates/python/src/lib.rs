@@ -1,5 +1,6 @@
 use pyo3::prelude::*;
 
+mod py_wma;
 mod py_bbands;
 mod py_ema;
 mod py_macd;
@@ -28,6 +29,10 @@ fn _core(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(py_bbands::bbands_next, m)?)?;
     m.add_class::<py_bbands::PyBBandsState>()?;
     m.add_class::<py_bbands::PyBBandsMA>()?;
+
+    m.add_function(wrap_pyfunction!(py_wma::wma, m)?)?;
+    m.add_function(wrap_pyfunction!(py_wma::wma_next, m)?)?;
+    m.add_class::<py_wma::PyWmaState>()?;
 
     Ok(())
 }

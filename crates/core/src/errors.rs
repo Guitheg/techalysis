@@ -4,4 +4,5 @@ pub enum TechalysisError {
     InsufficientData,
     DataNonFinite(String),
     NotImplementedYet,
+    Overflow,
 }

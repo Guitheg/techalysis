@@ -47,3 +47,9 @@ path = "fuzz_targets/fuzz_bbands.rs"
 test = false
 doc = false
 bench = false
+[[bin]]
+name = "wma"
+path = "fuzz_targets/fuzz_wma.rs"
+test = false
+doc = false
+bench = false
