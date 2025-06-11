@@ -1,6 +1,7 @@
 use crate::errors::TechalysisError;
 use crate::indicators::ema::{ema_next_unchecked, period_to_alpha};
 use crate::indicators::sma::init_sma_unchecked;
+use crate::traits::State;
 use crate::types::Float;
 
 #[derive(Debug)]
@@ -18,16 +19,16 @@ pub struct DemaState {
     pub alpha: Float,
 }
 
-impl DemaState {
-    pub fn next(&mut self, new_value: Float) -> Result<(), TechalysisError> {
+impl State<Float> for DemaState {
+    fn update(&mut self, sample: Float) -> Result<(), TechalysisError> {
         if self.period <= 1 {
             return Err(TechalysisError::BadParam(
                 "Period must be greater than 1".to_string(),
             ));
         }
-        if !new_value.is_finite() {
+        if !sample.is_finite() {
             return Err(TechalysisError::DataNonFinite(format!(
-                "new_value = {new_value:?}",
+                "sample = {sample:?}",
             )));
         }
 
@@ -46,7 +47,7 @@ impl DemaState {
         }
 
         let (dema, ema_1, ema_2) = dema_next_unchecked(
-            new_value,
+            sample,
             self.ema_1, 
             self.ema_2,
             self.alpha

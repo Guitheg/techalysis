@@ -1,6 +1,7 @@
 use super::ema::period_to_alpha;
 use crate::errors::TechalysisError;
 use crate::indicators::ema::ema_next_unchecked;
+use crate::traits::State;
 use crate::types::Float;
 
 #[derive(Debug)]
@@ -25,8 +26,8 @@ pub struct MacdState {
     pub signal_period: usize,
 }
 
-impl MacdState {
-    pub fn next(&mut self, new_value: Float) -> Result<(), TechalysisError> {
+impl State<Float> for MacdState {
+    fn update(&mut self, sample: Float) -> Result<(), TechalysisError> {
         if self.fast_period >= self.slow_period {
             return Err(TechalysisError::BadParam(
                 "Fast period must be less than slow period".to_string(),
@@ -37,9 +38,9 @@ impl MacdState {
         let slow_alpha = period_to_alpha(self.slow_period, None)?;
         let signal_alpha = period_to_alpha(self.signal_period, None)?;
 
-        if !new_value.is_finite() {
+        if !sample.is_finite() {
             return Err(TechalysisError::DataNonFinite(format!(
-                "new_value = {new_value:?}",
+                "sample = {sample:?}",
             )));
         }
         if !self.fast_ema.is_finite() {
@@ -74,7 +75,7 @@ impl MacdState {
         }
 
         let (fast_ema, slow_ema, macd, signal, histogram) = macd_next_unchecked(
-            new_value,
+            sample,
             self.fast_ema,
             self.slow_ema,
             self.signal,

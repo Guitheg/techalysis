@@ -2,6 +2,7 @@ use numpy::{IntoPyArray, PyArray1, PyArrayMethods, PyReadonlyArray1, PyUntypedAr
 use pyo3::{exceptions::PyValueError, pyclass, pyfunction, pymethods, Py, PyResult, Python};
 use techalysis::indicators::dema::{dema_into, DemaState};
 use techalysis::indicators::ema::period_to_alpha;
+use techalysis::traits::State;
 use techalysis::types::Float;
 
 #[pyclass(name = "DemaState")]
@@ -108,7 +109,7 @@ pub(crate) fn dema(
 pub(crate) fn dema_next(new_value: Float, dema_state: PyDemaState) -> PyResult<PyDemaState> {
     let mut dema_state: DemaState = dema_state.into();
     dema_state
-        .next(new_value)
+        .update(new_value)
         .map_err(|e| PyValueError::new_err(format!("{:?}", e)))?;
 
     Ok(dema_state.into())

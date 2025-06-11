@@ -7,9 +7,7 @@ use crate::{
 };
 
 use techalysis::{
-    errors::TechalysisError,
-    indicators::bbands::{bbands, BBandsMA, BBandsResult, DeviationMulipliers},
-    types::Float,
+    errors::TechalysisError, indicators::bbands::{bbands, BBandsMA, BBandsResult, DeviationMulipliers}, traits::State, types::Float
 };
 
 fn generated_and_no_lookahead_bbands(file_name: &str, period: usize, ma_type: BBandsMA) {
@@ -40,7 +38,7 @@ fn generated_and_no_lookahead_bbands(file_name: &str, period: usize, ma_type: BB
     let mut state = result.state;
 
     for i in 0..next_count {
-        state.next(input[last_idx + i]).unwrap();
+        state.update(input[last_idx + i]).unwrap();
         assert!(
             approx_eq_float(state.upper, upper[last_idx + i], 1e-8),
             "Next expected {}, but got {}",
@@ -239,7 +237,7 @@ fn next_with_finite_extreme_err_overflow_or_ok_all_finite() {
     )
     .unwrap();
     let mut state = result.state;
-    let output = state.next(Float::MAX - 5.0);
+    let output = state.update(Float::MAX - 5.0);
     expect_err_overflow_or_ok_with!(output, |_| {
         assert!(state.upper.is_finite(), "Expected all values to be finite");
         assert!(state.middle.is_finite(), "Expected all values to be finite");

@@ -2,6 +2,7 @@ use numpy::{IntoPyArray, PyArray1, PyArrayMethods, PyReadonlyArray1, PyUntypedAr
 use pyo3::{exceptions::PyValueError, pyclass, pyfunction, pymethods, Py, PyResult, Python};
 use techalysis::indicators::ema::period_to_alpha;
 use techalysis::indicators::tema::{tema_into, TemaState};
+use techalysis::traits::State;
 use techalysis::types::Float;
 
 #[pyclass(name = "TemaState")]
@@ -114,7 +115,7 @@ pub(crate) fn tema(
 pub(crate) fn tema_next(new_value: Float, tema_state: PyTemaState) -> PyResult<PyTemaState> {
     let mut tema_state: TemaState = tema_state.into();
     tema_state
-        .next(new_value)
+        .update(new_value)
         .map_err(|e| PyValueError::new_err(format!("{:?}", e)))?;
 
     Ok(tema_state.into())

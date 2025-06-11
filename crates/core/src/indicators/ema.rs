@@ -1,5 +1,6 @@
 use crate::errors::TechalysisError;
 use crate::indicators::sma::init_sma_unchecked;
+use crate::traits::State;
 use crate::types::Float;
 
 const DEFAULT_SMOOTHING: Float = 2.0;
@@ -17,17 +18,17 @@ pub struct EmaState {
     pub alpha: Float,
 }
 
-impl EmaState {
-    pub fn next(&mut self, new_value: Float) -> Result<(), TechalysisError> {
+impl State<Float> for EmaState {
+    fn update(&mut self, sample: Float) -> Result<(), TechalysisError> {
         if self.period <= 1 {
             return Err(TechalysisError::BadParam(
                 "Period must be greater than 1".to_string(),
             ));
         }
 
-        if !new_value.is_finite() {
+        if !sample.is_finite() {
             return Err(TechalysisError::DataNonFinite(format!(
-                "new_value = {new_value:?}",
+                "sample = {sample:?}",
             )));
         }
 
@@ -41,7 +42,7 @@ impl EmaState {
             return Err(TechalysisError::DataNonFinite(format!("alpha = {:?}", self.alpha)));
         }
 
-        let ema = ema_next_unchecked(new_value, self.ema, self.alpha);
+        let ema = ema_next_unchecked(sample, self.ema, self.alpha);
         if !ema.is_finite() {
             return Err(TechalysisError::Overflow(0, ema));
         }

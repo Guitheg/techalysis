@@ -3,6 +3,7 @@ use pyo3::{exceptions::PyValueError, pyclass, pyfunction, pymethods, Py, PyResul
 use techalysis::indicators::bbands::{
     bbands_into, BBandsMA, BBandsState, DeviationMulipliers, MovingAverageState,
 };
+use techalysis::traits::State;
 use techalysis::types::Float;
 
 #[pyclass(name = "BBandsState")]
@@ -219,7 +220,7 @@ pub(crate) fn bbands_next(
 ) -> PyResult<PyBBandsState> {
     let mut bbands_state: BBandsState = bbands_state.into();
     bbands_state
-        .next(new_value)
+        .update(new_value)
         .map_err(|e| PyValueError::new_err(format!("{:?}", e)))?;
 
     Ok(bbands_state.into())

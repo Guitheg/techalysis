@@ -6,9 +6,7 @@ use crate::helper::{
 use crate::expect_err_overflow_or_ok_with;
 use proptest::{collection::vec, prelude::*};
 use techalysis::{
-    errors::TechalysisError,
-    indicators::sma::{sma, SmaResult},
-    types::Float,
+    errors::TechalysisError, indicators::sma::{sma, SmaResult}, traits::State, types::Float
 };
 
 fn generated_and_no_lookahead_sma(file_name: &str, period: usize) {
@@ -31,7 +29,7 @@ fn generated_and_no_lookahead_sma(file_name: &str, period: usize) {
 
     let mut new_state = result.state;
     for i in 0..next_count {
-        new_state.next(input[last_idx + i]).unwrap();
+        new_state.update(input[last_idx + i]).unwrap();
         assert!(
             approx_eq_float(new_state.sma, expected[last_idx + i], 1e-8),
             "Next expected {}, but got {}",
@@ -71,7 +69,7 @@ fn next_with_finite_neg_extreme_err_overflow_or_ok_all_finite() {
     let period = 3;
     let result = sma(&data, period).unwrap();
     let mut state = result.state;
-    expect_err_overflow_or_ok_with!(state.next(Float::MIN + 5.0), |_| {
+    expect_err_overflow_or_ok_with!(state.update(Float::MIN + 5.0), |_| {
         assert!(state.sma.is_finite(), "Expected all values to be finite");
     });
 }

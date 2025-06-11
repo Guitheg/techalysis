@@ -1,6 +1,7 @@
 use numpy::{IntoPyArray, PyArray1, PyArrayMethods, PyReadonlyArray1, PyUntypedArrayMethods};
 use pyo3::{exceptions::PyValueError, pyclass, pyfunction, pymethods, Py, PyResult, Python};
 use techalysis::indicators::ema::{ema_into, period_to_alpha, EmaState};
+use techalysis::traits::State;
 use techalysis::types::Float;
 
 #[derive(Debug, Clone)]
@@ -82,7 +83,7 @@ pub(crate) fn ema(
 #[pyfunction(signature = (new_value, ema_state))]
 pub(crate) fn ema_next(new_value: Float, ema_state: PyEmaState) -> PyResult<PyEmaState> {
     let mut state: EmaState = ema_state.into();
-    state.next(new_value)
+    state.update(new_value)
         .map_err(|e| PyValueError::new_err(format!("{:?}", e)))?;
     Ok(state.into())
 }

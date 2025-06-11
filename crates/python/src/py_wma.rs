@@ -2,6 +2,7 @@ use numpy::{IntoPyArray, PyArray1, PyArrayMethods, PyReadonlyArray1, PyUntypedAr
 use pyo3::pymethods;
 use pyo3::{exceptions::PyValueError, pyclass, pyfunction, Py, PyResult, Python};
 use techalysis::indicators::wma::{wma_into, WmaState};
+use techalysis::traits::State;
 use techalysis::types::Float;
 
 #[pyclass(name = "WmaState")]
@@ -101,7 +102,7 @@ pub(crate) fn wma(
 pub(crate) fn wma_next(new_value: Float, wma_state: PyWmaState) -> PyResult<PyWmaState> {
     let mut wma_state: WmaState = wma_state.into();
     wma_state
-        .next(new_value)
+        .update(new_value)
         .map_err(|e| PyValueError::new_err(format!("{:?}", e)))?;
 
     Ok(wma_state.into())

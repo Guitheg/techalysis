@@ -1,4 +1,5 @@
 use crate::errors::TechalysisError;
+use crate::traits::State;
 use crate::types::Float;
 use std::collections::VecDeque;
 
@@ -16,16 +17,16 @@ pub struct SmaState {
 }
 
 
-impl SmaState {
-    pub fn next(&mut self, new_value: Float) -> Result<(), TechalysisError> {
+impl State<Float> for SmaState {
+    fn update(&mut self, sample: Float) -> Result<(), TechalysisError> {
         if self.period <= 1 {
             return Err(TechalysisError::BadParam(
                 "SMA period must be greater than 1".to_string(),
             ));
         }
-        if !new_value.is_finite() {
+        if !sample.is_finite() {
             return Err(TechalysisError::DataNonFinite(format!(
-                "new_value = {new_value:?}"
+                "sample = {sample:?}"
             )));
         }
         if !self.sma.is_finite() {
@@ -56,10 +57,10 @@ impl SmaState {
         let old_value = window
             .pop_front()
             .ok_or(TechalysisError::InsufficientData)?;
-        window.push_back(new_value);
+        window.push_back(sample);
 
         let sma = sma_next_unchecked(
-            new_value,
+            sample,
             old_value,
             self.sma,
             1.0 / (self.period as Float)

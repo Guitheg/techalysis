@@ -1,4 +1,5 @@
 use crate::errors::TechalysisError;
+use crate::traits::State;
 use crate::types::Float;
 
 #[derive(Debug)]
@@ -16,17 +17,17 @@ pub struct RsiState {
     pub period: usize,
 }
 
-impl RsiState {
-    pub fn next(&mut self, new_value: Float) -> Result<(), TechalysisError> {
+impl State<Float> for RsiState {
+    fn update(&mut self, sample: Float) -> Result<(), TechalysisError> {
         if self.period <= 1 {
             return Err(TechalysisError::BadParam(
                 "RSI period must be greater than 1".to_string(),
             ));
         }
 
-        if !new_value.is_finite() {
+        if !sample.is_finite() {
             return Err(TechalysisError::DataNonFinite(format!(
-                "new_value = {new_value:?}",
+                "sample = {sample:?}",
             )));
         }
         if !self.prev_value.is_finite() {
@@ -46,7 +47,7 @@ impl RsiState {
         }
 
         let (rsi, avg_gain, avg_loss) = rsi_next_unchecked(
-            new_value - self.prev_value,
+            sample - self.prev_value,
             self.avg_gain,
             self.avg_loss,
             self.period as Float,
@@ -55,7 +56,7 @@ impl RsiState {
             return Err(TechalysisError::Overflow(0, rsi));
         }
         self.rsi = rsi;
-        self.prev_value = new_value;
+        self.prev_value = sample;
         self.avg_gain = avg_gain;
         self.avg_loss = avg_loss;
         Ok(())

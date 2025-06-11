@@ -2,6 +2,7 @@ use numpy::{IntoPyArray, PyArray1, PyArrayMethods, PyReadonlyArray1, PyUntypedAr
 use pyo3::pymethods;
 use pyo3::{exceptions::PyValueError, pyclass, pyfunction, Py, PyResult, Python};
 use techalysis::indicators::trima::{trima_into, TrimaState};
+use techalysis::traits::State;
 use techalysis::types::Float;
 
 #[pyclass(name = "TrimaState")]
@@ -113,7 +114,7 @@ pub(crate) fn trima(
 pub(crate) fn trima_next(new_value: Float, trima_state: PyTrimaState) -> PyResult<PyTrimaState> {
     let mut trima_state: TrimaState = trima_state.into();
     trima_state
-        .next(new_value)
+        .update(new_value)
         .map_err(|e| PyValueError::new_err(format!("{:?}", e)))?;
 
     Ok(trima_state.into())

@@ -1,6 +1,7 @@
 use numpy::{IntoPyArray, PyArray1, PyArrayMethods, PyReadonlyArray1, PyUntypedArrayMethods};
 use pyo3::{exceptions::PyValueError, pyclass, pyfunction, pymethods, Py, PyResult, Python};
 use techalysis::indicators::macd::{macd_into, MacdState};
+use techalysis::traits::State;
 use techalysis::types::Float;
 
 #[pyclass(name = "MacdState")]
@@ -163,6 +164,6 @@ pub(crate) fn macd(
 #[pyfunction(signature = (new_value, macd_state,))]
 pub(crate) fn macd_next(new_value: Float, macd_state: PyMacdState) -> PyResult<PyMacdState> {
     let mut state: MacdState = macd_state.into();
-    state.next(new_value).map_err(|e| PyValueError::new_err(format!("{:?}", e)))?;
+    state.update(new_value).map_err(|e| PyValueError::new_err(format!("{:?}", e)))?;
     Ok(state.into())
 }

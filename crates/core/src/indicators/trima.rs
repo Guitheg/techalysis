@@ -1,6 +1,7 @@
 use std::collections::VecDeque;
 
 use crate::errors::TechalysisError;
+use crate::traits::State;
 use crate::types::Float;
 
 #[derive(Debug)]
@@ -27,16 +28,16 @@ impl From<TrimaResult> for Vec<Float> {
     }
 }
 
-impl TrimaState {
-    pub fn next(&mut self, new_value: Float) -> Result<(), TechalysisError> {
+impl State<Float> for TrimaState {
+    fn update(&mut self, sample: Float) -> Result<(), TechalysisError> {
         if self.period <= 1 {
             return Err(TechalysisError::BadParam(
                 "TRIMA period must be greater than 1".to_string(),
             ));
         }
-        if !new_value.is_finite() {
+        if !sample.is_finite() {
             return Err(TechalysisError::DataNonFinite(format!(
-                "new_value = {new_value:?}"
+                "sample = {sample:?}"
             )));
         }
         if !self.trima.is_finite() {
@@ -64,7 +65,7 @@ impl TrimaState {
         let old_value = window
             .pop_front()
             .ok_or(TechalysisError::InsufficientData)?;
-        window.push_back(new_value);
+        window.push_back(sample);
         let vec = Vec::from(window.clone());
         let middle_idx = get_middle_idx(self.period);
         let middle_value = vec[middle_idx];
@@ -72,7 +73,7 @@ impl TrimaState {
 
         let (trima, new_sum, new_trailing_sum, new_heading_sum) = if is_odd {
             trima_next_odd_unchecked(
-                new_value,
+                sample,
                 middle_value,
                 old_value,
                 self.sum,
@@ -82,7 +83,7 @@ impl TrimaState {
             )
         } else {
             trima_next_even_unchecked(
-                new_value,
+                sample,
                 middle_value,
                 old_value,
                 self.sum,

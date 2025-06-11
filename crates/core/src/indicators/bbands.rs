@@ -30,6 +30,7 @@
 use crate::errors::TechalysisError;
 use crate::indicators::ema::{ema_next_unchecked, period_to_alpha};
 use crate::indicators::sma::sma_next_unchecked;
+use crate::traits::State;
 use crate::types::Float;
 use std::collections::VecDeque;
 
@@ -135,17 +136,17 @@ pub enum BBandsMA {
     EMA(Option<Float>),
 }
 
-impl BBandsState {
+impl State<Float> for BBandsState {
     /// Calculates the next [`BBandsState`] based on a new input value.
-    pub fn next(&mut self, new_value: Float) -> Result<(), TechalysisError> {
+    fn update(&mut self, sample: Float) -> Result<(), TechalysisError> {
         if self.period <= 1 {
             return Err(TechalysisError::BadParam(
                 "SMA period must be greater than 1".to_string(),
             ));
         }
-        if !new_value.is_finite() {
+        if !sample.is_finite() {
             return Err(TechalysisError::DataNonFinite(format!(
-                "new_value = {new_value:?}"
+                "sample = {sample:?}"
             )));
         }
         if self.std_dev_mult.up <= 0.0 || self.std_dev_mult.down <= 0.0 {
@@ -201,11 +202,11 @@ impl BBandsState {
         let old_value = window
             .pop_front()
             .ok_or(TechalysisError::InsufficientData)?;
-        window.push_back(new_value);
+        window.push_back(sample);
 
         let (upper, middle, lower, ma_sq, sma) = match self.ma_type {
             BBandsMA::SMA => bbands_sma_next_unchecked(
-                new_value,
+                sample,
                 old_value,
                 self.middle,
                 self.moving_averages.ma_square,
@@ -219,7 +220,7 @@ impl BBandsState {
                     period_to_alpha(self.period, None)?
                 };
                 bbands_ema_next_unchecked(
-                    new_value,
+                    sample,
                     old_value,
                     self.middle,
                     self.moving_averages,

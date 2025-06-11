@@ -1,6 +1,7 @@
 use numpy::{IntoPyArray, PyArray1, PyArrayMethods, PyUntypedArrayMethods};
 use pyo3::{exceptions::PyValueError, pyclass, pyfunction, pymethods, Py, PyResult, Python};
 use techalysis::indicators::rsi::{rsi_into, RsiState};
+use techalysis::traits::State;
 use techalysis::types::Float;
 
 #[pyclass(name = "RsiState")]
@@ -105,6 +106,6 @@ pub(crate) fn rsi(
 #[pyfunction(signature = (new_value, rsi_state))]
 pub(crate) fn rsi_next(new_value: Float, rsi_state: PyRsiState) -> PyResult<PyRsiState> {
     let mut state: RsiState = rsi_state.into();
-    state.next(new_value).map_err(|e| PyValueError::new_err(format!("{:?}", e)))?;
+    state.update(new_value).map_err(|e| PyValueError::new_err(format!("{:?}", e)))?;
     Ok(state.into())
 }

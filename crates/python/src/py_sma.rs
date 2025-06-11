@@ -2,6 +2,7 @@ use numpy::{IntoPyArray, PyArray1, PyArrayMethods, PyReadonlyArray1, PyUntypedAr
 use pyo3::pymethods;
 use pyo3::{exceptions::PyValueError, pyclass, pyfunction, Py, PyResult, Python};
 use techalysis::indicators::sma::{sma_into, SmaState};
+use techalysis::traits::State;
 use techalysis::types::Float;
 
 #[pyclass(name = "SmaState")]
@@ -85,7 +86,7 @@ pub(crate) fn sma(
 pub(crate) fn sma_next(new_value: Float, sma_state: PySmaState) -> PyResult<PySmaState> {
     let mut sma_state: SmaState = sma_state.into();
     sma_state
-        .next(new_value)
+        .update(new_value)
         .map_err(|e| PyValueError::new_err(format!("{:?}", e)))?;
 
     Ok(sma_state.into())
