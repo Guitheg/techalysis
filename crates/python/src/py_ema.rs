@@ -1,6 +1,6 @@
 use numpy::{IntoPyArray, PyArray1, PyArrayMethods, PyReadonlyArray1, PyUntypedArrayMethods};
 use pyo3::{exceptions::PyValueError, pyclass, pyfunction, pymethods, Py, PyResult, Python};
-use techalysis::indicators::ema::{ema_into, ema_next as core_ema_next, EmaState};
+use techalysis::indicators::ema::{ema_into, period_to_alpha, EmaState};
 use techalysis::types::Float;
 
 #[derive(Debug, Clone)]
@@ -41,6 +41,18 @@ impl From<EmaState> for PyEmaState {
     }
 }
 
+impl From<PyEmaState> for EmaState {
+    fn from(py_state: PyEmaState) -> Self {
+        EmaState {
+            ema: py_state.ema,
+            period: py_state.period,
+            alpha: py_state.alpha.unwrap_or(
+                period_to_alpha(py_state.period, None).unwrap_or(2.0 / py_state.period as Float),
+            )
+        }
+    }
+}
+
 #[pyfunction(signature = (data, period = 14, alpha = None, release_gil = false))]
 pub(crate) fn ema(
     py: Python,
@@ -69,7 +81,8 @@ pub(crate) fn ema(
 
 #[pyfunction(signature = (new_value, ema_state))]
 pub(crate) fn ema_next(new_value: Float, ema_state: PyEmaState) -> PyResult<PyEmaState> {
-    let state = core_ema_next(new_value, ema_state.ema, ema_state.period, ema_state.alpha)
+    let mut state: EmaState = ema_state.into();
+    state.next(new_value)
         .map_err(|e| PyValueError::new_err(format!("{:?}", e)))?;
     Ok(state.into())
 }

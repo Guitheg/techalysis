@@ -6,56 +6,43 @@ use crate::helper::{
 use crate::expect_err_overflow_or_ok_with;
 use techalysis::{
     errors::TechalysisError,
-    indicators::tema::{tema, tema_skip_period_unchecked, TemaResult, TemaState},
+    indicators::tema::{tema, tema_skip_period_unchecked, TemaResult},
     types::Float,
 };
 
-#[test]
-fn generated() {
-    let columns = load_generated_csv("tema.csv").unwrap();
-
-    let input = columns.get("close").unwrap();
-
-    let out = columns.get("out").unwrap();
-
-    let output = tema(input, 30, None);
-    assert!(output.is_ok());
-    let result = output.unwrap();
-
-    assert_vec_eq_gen_data(out, &result.values);
-}
-
-#[test]
-fn no_lookahead() {
-    let columns = load_generated_csv("tema.csv").unwrap();
-
+fn generated_and_no_lookahead_tema(file_name: &str, period: usize) {
+    let columns = load_generated_csv(file_name).unwrap();
     let input = columns.get("close").unwrap();
 
     let len = input.len();
-    let last_idx = len - 3;
+    let next_count = 5;
+    let last_idx = len - (1 + next_count);
 
-    let out = columns.get("out").unwrap();
+    let expected = columns.get("out").unwrap();
 
     let input_prev = &input[0..last_idx];
 
-    let result = tema(input_prev, 30, None).unwrap();
+    let output = tema(input_prev, period, None);
+    assert!(output.is_ok(), "Failed to calculate TEMA: {:?}", output.err());
+    let result = output.unwrap();
 
-    assert_vec_eq_gen_data(&out[0..last_idx], &result.values);
+    assert_vec_eq_gen_data(&expected[0..last_idx], &result.values);
 
-    let new_state = result.state.next(input[last_idx]).unwrap();
-    assert!(
-        approx_eq_float(new_state.tema, out[last_idx], 1e-8),
-        "Expected last value to be {}, but got {}",
-        out[last_idx],
-        new_state.tema
-    );
-    let new_state = new_state.next(input[last_idx + 1]).unwrap();
-    assert!(
-        approx_eq_float(new_state.tema, out[last_idx + 1], 1e-8),
-        "Expected last value to be {}, but got {}",
-        out[last_idx],
-        new_state.tema
-    );
+    let mut new_state = result.state;
+    for i in 0..next_count {
+        new_state.next(input[last_idx + i]).unwrap();
+        assert!(
+            approx_eq_float(new_state.tema, expected[last_idx + i], 1e-8),
+            "Next expected {}, but got {}",
+            expected[last_idx + i],
+            new_state.tema
+        );
+    }
+}
+
+#[test]
+fn generated_with_no_lookahead_ok() {
+    generated_and_no_lookahead_tema("tema.csv", 30);
 }
 
 #[test]
@@ -90,7 +77,8 @@ fn next_with_finite_neg_extreme_err_overflow_or_ok_all_finite() {
     let data = vec![5.0, 10.0, 30.0, 3.0, 5.0, 6.0, 8.0];
     let period = 3;
     let result = tema(&data, period, None).unwrap();
-    expect_err_overflow_or_ok_with!(result.state.next(Float::MIN + 5.0), |state: TemaState| {
+    let mut state = result.state;
+    expect_err_overflow_or_ok_with!(state.next(Float::MIN + 5.0), |_| {
         assert!(state.tema.is_finite(), "Expected all values to be finite");
     });
 }

@@ -83,12 +83,12 @@ impl From<BBandsState> for PyBBandsState {
             upper: state.upper,
             middle: state.middle,
             lower: state.lower,
-            mean_sma: state.ma.sma,
-            mean_sq: state.ma.ma_sq,
-            window: state.window.into(),
+            mean_sma: state.moving_averages.sma,
+            mean_sq: state.moving_averages.ma_square,
+            window: state.last_window.into(),
             period: state.period,
-            std_up: state.std.up,
-            std_down: state.std.down,
+            std_up: state.std_dev_mult.up,
+            std_down: state.std_dev_mult.down,
             ma_type: state.ma_type.into(),
         }
     }
@@ -100,13 +100,13 @@ impl From<PyBBandsState> for BBandsState {
             upper: py_state.upper,
             middle: py_state.middle,
             lower: py_state.lower,
-            ma: MovingAverageState {
+            moving_averages: MovingAverageState {
                 sma: py_state.mean_sma,
-                ma_sq: py_state.mean_sq,
+                ma_square: py_state.mean_sq,
             },
-            window: py_state.window.into(),
+            last_window: py_state.window.into(),
             period: py_state.period,
-            std: DeviationMulipliers {
+            std_dev_mult: DeviationMulipliers {
                 up: py_state.std_up,
                 down: py_state.std_down,
             },
@@ -217,8 +217,8 @@ pub(crate) fn bbands_next(
     new_value: Float,
     bbands_state: PyBBandsState,
 ) -> PyResult<PyBBandsState> {
-    let bbands_state: BBandsState = bbands_state.into();
-    let bbands_state = bbands_state
+    let mut bbands_state: BBandsState = bbands_state.into();
+    bbands_state
         .next(new_value)
         .map_err(|e| PyValueError::new_err(format!("{:?}", e)))?;
 

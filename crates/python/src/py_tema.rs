@@ -112,8 +112,8 @@ pub(crate) fn tema(
 
 #[pyfunction(signature = (new_value, tema_state))]
 pub(crate) fn tema_next(new_value: Float, tema_state: PyTemaState) -> PyResult<PyTemaState> {
-    let tema_state: TemaState = tema_state.into();
-    let tema_state = tema_state
+    let mut tema_state: TemaState = tema_state.into();
+    tema_state
         .next(new_value)
         .map_err(|e| PyValueError::new_err(format!("{:?}", e)))?;
 

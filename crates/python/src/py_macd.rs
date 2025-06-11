@@ -1,6 +1,6 @@
 use numpy::{IntoPyArray, PyArray1, PyArrayMethods, PyReadonlyArray1, PyUntypedArrayMethods};
 use pyo3::{exceptions::PyValueError, pyclass, pyfunction, pymethods, Py, PyResult, Python};
-use techalysis::indicators::macd::{macd_into, macd_next as core_macd_next, MacdState};
+use techalysis::indicators::macd::{macd_into, MacdState};
 use techalysis::types::Float;
 
 #[pyclass(name = "MacdState")]
@@ -70,6 +70,20 @@ impl From<MacdState> for PyMacdState {
             fast_period: state.fast_period,
             slow_period: state.slow_period,
             signal_period: state.signal_period,
+        }
+    }
+}
+impl From<PyMacdState> for MacdState {
+    fn from(py_state: PyMacdState) -> Self {
+        MacdState {
+            macd: py_state.macd,
+            signal: py_state.signal,
+            histogram: py_state.histogram,
+            fast_ema: py_state.fast_ema,
+            slow_ema: py_state.slow_ema,
+            fast_period: py_state.fast_period,
+            slow_period: py_state.slow_period,
+            signal_period: py_state.signal_period,
         }
     }
 }
@@ -148,15 +162,7 @@ pub(crate) fn macd(
 
 #[pyfunction(signature = (new_value, macd_state,))]
 pub(crate) fn macd_next(new_value: Float, macd_state: PyMacdState) -> PyResult<PyMacdState> {
-    let state = core_macd_next(
-        new_value,
-        macd_state.fast_ema,
-        macd_state.slow_ema,
-        macd_state.signal,
-        macd_state.fast_period,
-        macd_state.slow_period,
-        macd_state.signal_period,
-    )
-    .map_err(|e| PyValueError::new_err(format!("{:?}", e)))?;
+    let mut state: MacdState = macd_state.into();
+    state.next(new_value).map_err(|e| PyValueError::new_err(format!("{:?}", e)))?;
     Ok(state.into())
 }

@@ -7,12 +7,6 @@ pub struct RsiResult {
     pub state: RsiState,
 }
 
-impl From<RsiResult> for Vec<Float> {
-    fn from(result: RsiResult) -> Self {
-        result.values
-    }
-}
-
 #[derive(Debug, Clone, Copy)]
 pub struct RsiState {
     pub rsi: Float,
@@ -23,27 +17,49 @@ pub struct RsiState {
 }
 
 impl RsiState {
-    pub fn next(&self, new_value: Float) -> Result<RsiState, TechalysisError> {
-        rsi_next(
-            new_value,
-            self.prev_value,
+    pub fn next(&mut self, new_value: Float) -> Result<(), TechalysisError> {
+        if self.period <= 1 {
+            return Err(TechalysisError::BadParam(
+                "RSI period must be greater than 1".to_string(),
+            ));
+        }
+
+        if !new_value.is_finite() {
+            return Err(TechalysisError::DataNonFinite(format!(
+                "new_value = {new_value:?}",
+            )));
+        }
+        if !self.prev_value.is_finite() {
+            return Err(TechalysisError::DataNonFinite(format!(
+                "prev_value = {:?}", self.prev_value
+            )));
+        }
+        if !self.avg_gain.is_finite() {
+            return Err(TechalysisError::DataNonFinite(format!(
+                "self.avg_gain = {:?}", self.avg_gain
+            )));
+        }
+        if !self.avg_loss.is_finite() {
+            return Err(TechalysisError::DataNonFinite(format!(
+                "self.avg_loss = {:?}", self.avg_loss
+            )));
+        }
+
+        let (rsi, avg_gain, avg_loss) = rsi_next_unchecked(
+            new_value - self.prev_value,
             self.avg_gain,
             self.avg_loss,
-            self.period,
-        )
-    }
-}
-
-#[inline(always)]
-fn calculate_rsi(avg_gain: Float, avg_loss: Float) -> Float {
-    if avg_loss == 0.0 {
-        if avg_gain == 0.0 {
-            return 50.0;
+            self.period as Float,
+        );
+        if !rsi.is_finite() {
+            return Err(TechalysisError::Overflow(0, rsi));
         }
-        return 100.0;
+        self.rsi = rsi;
+        self.prev_value = new_value;
+        self.avg_gain = avg_gain;
+        self.avg_loss = avg_loss;
+        Ok(())
     }
-    let rs = avg_gain / avg_loss;
-    100.0 - (100.0 / (1.0 + rs))
 }
 
 pub fn rsi(data_array: &[Float], window_size: usize) -> Result<RsiResult, TechalysisError> {
@@ -127,60 +143,8 @@ pub fn rsi_into(
     })
 }
 
-pub fn rsi_next(
-    new_value: Float,
-    prev_value: Float,
-    prev_avg_gain: Float,
-    prev_avg_loss: Float,
-    period: usize,
-) -> Result<RsiState, TechalysisError> {
-    if period <= 1 {
-        return Err(TechalysisError::BadParam(
-            "RSI period must be greater than 1".to_string(),
-        ));
-    }
-
-    if !new_value.is_finite() {
-        return Err(TechalysisError::DataNonFinite(format!(
-            "new_value = {new_value:?}",
-        )));
-    }
-    if !prev_value.is_finite() {
-        return Err(TechalysisError::DataNonFinite(format!(
-            "prev_value = {prev_value:?}",
-        )));
-    }
-    if !prev_avg_gain.is_finite() {
-        return Err(TechalysisError::DataNonFinite(format!(
-            "prev_avg_gain = {prev_avg_gain:?}",
-        )));
-    }
-    if !prev_avg_loss.is_finite() {
-        return Err(TechalysisError::DataNonFinite(format!(
-            "prev_avg_loss = {prev_avg_loss:?}",
-        )));
-    }
-
-    let (rsi, avg_gain, avg_loss) = rsi_next_unchecked(
-        new_value - prev_value,
-        prev_avg_gain,
-        prev_avg_loss,
-        period as Float,
-    );
-    if !rsi.is_finite() {
-        return Err(TechalysisError::Overflow(0, rsi));
-    }
-    Ok(RsiState {
-        rsi,
-        prev_value: new_value,
-        avg_gain,
-        avg_loss,
-        period,
-    })
-}
-
 #[inline(always)]
-pub fn rsi_next_unchecked(
+fn rsi_next_unchecked(
     delta: Float,
     prev_avg_gain: Float,
     prev_avg_loss: Float,
@@ -203,4 +167,16 @@ pub fn rsi_next_unchecked(
     };
 
     (calculate_rsi(avg_gain, avg_loss), avg_gain, avg_loss)
+}
+
+#[inline(always)]
+fn calculate_rsi(avg_gain: Float, avg_loss: Float) -> Float {
+    if avg_loss == 0.0 {
+        if avg_gain == 0.0 {
+            return 50.0;
+        }
+        return 100.0;
+    }
+    let rs = avg_gain / avg_loss;
+    100.0 - (100.0 / (1.0 + rs))
 }

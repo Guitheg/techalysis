@@ -7,45 +7,43 @@ use crate::expect_err_overflow_or_ok_with;
 use proptest::{collection::vec, prelude::*};
 use techalysis::{
     errors::TechalysisError,
-    indicators::sma::{sma, SmaResult, SmaState},
+    indicators::sma::{sma, SmaResult},
     types::Float,
 };
 
-#[test]
-fn generated() {
-    let columns = load_generated_csv("sma.csv").unwrap();
+fn generated_and_no_lookahead_sma(file_name: &str, period: usize) {
+    let columns = load_generated_csv(file_name).unwrap();
     let input = columns.get("close").unwrap();
-    let output = sma(input, 30);
-    assert!(output.is_ok());
-    let out = output.unwrap();
+
+    let len = input.len();
+    let next_count = 5;
+    let last_idx = len - (1 + next_count);
+
     let expected = columns.get("out").unwrap();
-    assert_vec_eq_gen_data(&out.values, expected);
-    assert!(out.values.len() == input.len());
+
+    let input_prev = &input[0..last_idx];
+
+    let output = sma(input_prev, period);
+    assert!(output.is_ok(), "Failed to calculate SMA: {:?}", output.err());
+    let result = output.unwrap();
+
+    assert_vec_eq_gen_data(&expected[0..last_idx], &result.values);
+
+    let mut new_state = result.state;
+    for i in 0..next_count {
+        new_state.next(input[last_idx + i]).unwrap();
+        assert!(
+            approx_eq_float(new_state.sma, expected[last_idx + i], 1e-8),
+            "Next expected {}, but got {}",
+            expected[last_idx + i],
+            new_state.sma
+        );
+    }
 }
 
 #[test]
-fn no_lookahead() {
-    let columns = load_generated_csv("sma.csv").unwrap();
-    let input = columns.get("close").unwrap();
-    let expected = columns.get("out").unwrap();
-    // Check that the state given by : 'out_sma, state = sma(input[..-1])' is equal to sma_next(input[-1], state)
-    let output = sma(&input[0..input.len() - 1], 30);
-    assert!(output.is_ok());
-    let result = output.unwrap();
-    assert_vec_eq_gen_data(&result.values, &expected[0..&expected.len() - 1]);
-
-    let new_output = result.state.next(input[input.len() - 1]);
-    assert!(
-        new_output.is_ok(),
-        "Expected next state to be Ok, but got an error: {new_output:?}",
-    );
-    let new_state = new_output.unwrap();
-    assert!(
-        approx_eq_float(new_state.sma, expected[expected.len() - 1], 1e-8),
-        "Expected last value to be {}, but got {}",
-        expected[expected.len() - 1],
-        new_state.sma
-    );
+fn generated_with_no_lookahead_ok() {
+    generated_and_no_lookahead_sma("sma.csv", 30);
 }
 
 #[test]
@@ -72,7 +70,8 @@ fn next_with_finite_neg_extreme_err_overflow_or_ok_all_finite() {
     let data = vec![5.0, 10.0, 30.0, 3.0, 5.0, 6.0, 8.0];
     let period = 3;
     let result = sma(&data, period).unwrap();
-    expect_err_overflow_or_ok_with!(result.state.next(Float::MIN + 5.0), |state: SmaState| {
+    let mut state = result.state;
+    expect_err_overflow_or_ok_with!(state.next(Float::MIN + 5.0), |_| {
         assert!(state.sma.is_finite(), "Expected all values to be finite");
     });
 }

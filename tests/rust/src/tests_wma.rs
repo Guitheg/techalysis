@@ -8,46 +8,43 @@ use crate::{
 
 use techalysis::{
     errors::TechalysisError,
-    indicators::wma::{wma, WmaResult, WmaState},
+    indicators::wma::{wma, WmaResult},
     types::Float,
 };
 
-#[test]
-fn generated() {
-    let columns = load_generated_csv("wma.csv").unwrap();
-    let input = columns.get("close").unwrap();
-    let output = wma(input, 30);
-    assert!(output.is_ok());
-    let out = output.unwrap();
-    let expected = columns.get("out").unwrap();
-    assert_vec_eq_gen_data(expected, &out.values);
-    assert!(out.values.len() == input.len());
-}
-
-#[test]
-fn no_lookahead() {
-    let columns = load_generated_csv("wma.csv").unwrap();
-
+fn generated_and_no_lookahead_wma(file_name: &str, period: usize) {
+    let columns = load_generated_csv(file_name).unwrap();
     let input = columns.get("close").unwrap();
 
     let len = input.len();
-    let last_idx = len - 2;
+    let next_count = 5;
+    let last_idx = len - (1 + next_count);
 
     let expected = columns.get("out").unwrap();
 
     let input_prev = &input[0..last_idx];
 
-    let result = wma(input_prev, 30).unwrap();
+    let output = wma(input_prev, period);
+    assert!(output.is_ok(), "Failed to calculate WMA: {:?}", output.err());
+    let result = output.unwrap();
 
     assert_vec_eq_gen_data(&expected[0..last_idx], &result.values);
 
-    let new_state = result.state.next(input[last_idx]).unwrap();
-    assert!(
-        approx_eq_float(new_state.wma, expected[last_idx], 1e-8),
-        "Next expected {}, but got {}",
-        expected[last_idx],
-        new_state.wma
-    );
+    let mut new_state = result.state;
+    for i in 0..next_count {
+        new_state.next(input[last_idx + i]).unwrap();
+        assert!(
+            approx_eq_float(new_state.wma, expected[last_idx + i], 1e-8),
+            "Next expected {}, but got {}",
+            expected[last_idx + i],
+            new_state.wma
+        );
+    }
+}
+
+#[test]
+fn generated_with_no_lookahead_ok() {
+    generated_and_no_lookahead_wma("wma.csv", 30);
 }
 
 #[test]
@@ -113,7 +110,8 @@ fn next_with_finite_neg_extreme_err_overflow_or_ok_all_finite() {
     let data = vec![5.0, 10.0, 30.0, 3.0, 5.0, 6.0, 8.0];
     let period = 3;
     let result = wma(&data, period).unwrap();
-    expect_err_overflow_or_ok_with!(result.state.next(Float::MIN + 5.0), |state: WmaState| {
+    let mut state = result.state;
+    expect_err_overflow_or_ok_with!(state.next(Float::MIN + 5.0), |_| {
         assert!(state.wma.is_finite(), "Expected all values to be finite");
     });
 }

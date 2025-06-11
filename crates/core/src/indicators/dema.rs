@@ -18,71 +18,48 @@ pub struct DemaState {
     pub alpha: Float,
 }
 
-impl From<DemaResult> for Vec<Float> {
-    fn from(result: DemaResult) -> Self {
-        result.values
-    }
-}
-
 impl DemaState {
-    pub fn next(&self, new_value: Float) -> Result<DemaState, TechalysisError> {
-        dema_next(
+    pub fn next(&mut self, new_value: Float) -> Result<(), TechalysisError> {
+        if self.period <= 1 {
+            return Err(TechalysisError::BadParam(
+                "Period must be greater than 1".to_string(),
+            ));
+        }
+        if !new_value.is_finite() {
+            return Err(TechalysisError::DataNonFinite(format!(
+                "new_value = {new_value:?}",
+            )));
+        }
+
+        if !self.ema_1.is_finite() {
+            return Err(TechalysisError::DataNonFinite(format!(
+                "self.ema_1 = {:?}", self.ema_1
+            )));
+        }
+        if !self.ema_2.is_finite() {
+            return Err(TechalysisError::DataNonFinite(format!(
+                "self.ema_2 = {:?}", self.ema_2
+            )));
+        }
+        if !self.alpha.is_finite() {
+            return Err(TechalysisError::DataNonFinite(format!("self.alpha = {:?}", self.alpha)));
+        }
+
+        let (dema, ema_1, ema_2) = dema_next_unchecked(
             new_value,
-            self.ema_1,
+            self.ema_1, 
             self.ema_2,
-            self.period,
-            Some(self.alpha),
-        )
-    }
-}
+            self.alpha
+        );
 
-pub fn dema_next(
-    new_value: Float,
-    prev_ema_1: Float,
-    prev_ema_2: Float,
-    period: usize,
-    alpha: Option<Float>,
-) -> Result<DemaState, TechalysisError> {
-    let alpha = match alpha {
-        Some(a) => a,
-        None => period_to_alpha(period, None)?,
-    };
-    if period <= 1 {
-        return Err(TechalysisError::BadParam(
-            "Period must be greater than 1".to_string(),
-        ));
+        if !dema.is_finite() {
+            return Err(TechalysisError::Overflow(0, dema));
+        }
+        self.dema = dema;
+        self.ema_1 = ema_1;
+        self.ema_2 = ema_2;
+        Ok(())
     }
-    if !new_value.is_finite() {
-        return Err(TechalysisError::DataNonFinite(format!(
-            "new_value = {new_value:?}",
-        )));
-    }
-
-    if !prev_ema_1.is_finite() {
-        return Err(TechalysisError::DataNonFinite(format!(
-            "prev_ema_1 = {prev_ema_1:?}",
-        )));
-    }
-    if !prev_ema_2.is_finite() {
-        return Err(TechalysisError::DataNonFinite(format!(
-            "prev_ema_2 = {prev_ema_2:?}",
-        )));
-    }
-    if !alpha.is_finite() {
-        return Err(TechalysisError::DataNonFinite(format!("alpha = {alpha:?}")));
-    }
-
-    let (ema_1, ema_2, dema) = dema_next_unchecked(new_value, prev_ema_1, prev_ema_2, alpha);
-    if !dema.is_finite() {
-        return Err(TechalysisError::Overflow(0, dema));
-    }
-    Ok(DemaState {
-        dema,
-        ema_1,
-        ema_2,
-        period,
-        alpha,
-    })
 }
 
 pub fn dema(
@@ -124,7 +101,7 @@ pub fn dema_into(
         Some(alpha) => alpha,
         None => period_to_alpha(period, None)?,
     };
-    let (mut ema_1, mut ema_2, output_value) =
+    let (output_value, mut ema_1, mut ema_2) =
         init_dema_unchecked(data, period, inv_period, skip_period, alpha, output)?;
     output[skip_period] = output_value;
     if !output[skip_period].is_finite() {
@@ -139,7 +116,7 @@ pub fn dema_into(
             )));
         }
 
-        (ema_1, ema_2, output[idx]) = dema_next_unchecked(data[idx], ema_1, ema_2, alpha);
+        (output[idx], ema_1, ema_2) = dema_next_unchecked(data[idx], ema_1, ema_2, alpha);
 
         if !output[idx].is_finite() {
             return Err(TechalysisError::Overflow(idx, output[idx]));
@@ -156,7 +133,7 @@ pub fn dema_into(
 }
 
 #[inline(always)]
-pub fn dema_next_unchecked(
+pub(crate) fn dema_next_unchecked(
     new_value: Float,
     prev_ema_1: Float,
     prev_ema_2: Float,
@@ -164,7 +141,7 @@ pub fn dema_next_unchecked(
 ) -> (Float, Float, Float) {
     let ema_1 = ema_next_unchecked(new_value, prev_ema_1, alpha);
     let ema_2 = ema_next_unchecked(ema_1, prev_ema_2, alpha);
-    (ema_1, ema_2, calculate_dema(ema_1, ema_2))
+    (calculate_dema(ema_1, ema_2), ema_1, ema_2)
 }
 
 #[inline(always)]
@@ -194,7 +171,7 @@ pub(crate) fn init_dema_unchecked(
     sum_ema_2 += ema_1;
     let ema_2 = sum_ema_2 * inv_period;
 
-    Ok((ema_1, ema_2, calculate_dema(ema_1, ema_2)))
+    Ok((calculate_dema(ema_1, ema_2), ema_1, ema_2))
 }
 
 #[inline(always)]

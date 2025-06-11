@@ -17,38 +17,37 @@ pub struct EmaState {
     pub alpha: Float,
 }
 
-impl From<EmaResult> for Vec<Float> {
-    fn from(result: EmaResult) -> Self {
-        result.values
-    }
-}
-
 impl EmaState {
-    pub fn next(&self, new_value: Float) -> Result<EmaState, TechalysisError> {
-        ema_next(new_value, self.ema, self.period, Some(self.alpha))
-    }
-}
-
-pub fn period_to_alpha(period: usize, smoothing: Option<Float>) -> Result<Float, TechalysisError> {
-    if period == 0 {
-        return Err(TechalysisError::BadParam(
-            "Period must be greater than 0".to_string(),
-        ));
-    }
-
-    let smoothing = match smoothing {
-        Some(s) => {
-            if s <= 0.0 {
-                return Err(TechalysisError::BadParam(
-                    "Smoothing must be greater than 0".to_string(),
-                ));
-            }
-            s
+    pub fn next(&mut self, new_value: Float) -> Result<(), TechalysisError> {
+        if self.period <= 1 {
+            return Err(TechalysisError::BadParam(
+                "Period must be greater than 1".to_string(),
+            ));
         }
-        None => DEFAULT_SMOOTHING,
-    };
 
-    Ok(smoothing / (period as Float + 1.0))
+        if !new_value.is_finite() {
+            return Err(TechalysisError::DataNonFinite(format!(
+                "new_value = {new_value:?}",
+            )));
+        }
+
+        if !self.ema.is_finite() {
+            return Err(TechalysisError::DataNonFinite(format!(
+                "self.ema = {:?}", self.ema
+            )));
+        }
+
+        if !self.alpha.is_finite() {
+            return Err(TechalysisError::DataNonFinite(format!("alpha = {:?}", self.alpha)));
+        }
+
+        let ema = ema_next_unchecked(new_value, self.ema, self.alpha);
+        if !ema.is_finite() {
+            return Err(TechalysisError::Overflow(0, ema));
+        }
+        self.ema = ema;
+        Ok(())
+    }
 }
 
 pub fn ema(
@@ -82,10 +81,7 @@ pub fn ema_into(
         ));
     }
 
-    let alpha = match alpha {
-        Some(alpha) => alpha,
-        None => period_to_alpha(period, None)?,
-    };
+    let alpha = get_alpha_value(alpha, period)?;
 
     output[period - 1] = init_sma_unchecked(data, period, inv_period, output)?;
     if !output[period - 1].is_finite() {
@@ -112,47 +108,36 @@ pub fn ema_into(
     })
 }
 
-pub fn ema_next(
-    new_value: Float,
-    prev_ema: Float,
-    period: usize,
-    alpha: Option<Float>,
-) -> Result<EmaState, TechalysisError> {
-    let alpha = match alpha {
-        Some(alpha) => alpha,
-        None => period_to_alpha(period, None)?,
-    };
+#[inline(always)]
+pub(crate) fn ema_next_unchecked(new_value: Float, prev_ema: Float, alpha: Float) -> Float {
+    new_value * alpha + prev_ema * (1.0 - alpha)
+}
 
-    if period <= 1 {
+pub fn period_to_alpha(period: usize, smoothing: Option<Float>) -> Result<Float, TechalysisError> {
+    if period == 0 {
         return Err(TechalysisError::BadParam(
-            "Period must be greater than 1".to_string(),
+            "Period must be greater than 0".to_string(),
         ));
     }
 
-    if !new_value.is_finite() {
-        return Err(TechalysisError::DataNonFinite(format!(
-            "new_value = {new_value:?}",
-        )));
-    }
+    let smoothing = match smoothing {
+        Some(s) => {
+            if s <= 0.0 {
+                return Err(TechalysisError::BadParam(
+                    "Smoothing must be greater than 0".to_string(),
+                ));
+            }
+            s
+        }
+        None => DEFAULT_SMOOTHING,
+    };
 
-    if !prev_ema.is_finite() {
-        return Err(TechalysisError::DataNonFinite(format!(
-            "prev_ema = {prev_ema:?}",
-        )));
-    }
-
-    if !alpha.is_finite() {
-        return Err(TechalysisError::DataNonFinite(format!("alpha = {alpha:?}")));
-    }
-
-    let ema = ema_next_unchecked(new_value, prev_ema, alpha);
-    if !ema.is_finite() {
-        return Err(TechalysisError::Overflow(0, ema));
-    }
-    Ok(EmaState { ema, period, alpha })
+    Ok(smoothing / (period as Float + 1.0))
 }
 
-#[inline(always)]
-pub fn ema_next_unchecked(new_value: Float, prev_ema: Float, alpha: Float) -> Float {
-    new_value * alpha + prev_ema * (1.0 - alpha)
+pub(crate) fn get_alpha_value(alpha: Option<Float>, period: usize) -> Result<Float, TechalysisError> {
+    match alpha {
+        Some(a) => Ok(a),
+        None => period_to_alpha(period, None),
+    }
 }

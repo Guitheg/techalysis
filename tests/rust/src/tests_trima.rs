@@ -8,7 +8,7 @@ use crate::{
 
 use techalysis::{
     errors::TechalysisError,
-    indicators::trima::{trima, TrimaResult, TrimaState},
+    indicators::trima::{trima, TrimaResult},
     types::Float,
 };
 
@@ -24,13 +24,15 @@ fn generated_and_no_lookahead_trima(file_name: &str, period: usize) {
 
     let input_prev = &input[0..last_idx];
 
-    let result = trima(input_prev, period).unwrap();
+    let output = trima(input_prev, period);
+    assert!(output.is_ok(), "Failed to calculate TRIMA: {:?}", output.err());
+    let result = output.unwrap();
 
     assert_vec_eq_gen_data(&expected[0..last_idx], &result.values);
 
     let mut new_state = result.state;
     for i in 0..next_count {
-        new_state = new_state.next(input[last_idx + i]).unwrap();
+        new_state.next(input[last_idx + i]).unwrap();
         assert!(
             approx_eq_float(new_state.trima, expected[last_idx + i], 1e-8),
             "Next expected {}, but got {}",
@@ -128,7 +130,8 @@ fn next_with_finite_neg_extreme_err_overflow_or_ok_all_finite() {
     let data = vec![5.0, 10.0, 30.0, 3.0, 5.0, 6.0, 8.0];
     let period = 3;
     let result = trima(&data, period).unwrap();
-    expect_err_overflow_or_ok_with!(result.state.next(Float::MIN + 5.0), |state: TrimaState| {
+    let mut state = result.state;
+    expect_err_overflow_or_ok_with!(state.next(Float::MIN + 5.0), |_| {
         assert!(state.trima.is_finite(), "Expected all values to be finite");
     });
 }

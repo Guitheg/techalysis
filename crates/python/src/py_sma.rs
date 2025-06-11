@@ -38,7 +38,7 @@ impl From<SmaState> for PySmaState {
         PySmaState {
             sma: state.sma,
             period: state.period,
-            window: state.window.into(),
+            window: state.last_window.into(),
         }
     }
 }
@@ -48,7 +48,7 @@ impl From<PySmaState> for SmaState {
         SmaState {
             sma: py_state.sma,
             period: py_state.period,
-            window: py_state.window.into(),
+            last_window: py_state.window.into(),
         }
     }
 }
@@ -83,8 +83,8 @@ pub(crate) fn sma(
 
 #[pyfunction(signature = (new_value, sma_state))]
 pub(crate) fn sma_next(new_value: Float, sma_state: PySmaState) -> PyResult<PySmaState> {
-    let sma_state: SmaState = sma_state.into();
-    let sma_state = sma_state
+    let mut sma_state: SmaState = sma_state.into();
+    sma_state
         .next(new_value)
         .map_err(|e| PyValueError::new_err(format!("{:?}", e)))?;
 

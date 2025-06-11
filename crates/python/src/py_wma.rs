@@ -52,7 +52,7 @@ impl From<WmaState> for PyWmaState {
             period: state.period,
             period_sub: state.period_sub,
             period_sum: state.period_sum,
-            window: state.window.into(),
+            window: state.last_window.into(),
         }
     }
 }
@@ -64,7 +64,7 @@ impl From<PyWmaState> for WmaState {
             period: py_state.period,
             period_sub: py_state.period_sub,
             period_sum: py_state.period_sum,
-            window: py_state.window.into(),
+            last_window: py_state.window.into(),
         }
     }
 }
@@ -99,8 +99,8 @@ pub(crate) fn wma(
 
 #[pyfunction(signature = (new_value, wma_state))]
 pub(crate) fn wma_next(new_value: Float, wma_state: PyWmaState) -> PyResult<PyWmaState> {
-    let wma_state: WmaState = wma_state.into();
-    let wma_state = wma_state
+    let mut wma_state: WmaState = wma_state.into();
+    wma_state
         .next(new_value)
         .map_err(|e| PyValueError::new_err(format!("{:?}", e)))?;
 

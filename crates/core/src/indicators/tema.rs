@@ -22,76 +22,52 @@ pub struct TemaState {
     pub alpha: Float,
 }
 
-impl From<TemaResult> for Vec<Float> {
-    fn from(result: TemaResult) -> Self {
-        result.values
-    }
-}
-
 impl TemaState {
-    pub fn next(&self, new_value: Float) -> Result<TemaState, TechalysisError> {
-        tema_next(
-            new_value,
-            self.ema_1,
-            self.ema_2,
-            self.ema_3,
-            self.period,
-            Some(self.alpha),
-        )
+    pub fn next(&mut self, new_value: Float) -> Result<(), TechalysisError> {
+        if self.period <= 1 {
+            return Err(TechalysisError::BadParam(
+                "Period must be greater than 1".to_string(),
+            ));
+        }
+        if !new_value.is_finite() {
+            return Err(TechalysisError::DataNonFinite(format!(
+                "new_value = {new_value:?}",
+            )));
+        }
+
+        if !self.ema_1.is_finite() {
+            return Err(TechalysisError::DataNonFinite(format!(
+                "self.ema_1 = {:?}", self.ema_1
+            )));
+        }
+        if !self.ema_2.is_finite() {
+            return Err(TechalysisError::DataNonFinite(format!(
+                "self.ema_2 = {:?}", self.ema_2
+            )));
+        }
+        if !self.ema_3.is_finite() {
+            return Err(TechalysisError::DataNonFinite(format!(
+                "self.ema_3 = {:?}", self.ema_3
+            )));
+        }
+        if !self.alpha.is_finite() {
+            return Err(TechalysisError::BadParam(format!("self.alpha = {:?}", self.alpha)));
+        }
+
+        let (tema, ema_1, ema_2, ema_3) =
+            tema_next_unchecked(new_value, self.ema_1, self.ema_2, self.ema_3, self.alpha);
+        if !tema.is_finite() {
+            return Err(TechalysisError::Overflow(0, tema));
+        }
+        self.tema = tema;
+        self.ema_1 = ema_1;
+        self.ema_2 = ema_2;
+        self.ema_3 = ema_3;
+        Ok(())
     }
 }
 
-pub fn tema_next(
-    new_value: Float,
-    prev_ema_1: Float,
-    prev_ema_2: Float,
-    prev_ema_3: Float,
-    period: usize,
-    alpha: Option<Float>,
-) -> Result<TemaState, TechalysisError> {
-    let alpha = match alpha {
-        Some(a) => a,
-        None => period_to_alpha(period, None)?,
-    };
-    if period <= 1 {
-        return Err(TechalysisError::BadParam(
-            "Period must be greater than 1".to_string(),
-        ));
-    }
-    if !new_value.is_finite() {
-        return Err(TechalysisError::DataNonFinite(format!(
-            "new_value = {new_value:?}",
-        )));
-    }
 
-    if !prev_ema_1.is_finite() {
-        return Err(TechalysisError::DataNonFinite(format!(
-            "prev_ema_1 = {prev_ema_1:?}",
-        )));
-    }
-    if !prev_ema_2.is_finite() {
-        return Err(TechalysisError::DataNonFinite(format!(
-            "prev_ema_2 = {prev_ema_2:?}",
-        )));
-    }
-    if !alpha.is_finite() {
-        return Err(TechalysisError::DataNonFinite(format!("alpha = {alpha:?}")));
-    }
-
-    let (ema_1, ema_2, ema_3, tema) =
-        tema_next_unchecked(new_value, prev_ema_1, prev_ema_2, prev_ema_3, alpha);
-    if !tema.is_finite() {
-        return Err(TechalysisError::Overflow(0, tema));
-    }
-    Ok(TemaState {
-        tema,
-        ema_1,
-        ema_2,
-        ema_3,
-        period,
-        alpha,
-    })
-}
 
 pub fn tema(
     data_array: &[Float],
@@ -132,7 +108,7 @@ pub fn tema_into(
         Some(alpha) => alpha,
         None => period_to_alpha(period, None)?,
     };
-    let (mut ema_1, mut ema_2, mut ema_3, output_value) =
+    let (output_value, mut ema_1, mut ema_2, mut ema_3) =
         init_tema_unchecked(data, period, inv_period, skip_period, alpha, output)?;
     output[skip_period] = output_value;
     if !output[skip_period].is_finite() {
@@ -147,7 +123,7 @@ pub fn tema_into(
             )));
         }
 
-        (ema_1, ema_2, ema_3, output[idx]) =
+        (output[idx], ema_1, ema_2, ema_3) =
             tema_next_unchecked(data[idx], ema_1, ema_2, ema_3, alpha);
 
         if !output[idx].is_finite() {
@@ -166,7 +142,7 @@ pub fn tema_into(
 }
 
 #[inline(always)]
-pub fn tema_next_unchecked(
+fn tema_next_unchecked(
     new_value: Float,
     prev_ema_1: Float,
     prev_ema_2: Float,
@@ -176,7 +152,7 @@ pub fn tema_next_unchecked(
     let ema_1 = ema_next_unchecked(new_value, prev_ema_1, alpha);
     let ema_2 = ema_next_unchecked(ema_1, prev_ema_2, alpha);
     let ema_3 = ema_next_unchecked(ema_2, prev_ema_3, alpha);
-    (ema_1, ema_2, ema_3, calculate_tema(ema_1, ema_2, ema_3))
+    (calculate_tema(ema_1, ema_2, ema_3), ema_1, ema_2, ema_3)
 }
 
 #[inline(always)]
@@ -189,7 +165,7 @@ pub(crate) fn init_tema_unchecked(
     output: &mut [Float],
 ) -> Result<(Float, Float, Float, Float), TechalysisError> {
     let dema_skip_period = dema_skip_period_unchecked(period);
-    let (mut ema_1, mut ema_2, _) =
+    let (_, mut ema_1, mut ema_2) =
         init_dema_unchecked(data, period, inv_period, dema_skip_period, alpha, output)?;
     output[dema_skip_period] = Float::NAN;
 
@@ -201,15 +177,15 @@ pub(crate) fn init_tema_unchecked(
                 data[idx]
             )));
         }
-        (ema_1, ema_2, _) = dema_next_unchecked(data[idx], ema_1, ema_2, alpha);
+        (_, ema_1, ema_2) = dema_next_unchecked(data[idx], ema_1, ema_2, alpha);
         sum_ema_3 += ema_2;
         output[idx] = Float::NAN;
     }
-    (ema_1, ema_2, _) = dema_next_unchecked(data[skip_period], ema_1, ema_2, alpha);
+    (_, ema_1, ema_2) = dema_next_unchecked(data[skip_period], ema_1, ema_2, alpha);
     sum_ema_3 += ema_2;
     let ema_3 = sum_ema_3 * inv_period;
 
-    Ok((ema_1, ema_2, ema_3, calculate_tema(ema_1, ema_2, ema_3)))
+    Ok((calculate_tema(ema_1, ema_2, ema_3), ema_1, ema_2, ema_3))
 }
 
 #[inline(always)]

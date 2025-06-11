@@ -15,94 +15,75 @@ pub struct WmaState {
     pub period: usize,
     pub period_sub: Float,
     pub period_sum: Float,
-    pub window: VecDeque<Float>,
-}
-
-impl From<WmaResult> for Vec<Float> {
-    fn from(result: WmaResult) -> Self {
-        result.values
-    }
+    pub last_window: VecDeque<Float>,
 }
 
 impl WmaState {
-    pub fn next(&self, new_value: Float) -> Result<WmaState, TechalysisError> {
-        wma_next(
-            new_value,
-            self.wma,
-            self.period,
-            self.period_sub,
-            self.period_sum,
-            &self.window,
-        )
-    }
-}
-
-pub fn wma_next(
-    new_value: Float,
-    prev_wma: Float,
-    period: usize,
-    period_sub: Float,
-    period_sum: Float,
-    window: &VecDeque<Float>,
-) -> Result<WmaState, TechalysisError> {
-    if period <= 1 {
-        return Err(TechalysisError::BadParam(
-            "WMA period must be greater than 1".to_string(),
-        ));
-    }
-    if !new_value.is_finite() {
-        return Err(TechalysisError::DataNonFinite(format!(
-            "new_value = {new_value:?}"
-        )));
-    }
-    if !prev_wma.is_finite() {
-        return Err(TechalysisError::DataNonFinite(format!(
-            "prev_wma = {prev_wma:?}"
-        )));
-    }
-    if window.len() != period {
-        return Err(TechalysisError::BadParam(
-            "Window length must match the WMA period".to_string(),
-        ));
-    }
-
-    for (idx, &value) in window.iter().enumerate() {
-        if !value.is_finite() {
+    pub fn next(&mut self, new_value: Float) -> Result<(), TechalysisError> {
+        if self.period <= 1 {
+            return Err(TechalysisError::BadParam(
+                "WMA period must be greater than 1".to_string(),
+            ));
+        }
+        if !new_value.is_finite() {
             return Err(TechalysisError::DataNonFinite(format!(
-                "window[{idx}] = {value:?}"
+                "new_value = {new_value:?}"
             )));
         }
+        if !self.wma.is_finite() {
+            return Err(TechalysisError::DataNonFinite(format!(
+                "self.wma = {:?}", self.wma
+            )));
+        }
+        if self.last_window.len() != self.period {
+            return Err(TechalysisError::BadParam(
+                format!(
+                    "WMA state window length ({}) does not match period ({})",
+                    self.last_window.len(),
+                    self.period
+                )
+            ));
+        }
+
+        for (idx, &value) in self.last_window.iter().enumerate() {
+            if !value.is_finite() {
+                return Err(TechalysisError::DataNonFinite(format!(
+                    "window[{idx}] = {value:?}"
+                )));
+            }
+        }
+
+        let mut window = self.last_window.clone();
+        let inv_weight_sum = inv_weight_sum_linear(self.period);
+
+        let old_value = window
+            .pop_front()
+            .ok_or(TechalysisError::InsufficientData)?;
+        window.push_back(new_value);
+
+        let (wma, new_period_sub, new_period_sum) = wma_next_unchecked(
+            new_value,
+            old_value,
+            self.period as Float,
+            self.period_sub,
+            self.period_sum,
+            inv_weight_sum,
+        );
+
+        if !wma.is_finite() {
+            return Err(TechalysisError::Overflow(0, wma));
+        }
+
+        self.wma = wma;
+        self.period_sub = new_period_sub;
+        self.period_sum = new_period_sum;
+        self.last_window = window;
+
+        Ok(())
     }
-
-    let mut window = window.clone();
-    let inv_weight_sum = inv_weight_sum_linear(period);
-
-    let old_value = window
-        .pop_front()
-        .ok_or(TechalysisError::InsufficientData)?;
-    window.push_back(new_value);
-
-    let (wma, new_period_sub, new_period_sum) = wma_next_unchecked(
-        new_value,
-        old_value,
-        period as Float,
-        period_sub,
-        period_sum,
-        inv_weight_sum,
-    );
-
-    if !wma.is_finite() {
-        return Err(TechalysisError::Overflow(0, wma));
-    }
-
-    Ok(WmaState {
-        wma,
-        period,
-        period_sub: new_period_sub,
-        period_sum: new_period_sum,
-        window,
-    })
 }
+
+
 
 pub fn wma(data: &[Float], period: usize) -> Result<WmaResult, TechalysisError> {
     let len = data.len();
@@ -164,7 +145,7 @@ pub fn wma_into(
         period,
         period_sub,
         period_sum,
-        window: VecDeque::from(data[len - period..len].to_vec()),
+        last_window: VecDeque::from(data[len - period..len].to_vec()),
     })
 }
 

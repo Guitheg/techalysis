@@ -11,19 +11,66 @@ pub struct SmaResult {
 #[derive(Debug, Clone)]
 pub struct SmaState {
     pub sma: Float,
+    pub last_window: VecDeque<Float>,
     pub period: usize,
-    pub window: VecDeque<Float>,
 }
 
-impl From<SmaResult> for Vec<Float> {
-    fn from(result: SmaResult) -> Self {
-        result.values
-    }
-}
 
 impl SmaState {
-    pub fn next(&self, new_value: Float) -> Result<SmaState, TechalysisError> {
-        sma_next(new_value, self.sma, &self.window, self.period)
+    pub fn next(&mut self, new_value: Float) -> Result<(), TechalysisError> {
+        if self.period <= 1 {
+            return Err(TechalysisError::BadParam(
+                "SMA period must be greater than 1".to_string(),
+            ));
+        }
+        if !new_value.is_finite() {
+            return Err(TechalysisError::DataNonFinite(format!(
+                "new_value = {new_value:?}"
+            )));
+        }
+        if !self.sma.is_finite() {
+            return Err(TechalysisError::DataNonFinite(format!(
+                "self.sma = {:?}", self.sma
+            )));
+        }
+        if self.last_window.len() != self.period {
+            return Err(TechalysisError::BadParam(
+                format!(
+                    "SMA state last_window length ({}) does not match period ({})",
+                    self.last_window.len(),
+                    self.period
+                )
+            ));
+        }
+
+        for (idx, &value) in self.last_window.iter().enumerate() {
+            if !value.is_finite() {
+                return Err(TechalysisError::DataNonFinite(format!(
+                    "window[{idx}] = {value:?}"
+                )));
+            }
+        }
+
+        let mut window = self.last_window.clone();
+
+        let old_value = window
+            .pop_front()
+            .ok_or(TechalysisError::InsufficientData)?;
+        window.push_back(new_value);
+
+        let sma = sma_next_unchecked(
+            new_value,
+            old_value,
+            self.sma,
+            1.0 / (self.period as Float)
+        );
+        if !sma.is_finite() {
+            return Err(TechalysisError::Overflow(0, sma));
+        }
+        self.sma = sma;
+        self.last_window = window;
+        
+        Ok(())
     }
 }
 
@@ -81,64 +128,12 @@ pub fn sma_into(
     Ok(SmaState {
         sma: output[len - 1],
         period,
-        window: VecDeque::from(data[len - period..len].to_vec()),
-    })
-}
-
-pub fn sma_next(
-    new_value: Float,
-    prev_sma: Float,
-    window: &VecDeque<Float>,
-    period: usize,
-) -> Result<SmaState, TechalysisError> {
-    if period <= 1 {
-        return Err(TechalysisError::BadParam(
-            "SMA period must be greater than 1".to_string(),
-        ));
-    }
-    if !new_value.is_finite() {
-        return Err(TechalysisError::DataNonFinite(format!(
-            "new_value = {new_value:?}"
-        )));
-    }
-    if !prev_sma.is_finite() {
-        return Err(TechalysisError::DataNonFinite(format!(
-            "prev_sma = {prev_sma:?}"
-        )));
-    }
-    if window.len() != period {
-        return Err(TechalysisError::BadParam(
-            "Window length must match the SMA period".to_string(),
-        ));
-    }
-
-    for (idx, &value) in window.iter().enumerate() {
-        if !value.is_finite() {
-            return Err(TechalysisError::DataNonFinite(format!(
-                "window[{idx}] = {value:?}"
-            )));
-        }
-    }
-
-    let mut window = window.clone();
-
-    let old_value = window
-        .pop_front()
-        .ok_or(TechalysisError::InsufficientData)?;
-    window.push_back(new_value);
-    let sma = sma_next_unchecked(new_value, old_value, prev_sma, 1.0 / (period as Float));
-    if !sma.is_finite() {
-        return Err(TechalysisError::Overflow(0, sma));
-    }
-    Ok(SmaState {
-        sma,
-        period,
-        window,
+        last_window: VecDeque::from(data[len - period..len].to_vec()),
     })
 }
 
 #[inline(always)]
-pub fn sma_next_unchecked(
+pub(crate) fn sma_next_unchecked(
     new_value: Float,
     old_value: Float,
     prev_sma: Float,

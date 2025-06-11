@@ -15,7 +15,7 @@ pub struct TrimaState {
     pub sum: Float,
     pub trailing_sum: Float,
     pub heading_sum: Float,
-    pub window: VecDeque<Float>,
+    pub last_window: VecDeque<Float>,
     pub inv_weight_sum: Float,
     pub period: usize,
 
@@ -28,94 +28,81 @@ impl From<TrimaResult> for Vec<Float> {
 }
 
 impl TrimaState {
-    pub fn next(&self, new_value: Float) -> Result<TrimaState, TechalysisError> {
-        trima_next(
-            new_value,
-            self
-        )
-    }
-}
-
-pub fn trima_next(
-    new_value: Float,
-    state: &TrimaState,
-) -> Result<TrimaState, TechalysisError> {
-    if state.period <= 1 {
-        return Err(TechalysisError::BadParam(
-            "TRIMA period must be greater than 1".to_string(),
-        ));
-    }
-    if !new_value.is_finite() {
-        return Err(TechalysisError::DataNonFinite(format!(
-            "new_value = {new_value:?}"
-        )));
-    }
-    if !state.trima.is_finite() {
-        return Err(TechalysisError::DataNonFinite(format!(
-            "prev_trima = {:?}", state.trima
-        )));
-    }
-    if state.window.len() != state.period {
-        return Err(TechalysisError::BadParam(
-            "Window length must match the TRIMA period".to_string(),
-        ));
-    }
-
-    for (idx, &value) in state.window.iter().enumerate() {
-        if !value.is_finite() {
+    pub fn next(&mut self, new_value: Float) -> Result<(), TechalysisError> {
+        if self.period <= 1 {
+            return Err(TechalysisError::BadParam(
+                "TRIMA period must be greater than 1".to_string(),
+            ));
+        }
+        if !new_value.is_finite() {
             return Err(TechalysisError::DataNonFinite(format!(
-                "window[{idx}] = {value:?}"
+                "new_value = {new_value:?}"
             )));
         }
+        if !self.trima.is_finite() {
+            return Err(TechalysisError::DataNonFinite(format!(
+                "prev_trima = {:?}", self.trima
+            )));
+        }
+        if self.last_window.len() != self.period {
+            return Err(TechalysisError::BadParam(
+                "Window length must match the TRIMA period".to_string(),
+            ));
+        }
+
+        for (idx, &value) in self.last_window.iter().enumerate() {
+            if !value.is_finite() {
+                return Err(TechalysisError::DataNonFinite(format!(
+                    "window[{idx}] = {value:?}"
+                )));
+            }
+        }
+        let is_odd = self.period % 2 != 0;
+
+        let mut window = self.last_window.clone();
+
+        let old_value = window
+            .pop_front()
+            .ok_or(TechalysisError::InsufficientData)?;
+        window.push_back(new_value);
+        let vec = Vec::from(window.clone());
+        let middle_idx = get_middle_idx(self.period);
+        let middle_value = vec[middle_idx];
+
+
+        let (trima, new_sum, new_trailing_sum, new_heading_sum) = if is_odd {
+            trima_next_odd_unchecked(
+                new_value,
+                middle_value,
+                old_value,
+                self.sum,
+                self.trailing_sum,
+                self.heading_sum,
+                self.inv_weight_sum,
+            )
+        } else {
+            trima_next_even_unchecked(
+                new_value,
+                middle_value,
+                old_value,
+                self.sum,
+                self.trailing_sum,
+                self.heading_sum,
+                self.inv_weight_sum,
+            )
+        };
+
+        if !trima.is_finite() {
+            return Err(TechalysisError::Overflow(0, trima));
+        }
+
+        self.trima = trima;
+        self.sum = new_sum;
+        self.trailing_sum = new_trailing_sum;
+        self.heading_sum = new_heading_sum;
+        self.last_window = window;
+        Ok(())
     }
-    let is_odd = state.period % 2 != 0;
-
-    let mut window = state.window.clone();
-
-    let old_value = window
-        .pop_front()
-        .ok_or(TechalysisError::InsufficientData)?;
-    window.push_back(new_value);
-    let vec = Vec::from(window.clone());
-    let middle_idx = get_middle_idx(state.period);
-    let middle_value = vec[middle_idx];
-
-
-    let (trima, new_sum, new_trailing_sum, new_heading_sum) = if is_odd {
-        trima_next_odd_unchecked(
-            new_value,
-            middle_value,
-            old_value,
-            state.sum,
-            state.trailing_sum,
-            state.heading_sum,
-            state.inv_weight_sum,
-        )
-    } else {
-        trima_next_even_unchecked(
-            new_value,
-            middle_value,
-            old_value,
-            state.sum,
-            state.trailing_sum,
-            state.heading_sum,
-            state.inv_weight_sum,
-        )
-    };
-
-    if !trima.is_finite() {
-        return Err(TechalysisError::Overflow(0, trima));
-    }
-
-    Ok(TrimaState {
-        trima,
-        sum: new_sum,
-        trailing_sum: new_trailing_sum,
-        heading_sum: new_heading_sum,
-        window,
-        inv_weight_sum: state.inv_weight_sum,
-        period: state.period,
-    })
 }
 
 pub fn trima(data: &[Float], period: usize) -> Result<TrimaResult, TechalysisError> {
@@ -211,14 +198,14 @@ pub fn trima_into(
         sum,
         trailing_sum,
         heading_sum,
-        window: VecDeque::from(data[len - period..len].to_vec()),
+        last_window: VecDeque::from(data[len - period..len].to_vec()),
         inv_weight_sum,
         period,
     })
 }
 
 #[inline(always)]
-pub fn trima_next_even_unchecked(
+fn trima_next_even_unchecked(
     new_value: Float,
     middle_value: Float,
     old_value: Float,
@@ -239,7 +226,7 @@ pub fn trima_next_even_unchecked(
 }
 
 #[inline(always)]
-pub fn trima_next_odd_unchecked(
+fn trima_next_odd_unchecked(
     new_value: Float,
     middle_value: Float,
     old_value: Float,

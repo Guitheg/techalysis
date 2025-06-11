@@ -1,6 +1,6 @@
 use techalysis::{
     errors::TechalysisError,
-    indicators::macd::{macd, MacdResult, MacdState},
+    indicators::macd::{macd, MacdResult},
     types::Float,
 };
 
@@ -12,101 +12,84 @@ use crate::{
     },
 };
 
-#[test]
-fn generated_default() {
-    let columns = load_generated_csv("macd.csv").unwrap();
+fn generated_and_no_lookahead_macd(file_name: &str, fast_period: usize, slow_period: usize, signal_period: usize) {
+    let columns = load_generated_csv(file_name).unwrap();
     let input = columns.get("close").unwrap();
-    let output = macd(input, 12, 26, 9);
-    assert!(output.is_ok());
-    let out = output.unwrap();
-    let expected_macd = columns.get("macd").unwrap();
-    let expected_signal = columns.get("signal").unwrap();
-    let expected_histogram = columns.get("histogram").unwrap();
-    assert_vec_eq_gen_data(&out.macd, expected_macd);
-    assert_vec_eq_gen_data(&out.signal, expected_signal);
-    assert_vec_eq_gen_data(&out.histogram, expected_histogram);
-    assert!(out.macd.len() == input.len());
-}
 
-#[test]
-fn generated_fast16_slow36_signal12() {
-    let columns =
-        load_generated_csv("macd_fastperiod-16_slowperiod-36_signalperiod-12.csv").unwrap();
-    let input = columns.get("close").unwrap();
-    let output = macd(input, 16, 36, 12);
-    assert!(output.is_ok());
-    let out = output.unwrap();
-    let expected_macd = columns.get("macd").unwrap();
-    let expected_signal = columns.get("signal").unwrap();
-    let expected_histogram = columns.get("histogram").unwrap();
-    assert_vec_eq_gen_data(&out.macd, expected_macd);
-    assert_vec_eq_gen_data(&out.signal, expected_signal);
-    assert_vec_eq_gen_data(&out.histogram, expected_histogram);
-    assert!(out.macd.len() == input.len());
-}
-
-#[test]
-fn no_lookahead() {
-    let columns = load_generated_csv("macd.csv").unwrap();
-    let input = columns.get("close").unwrap();
     let len = input.len();
-    let last_index = len - 1;
-    let input_minus = &input[0..last_index];
+    let next_count = 5;
+    let last_idx = len - (1 + next_count);
+
     let expected_macd = columns.get("macd").unwrap();
-    let expected_macd_minus = &expected_macd[0..last_index];
     let expected_signal = columns.get("signal").unwrap();
-    let expected_signal_minus = &expected_signal[0..last_index];
     let expected_histogram = columns.get("histogram").unwrap();
-    let expected_histogram_minus = &expected_histogram[0..last_index];
 
-    let result_minus = macd(input_minus, 12, 26, 9).unwrap();
-    assert_vec_eq_gen_data(&result_minus.macd, expected_macd_minus);
-    assert_vec_eq_gen_data(&result_minus.signal, expected_signal_minus);
-    assert_vec_eq_gen_data(&result_minus.histogram, expected_histogram_minus);
+    let output = macd(
+        &input[0..last_idx],
+        fast_period,
+        slow_period,
+        signal_period,
+    );
+    assert!(output.is_ok(), "Failed to calculate MACD: {:?}", output.err());
+    let result = output.unwrap();
 
-    let next_state = result_minus.state.next(input[last_index]).unwrap();
-    assert!(
-        approx_eq_float(next_state.macd, expected_macd[last_index], 1e-8),
-        "Expected last MACD value to be {}, but got {}",
-        expected_macd[last_index],
-        next_state.macd
-    );
-    assert!(
-        approx_eq_float(next_state.signal, expected_signal[last_index], 1e-8),
-        "Expected last Signal value to be {}, but got {}",
-        expected_signal[last_index],
-        next_state.signal
-    );
-    assert!(
-        approx_eq_float(next_state.histogram, expected_histogram[last_index], 1e-8),
-        "Expected last Histogram value to be {}, but got {}",
-        expected_histogram[last_index],
-        next_state.histogram
-    );
+    assert_vec_eq_gen_data(&expected_macd[0..last_idx], &result.macd);
+    assert_vec_eq_gen_data(&expected_signal[0..last_idx], &result.signal);
+    assert_vec_eq_gen_data(&expected_histogram[0..last_idx], &result.histogram);
 
-    let result = macd(input, 12, 26, 9).unwrap();
-    assert_vec_eq_gen_data(&result.macd, expected_macd);
-    assert_vec_eq_gen_data(&result.signal, expected_signal);
-    assert_vec_eq_gen_data(&result.histogram, expected_histogram);
-    assert!(result.state.macd == next_state.macd);
-    assert!(result.state.signal == next_state.signal);
-    assert!(result.state.histogram == next_state.histogram);
+    let mut state = result.state;
+
+    for i in 0..next_count {
+        state.next(input[last_idx + i]).unwrap();
+        assert!(
+            approx_eq_float(state.macd, expected_macd[last_idx + i], 1e-8),
+            "Next expected {}, but got {}",
+            expected_macd[last_idx + i],
+            state.macd
+        );
+        assert!(
+            approx_eq_float(state.signal, expected_signal[last_idx + i], 1e-8),
+            "Next expected {}, but got {}",
+            expected_signal[last_idx + i],
+            state.signal
+        );
+        assert!(
+            approx_eq_float(state.histogram, expected_histogram[last_idx + i], 1e-8),
+            "Next expected {}, but got {}",
+            expected_histogram[last_idx + i],
+            state.histogram
+        );
+    }
 }
 
 #[test]
-fn generated_signal32() {
-    let columns = load_generated_csv("macd_signalperiod-32.csv").unwrap();
-    let input = columns.get("close").unwrap();
-    let output = macd(input, 12, 26, 32);
-    assert!(output.is_ok());
-    let out = output.unwrap();
-    let expected_macd = columns.get("macd").unwrap();
-    let expected_signal = columns.get("signal").unwrap();
-    let expected_histogram = columns.get("histogram").unwrap();
-    assert_vec_eq_gen_data(&out.macd, expected_macd);
-    assert_vec_eq_gen_data(&out.signal, expected_signal);
-    assert_vec_eq_gen_data(&out.histogram, expected_histogram);
-    assert!(out.macd.len() == input.len());
+fn generated_with_no_lookahead_ok() {
+    generated_and_no_lookahead_macd(
+        "macd.csv",
+        12,
+        26,
+        9,
+    );
+}
+
+#[test]
+fn generated_with_no_lookahead_fast16_slow36_signal12_ok() {
+    generated_and_no_lookahead_macd(
+        "macd_fastperiod-16_slowperiod-36_signalperiod-12.csv",
+        16,
+        36,
+        12,
+    );
+}
+
+#[test]
+fn generated_with_no_lookahead_signal32_ok() {
+    generated_and_no_lookahead_macd(
+        "macd_signalperiod-32.csv",
+        12,
+        26,
+        32,
+    );
 }
 
 #[test]
@@ -226,7 +209,8 @@ fn next_with_finite_neg_extreme_err_overflow_or_ok_all_finite() {
     let signal_period = 2;
 
     let result = macd(&data, fast_period, slow_period, signal_period).unwrap();
-    expect_err_overflow_or_ok_with!(result.state.next(Float::MIN + 5.0), |state: MacdState| {
+    let mut state = result.state;
+    expect_err_overflow_or_ok_with!(state.next(Float::MIN + 5.0), |_| {
         assert!(state.macd.is_finite(), "Expected all values to be finite");
         assert!(state.signal.is_finite(), "Expected all values to be finite");
         assert!(

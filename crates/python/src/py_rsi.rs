@@ -1,6 +1,6 @@
 use numpy::{IntoPyArray, PyArray1, PyArrayMethods, PyUntypedArrayMethods};
 use pyo3::{exceptions::PyValueError, pyclass, pyfunction, pymethods, Py, PyResult, Python};
-use techalysis::indicators::rsi::{rsi_into, rsi_next as core_rsi_next, RsiState};
+use techalysis::indicators::rsi::{rsi_into, RsiState};
 use techalysis::types::Float;
 
 #[pyclass(name = "RsiState")]
@@ -62,6 +62,18 @@ impl From<RsiState> for PyRsiState {
     }
 }
 
+impl From<PyRsiState> for RsiState {
+    fn from(py_state: PyRsiState) -> Self {
+        RsiState {
+            rsi: py_state.rsi,
+            prev_value: py_state.prev_value,
+            avg_gain: py_state.avg_gain,
+            avg_loss: py_state.avg_loss,
+            period: py_state.period,
+        }
+    }
+}
+
 #[pyfunction(signature = (data, period = 14, release_gil = false))]
 pub(crate) fn rsi(
     py: Python,
@@ -92,13 +104,7 @@ pub(crate) fn rsi(
 
 #[pyfunction(signature = (new_value, rsi_state))]
 pub(crate) fn rsi_next(new_value: Float, rsi_state: PyRsiState) -> PyResult<PyRsiState> {
-    let state = core_rsi_next(
-        new_value,
-        rsi_state.prev_value,
-        rsi_state.avg_gain,
-        rsi_state.avg_loss,
-        rsi_state.period,
-    )
-    .map_err(|e| PyValueError::new_err(format!("{:?}", e)))?;
+    let mut state: RsiState = rsi_state.into();
+    state.next(new_value).map_err(|e| PyValueError::new_err(format!("{:?}", e)))?;
     Ok(state.into())
 }

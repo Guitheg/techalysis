@@ -60,7 +60,7 @@ impl From<TrimaState> for PyTrimaState {
             sum: state.sum,
             trailing_sum: state.trailing_sum,
             heading_sum: state.heading_sum,
-            window: state.window.into(),
+            window: state.last_window.into(),
             inv_weight_sum: state.inv_weight_sum,
             period: state.period,
         }
@@ -74,7 +74,7 @@ impl From<PyTrimaState> for TrimaState {
             sum: py_state.sum,
             trailing_sum: py_state.trailing_sum,
             heading_sum: py_state.heading_sum,
-            window: py_state.window.into(),
+            last_window: py_state.window.into(),
             inv_weight_sum: py_state.inv_weight_sum,
             period: py_state.period,
         }
@@ -111,8 +111,8 @@ pub(crate) fn trima(
 
 #[pyfunction(signature = (new_value, trima_state))]
 pub(crate) fn trima_next(new_value: Float, trima_state: PyTrimaState) -> PyResult<PyTrimaState> {
-    let trima_state: TrimaState = trima_state.into();
-    let trima_state = trima_state
+    let mut trima_state: TrimaState = trima_state.into();
+    trima_state
         .next(new_value)
         .map_err(|e| PyValueError::new_err(format!("{:?}", e)))?;
 

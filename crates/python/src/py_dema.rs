@@ -106,8 +106,8 @@ pub(crate) fn dema(
 
 #[pyfunction(signature = (new_value, dema_state))]
 pub(crate) fn dema_next(new_value: Float, dema_state: PyDemaState) -> PyResult<PyDemaState> {
-    let dema_state: DemaState = dema_state.into();
-    let dema_state = dema_state
+    let mut dema_state: DemaState = dema_state.into();
+    dema_state
         .next(new_value)
         .map_err(|e| PyValueError::new_err(format!("{:?}", e)))?;
 
