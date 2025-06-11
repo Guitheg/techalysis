@@ -48,6 +48,11 @@ fn generated_with_no_lookahead_ok() {
 }
 
 #[test]
+fn generated_with_no_lookahead_period_5_vfactor_055_ok() {
+    generated_and_no_lookahead_t3("t3_timeperiod-5_vfactor-0.55.csv", 5, 0.55)
+}
+
+#[test]
 fn finite_extreme_err_overflow_or_ok_all_finite() {
     let data = vec![
         Float::MAX - 3.0,
