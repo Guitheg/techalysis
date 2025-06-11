@@ -1,23 +1,110 @@
+/*
+    BSD 3-Clause License
+
+    Copyright (c) 2025, Guillaume GOBIN (Guitheg)
+
+    Redistribution and use in source and binary forms, with or without modification,
+    are permitted provided that the following conditions are met:
+
+    1. Redistributions of source code must retain the above copyright notice,
+    this list of conditions and the following disclaimer.
+
+    2. Redistributions in binary form must reproduce the above copyright notice,
+    this list of conditions and the following disclaimer in the documentation and/or
+    other materials provided with the distribution.
+
+    3. Neither the name of the copyright holder nor the names of its contributors
+    may be used to endorse or promote products derived from this software without
+    specific prior written permission.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+    WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+    DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+    FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+    DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+    SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+    CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+    OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
+    THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
+/*
+    List of contributors:
+    - Guitheg: Initial implementation
+*/
+
+/*
+    Inspired by TA-LIB SMA implementation
+*/
+
+//! Simple Moving Average (SMA) implementation
+
 use crate::errors::TechalysisError;
 use crate::traits::State;
 use crate::types::Float;
 use std::collections::VecDeque;
 
+/// SMA calculation result
+/// ---
+/// This struct holds the result and the state ([`SmaState`])
+/// of the calculation.
+/// 
+/// Attributes
+/// ---
+/// - `values`: A vector of [`Float`] representing the calculated SMA values.
+/// - `state`: A [`SmaState`], which can be used to calculate
+/// the next values incrementally.
 #[derive(Debug)]
 pub struct SmaResult {
+    /// The calculated SMA values.
     pub values: Vec<Float>,
+    /// A [`SmaState`], which can be used to calculate
+    /// the next values incrementally.
     pub state: SmaState,
 }
 
+/// SMA calculation state
+/// ---
+/// This struct holds the state of the calculation.
+/// It is used to calculate the next values in a incremental way.
+/// 
+/// Attributes
+/// ---
+/// **Last outputs values**
+/// - `sma`: The last calculated Simple Moving Average (SMA) value.
+/// 
+/// **State values**
+/// - `last_window`: A deque containing the last `period` values used for
+/// the SMA calculation.
+/// 
+/// **Parameters**
+/// - `period`: The period used for the SMA calculation, which determines
+/// how many values are averaged to compute the SMA.
 #[derive(Debug, Clone)]
 pub struct SmaState {
+    // Outputs
+    /// The last calculated Simple Moving Average (SMA) value.
     pub sma: Float,
+    
+    // State values
+    /// A deque containing the last `period` values used for
+    /// the SMA calculation.
     pub last_window: VecDeque<Float>,
+
+    // Parameters
+    /// The period used for the SMA calculation, which determines
+    /// how many values are averaged to compute the SMA.
     pub period: usize,
 }
 
 
 impl State<Float> for SmaState {
+    /// Update the [`SmaState`] with a new sample
+    /// 
+    /// Input Arguments
+    /// ---
+    /// - `sample`: The new input to update the SMA state
     fn update(&mut self, sample: Float) -> Result<(), TechalysisError> {
         if self.period <= 1 {
             return Err(TechalysisError::BadParam(
@@ -75,6 +162,18 @@ impl State<Float> for SmaState {
     }
 }
 
+/// Calculation of the SMA function
+/// ---
+/// It returns a [`SmaResult`]
+/// 
+/// Input Arguments
+/// ---
+/// - `data`: A slice of [`Float`] representing the input data.
+/// 
+/// Returns
+/// ---
+/// A `Result` containing a [`SmaResult`],
+/// or a [`TechalysisError`] error if the calculation fails.
 pub fn sma(data: &[Float], period: usize) -> Result<SmaResult, TechalysisError> {
     let len = data.len();
     let mut output = vec![0.0; len];
@@ -85,6 +184,25 @@ pub fn sma(data: &[Float], period: usize) -> Result<SmaResult, TechalysisError> 
     })
 }
 
+/// Calculation of the SMA function
+/// ---
+/// It stores the results in the provided output arrays and
+/// return the state [`SmaState`].
+///
+/// Input Arguments
+/// ---
+/// - `data`: A slice of [`Float`] representing the input data.
+/// - `period`: The period for the SMA calculation.
+/// 
+/// Output Arguments
+/// ---
+/// - `output`: A mutable slice of [`Float`] where the calculated SMA values
+/// will be stored.
+/// 
+/// Returns
+/// ---
+/// A `Result` containing a [`SmaState`],
+/// or a [`TechalysisError`] error if the calculation fails.
 pub fn sma_into(
     data: &[Float],
     period: usize,

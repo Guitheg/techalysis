@@ -1,34 +1,125 @@
-use std::collections::VecDeque;
+/*
+    BSD 3-Clause License
 
+    Copyright (c) 2025, Guillaume GOBIN (Guitheg)
+
+    Redistribution and use in source and binary forms, with or without modification,
+    are permitted provided that the following conditions are met:
+
+    1. Redistributions of source code must retain the above copyright notice,
+    this list of conditions and the following disclaimer.
+
+    2. Redistributions in binary form must reproduce the above copyright notice,
+    this list of conditions and the following disclaimer in the documentation and/or
+    other materials provided with the distribution.
+
+    3. Neither the name of the copyright holder nor the names of its contributors
+    may be used to endorse or promote products derived from this software without
+    specific prior written permission.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+    WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+    DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+    FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+    DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+    SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+    CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+    OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
+    THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
+/*
+    List of contributors:
+    - Guitheg: Initial implementation
+*/
+
+/*
+    Inspired by TA-LIB TRIMA implementation
+*/
+
+//! Triangular Moving Average (TRIMA) implementation
+
+use std::collections::VecDeque;
 use crate::errors::TechalysisError;
 use crate::traits::State;
 use crate::types::Float;
 
+/// TRIMA calculation result
+/// ---
+/// This struct holds the result and the state ([`TrimaState`])
+/// of the calculation.
+/// 
+/// Attributes
+/// ---
+/// - `values`: A vector of [`Float`] representing the calculated TRIMA values.
+/// - `state`: A [`TrimaState`], which can be used to calculate
+/// the next values incrementally.
 #[derive(Debug)]
 pub struct TrimaResult {
+    /// The calculated TRIMA values.
     pub values: Vec<Float>,
+    /// A [`TrimaState`], which can be used to calculate
+    /// the next values incrementally.
     pub state: TrimaState,
 }
 
+/// TRIMA calculation state
+/// ---
+/// This struct holds the state of the calculation.
+/// It is used to calculate the next values in a incremental way.
+/// 
+/// Attributes
+/// ---
+/// **Last outputs values**
+/// - `trima`: The last calculated TRIMA value.
+/// 
+/// **State values**
+/// - `weighted_sum`: The weighted sum of the values in the current window.
+/// - `trailing_sum`: The sum of the first half of the values in
+/// the current window. It is used to optimize the calculation of the TRIMA.
+/// - `heading_sum`: The sum of the second half of the values in the current window.
+/// It is used to optimize the calculation of the TRIMA.
+/// - `last_window`: A deque containing the last `period` values used for
+/// the TRIMA calculation.
+/// 
+/// **Parameters**
+/// - `inv_weight_sum`: The inverse of the sum of weights used in the TRIMA calculation.
+/// - `period`: The period used for the TRIMA calculation, which determines
+/// how many values are averaged to compute the TRIMA.
 #[derive(Debug, Clone)]
 pub struct TrimaState {
+    // Outputs
+    /// The last calculated TRIMA value
     pub trima: Float,
-    pub sum: Float,
+
+    // State values
+    /// The weighted sum of the values in the current window
+    pub weighted_sum: Float,
+    /// The sum of the first half of the values in the current window.
     pub trailing_sum: Float,
+    /// The sum of the second half of the values in the current window.
     pub heading_sum: Float,
+    /// A deque containing the last `period` values used for
     pub last_window: VecDeque<Float>,
+
+    // Parameters
+    /// The inverse of the sum of weights used in the TRIMA calculation
+    /// It is calculated as `1.0 / ((period // 2) * (period // 2 + 1))` for even periods
+    /// and `1.0 / ((period // 2 + 1) * (period // 2 + 1))` for odd periods.
+    /// This value is used to optimize the calculation of the TRIMA.
     pub inv_weight_sum: Float,
+    /// The period used for the TRIMA calculation, which determines
     pub period: usize,
 
 }
 
-impl From<TrimaResult> for Vec<Float> {
-    fn from(result: TrimaResult) -> Self {
-        result.values
-    }
-}
-
 impl State<Float> for TrimaState {
+    /// Update the [`TrimaState`] with a new sample
+    /// 
+    /// Input Arguments
+    /// ---
+    /// - `sample`: The new input to update the TRIMA state
     fn update(&mut self, sample: Float) -> Result<(), TechalysisError> {
         if self.period <= 1 {
             return Err(TechalysisError::BadParam(
@@ -71,12 +162,17 @@ impl State<Float> for TrimaState {
         let middle_value = vec[middle_idx];
 
 
-        let (trima, new_sum, new_trailing_sum, new_heading_sum) = if is_odd {
+        let (
+            trima,
+            new_weighted_sum,
+            new_trailing_sum,
+            new_heading_sum
+        ) = if is_odd {
             trima_next_odd_unchecked(
                 sample,
                 middle_value,
                 old_value,
-                self.sum,
+                self.weighted_sum,
                 self.trailing_sum,
                 self.heading_sum,
                 self.inv_weight_sum,
@@ -86,7 +182,7 @@ impl State<Float> for TrimaState {
                 sample,
                 middle_value,
                 old_value,
-                self.sum,
+                self.weighted_sum,
                 self.trailing_sum,
                 self.heading_sum,
                 self.inv_weight_sum,
@@ -98,7 +194,7 @@ impl State<Float> for TrimaState {
         }
 
         self.trima = trima;
-        self.sum = new_sum;
+        self.weighted_sum = new_weighted_sum;
         self.trailing_sum = new_trailing_sum;
         self.heading_sum = new_heading_sum;
         self.last_window = window;
@@ -106,7 +202,23 @@ impl State<Float> for TrimaState {
     }
 }
 
-pub fn trima(data: &[Float], period: usize) -> Result<TrimaResult, TechalysisError> {
+/// Calculation of the TRIMA function
+/// ---
+/// It returns a [`TrimaResult`]
+/// 
+/// Input Arguments
+/// ---
+/// - `data`: A slice of [`Float`] representing the input data.
+/// - `period`: The period for the TRIMA calculation.
+/// 
+/// Returns
+/// ---
+/// A `Result` containing a [`TrimaResult`],
+/// or a [`TechalysisError`] error if the calculation fails.
+pub fn trima(
+    data: &[Float],
+    period: usize
+) -> Result<TrimaResult, TechalysisError> {
     let len = data.len();
     let mut output = vec![0.0; len];
     let trima_state = trima_into(data, period, &mut output)?;
@@ -116,6 +228,24 @@ pub fn trima(data: &[Float], period: usize) -> Result<TrimaResult, TechalysisErr
     })
 }
 
+/// Calculation of the TRIMA function
+/// ---
+/// It stores the results in the provided output arrays and
+/// return the state [`TrimaState`].
+///
+/// Input Arguments
+/// ---
+/// - `data`: A slice of [`Float`] representing the input data.
+/// - `period`: The period for the TRIMA calculation.
+/// 
+/// Output Arguments
+/// ---
+/// - `output`: A mutable slice of [`Float`] where the calculated TRIMA values
+/// 
+/// Returns
+/// ---
+/// A `Result` containing a [`TrimaState`],
+/// or a [`TechalysisError`] error if the calculation fails.
 pub fn trima_into(
     data: &[Float],
     period: usize,
@@ -196,7 +326,7 @@ pub fn trima_into(
     
     Ok(TrimaState {
         trima: output[len - 1],
-        sum,
+        weighted_sum: sum,
         trailing_sum,
         heading_sum,
         last_window: VecDeque::from(data[len - period..len].to_vec()),
@@ -318,7 +448,6 @@ fn get_middle_idx(period: usize) -> usize {
 #[cfg(test)]
 mod tests {
     use super::*;
-
     #[test]
     fn init_trima_unchecked_odd_ok() {
         let data = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];

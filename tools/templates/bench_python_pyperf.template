@@ -7,7 +7,7 @@ def benchmark_${indicator_name}():
     # TODO: DEFINE SETUP
     # setup = "import numpy as np; data = np.random.random(10_000_000); period = 100"
     runner.timeit("tx.${indicator_name}", "tx.${indicator_name}(data, period)", setup="import techalysis as tx;" + setup)
-    runner.timeit("ta.${indicator_name}", "ta.${indicator_name}(data, period)", setup="import talib as ta;" + setup)
+    runner.timeit("ta.${indicator_name}", "ta.${INDICATORNAME}(data, period)", setup="import talib as ta;" + setup)
 
 if __name__ == "__main__":
     benchmark_${indicator_name}()
