@@ -7,7 +7,10 @@ use crate::{
 };
 
 use techalysis::{
-    errors::TechalysisError, indicators::trima::{trima, TrimaResult}, traits::State, types::Float
+    errors::TechalysisError,
+    indicators::trima::{trima, TrimaResult},
+    traits::State,
+    types::Float,
 };
 
 fn generated_and_no_lookahead_trima(file_name: &str, period: usize) {
@@ -23,7 +26,11 @@ fn generated_and_no_lookahead_trima(file_name: &str, period: usize) {
     let input_prev = &input[0..last_idx];
 
     let output = trima(input_prev, period);
-    assert!(output.is_ok(), "Failed to calculate TRIMA: {:?}", output.err());
+    assert!(
+        output.is_ok(),
+        "Failed to calculate TRIMA: {:?}",
+        output.err()
+    );
     let result = output.unwrap();
 
     assert_vec_eq_gen_data(&expected[0..last_idx], &result.values);
@@ -59,7 +66,6 @@ fn generated_with_no_lookahead_period_2_ok() {
 fn generated_with_no_lookahead_period_3_ok() {
     generated_and_no_lookahead_trima("trima_timeperiod-3.csv", 3);
 }
-
 
 #[test]
 fn zeros_ok() {

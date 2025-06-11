@@ -5,7 +5,10 @@ use crate::helper::{
 
 use crate::expect_err_overflow_or_ok_with;
 use techalysis::{
-    errors::TechalysisError, indicators::tema::{tema, tema_skip_period_unchecked, TemaResult}, traits::State, types::Float
+    errors::TechalysisError,
+    indicators::tema::{tema, tema_skip_period_unchecked, TemaResult},
+    traits::State,
+    types::Float,
 };
 
 fn generated_and_no_lookahead_tema(file_name: &str, period: usize) {
@@ -21,7 +24,11 @@ fn generated_and_no_lookahead_tema(file_name: &str, period: usize) {
     let input_prev = &input[0..last_idx];
 
     let output = tema(input_prev, period, None);
-    assert!(output.is_ok(), "Failed to calculate TEMA: {:?}", output.err());
+    assert!(
+        output.is_ok(),
+        "Failed to calculate TEMA: {:?}",
+        output.err()
+    );
     let result = output.unwrap();
 
     assert_vec_eq_gen_data(&expected[0..last_idx], &result.values);

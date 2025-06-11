@@ -77,7 +77,7 @@ impl PyTrimaState {
             heading_sum,
             last_window,
             inv_weight_sum,
-            period
+            period,
         }
     }
     #[getter]

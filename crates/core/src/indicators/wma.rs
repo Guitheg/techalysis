@@ -40,16 +40,16 @@
 
 //! Weighted Moving Average (WMA) implementation
 
-use std::collections::VecDeque;
 use crate::errors::TechalysisError;
 use crate::traits::State;
 use crate::types::Float;
+use std::collections::VecDeque;
 
 /// WMA calculation result
 /// ---
 /// This struct holds the result and the state ([`WmaState`])
 /// of the calculation.
-/// 
+///
 /// Attributes
 /// ---
 /// - `values`: A vector of [`Float`] representing the calculated WMA values.
@@ -68,18 +68,18 @@ pub struct WmaResult {
 /// ---
 /// This struct holds the state of the calculation.
 /// It is used to calculate the next values in a incremental way.
-/// 
+///
 /// Attributes
 /// ---
 /// **Last outputs values**
 /// - `wma`: The last calculated WMA value.
-/// 
+///
 /// **State values**
 /// - `period_sub`: The sumation to subtract from the period sum.
 /// - `period_sum`: The weighted sum of the previous window.
 /// - `last_window`: A deque containing the last `period` values used for
 /// the WMA calculation.
-/// 
+///
 /// **Parameters**
 /// - `period`: The period used for the WMA calculation, which determines
 /// how many values are averaged to compute the WMA.
@@ -105,7 +105,7 @@ pub struct WmaState {
 
 impl State<Float> for WmaState {
     /// Update the [`WmaState`] with a new sample
-    /// 
+    ///
     /// Input Arguments
     /// ---
     /// - `sample`: The new input to update the WMA state
@@ -122,17 +122,16 @@ impl State<Float> for WmaState {
         }
         if !self.wma.is_finite() {
             return Err(TechalysisError::DataNonFinite(format!(
-                "self.wma = {:?}", self.wma
+                "self.wma = {:?}",
+                self.wma
             )));
         }
         if self.last_window.len() != self.period {
-            return Err(TechalysisError::BadParam(
-                format!(
-                    "WMA state window length ({}) does not match period ({})",
-                    self.last_window.len(),
-                    self.period
-                )
-            ));
+            return Err(TechalysisError::BadParam(format!(
+                "WMA state window length ({}) does not match period ({})",
+                self.last_window.len(),
+                self.period
+            )));
         }
 
         for (idx, &value) in self.last_window.iter().enumerate() {
@@ -176,12 +175,12 @@ impl State<Float> for WmaState {
 /// Calculation of the WMA function
 /// ---
 /// It returns a [`WmaResult`]
-/// 
+///
 /// Input Arguments
 /// ---
 /// - `data`: A slice of [`Float`] representing the input data.
 /// - `period`: The period for the WMA calculation.
-/// 
+///
 /// Returns
 /// ---
 /// A `Result` containing a [`WmaResult`],
@@ -205,11 +204,11 @@ pub fn wma(data: &[Float], period: usize) -> Result<WmaResult, TechalysisError> 
 /// ---
 /// - `data`: A slice of [`Float`] representing the input data.
 /// - `period`: The period for the WMA calculation.
-/// 
+///
 /// Output Arguments
 /// ---
 /// - `output`: A mutable slice of [`Float`] where the calculated WMA values
-/// 
+///
 /// Returns
 /// ---
 /// A `Result` containing a [`WmaState`],

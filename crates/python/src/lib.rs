@@ -1,14 +1,14 @@
 use pyo3::prelude::*;
 
-mod py_t3;
-mod py_trima;
 mod py_bbands;
 mod py_dema;
 mod py_ema;
 mod py_macd;
 mod py_rsi;
 mod py_sma;
+mod py_t3;
 mod py_tema;
+mod py_trima;
 mod py_wma;
 
 #[pymodule]

@@ -56,13 +56,7 @@ pub struct PyDemaState {
 #[pymethods]
 impl PyDemaState {
     #[new]
-    pub fn new(
-        dema: Float,
-        ema_1: Float,
-        ema_2: Float,
-        period: usize,
-        alpha: Float,
-    ) -> Self {
+    pub fn new(dema: Float, ema_1: Float, ema_2: Float, period: usize, alpha: Float) -> Self {
         PyDemaState {
             dema,
             ema_1,

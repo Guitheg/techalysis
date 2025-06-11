@@ -84,7 +84,7 @@ impl From<PyEmaState> for EmaState {
             period: py_state.period,
             alpha: py_state.alpha.unwrap_or(
                 period_to_alpha(py_state.period, None).unwrap_or(2.0 / py_state.period as Float),
-            )
+            ),
         }
     }
 }
@@ -118,7 +118,8 @@ pub(crate) fn ema(
 #[pyfunction(signature = (new_value, ema_state))]
 pub(crate) fn ema_next(new_value: Float, ema_state: PyEmaState) -> PyResult<PyEmaState> {
     let mut state: EmaState = ema_state.into();
-    state.update(new_value)
+    state
+        .update(new_value)
         .map_err(|e| PyValueError::new_err(format!("{:?}", e)))?;
     Ok(state.into())
 }

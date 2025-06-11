@@ -3,13 +3,13 @@ use crate::helper::{
     generated::{assert_vec_eq_gen_data, load_generated_csv},
 };
 
-use techalysis::{
-    errors::TechalysisError, indicators::t3::{
-        t3,
-        T3Result,
-    }, traits::State, types::Float
-};
 use crate::expect_err_overflow_or_ok_with;
+use techalysis::{
+    errors::TechalysisError,
+    indicators::t3::{t3, T3Result},
+    traits::State,
+    types::Float,
+};
 
 fn generated_and_no_lookahead_t3(file_name: &str, period: usize, vfactor: Float) {
     let columns = load_generated_csv(file_name).unwrap();
@@ -23,7 +23,7 @@ fn generated_and_no_lookahead_t3(file_name: &str, period: usize, vfactor: Float)
 
     let input_prev = &input[0..last_idx];
 
-    let output = t3(input_prev, period,vfactor, None);
+    let output = t3(input_prev, period, vfactor, None);
     assert!(output.is_ok(), "Failed to calculate T3: {:?}", output.err());
     let result = output.unwrap();
 
@@ -44,11 +44,7 @@ fn generated_and_no_lookahead_t3(file_name: &str, period: usize, vfactor: Float)
 
 #[test]
 fn generated_with_no_lookahead_ok() {
-    generated_and_no_lookahead_t3(
-        "t3.csv",
-        20,
-        0.7,
-    )
+    generated_and_no_lookahead_t3("t3.csv", 20, 0.7)
 }
 
 #[test]
@@ -72,21 +68,20 @@ fn finite_extreme_err_overflow_or_ok_all_finite() {
         Float::MAX - 3.0,
     ];
     let period = 3;
-    expect_err_overflow_or_ok_with!(
-        t3(&data, period, 0.7, None),
-        |result: T3Result| {
-            assert!(
-                result.values.iter().skip(period).all(|v| v.is_finite()),
-                "Expected all values to be finite"
-            );
-        }
-    );
+    expect_err_overflow_or_ok_with!(t3(&data, period, 0.7, None), |result: T3Result| {
+        assert!(
+            result.values.iter().skip(period).all(|v| v.is_finite()),
+            "Expected all values to be finite"
+        );
+    });
 }
 
 #[test]
 fn next_with_finite_neg_extreme_err_overflow_or_ok_all_finite() {
-    let data = vec![5.0, 10.0, 30.0, 3.0, 5.0, 6.0, 8.0, 1.0, 2.0, 3.0, 
-        4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 30.0, 20.0, 30.0, 3.0];
+    let data = vec![
+        5.0, 10.0, 30.0, 3.0, 5.0, 6.0, 8.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0,
+        30.0, 20.0, 30.0, 3.0,
+    ];
     let period = 3;
     let result = t3(&data, period, 0.7, None).unwrap();
     let mut state = result.state;
@@ -97,8 +92,24 @@ fn next_with_finite_neg_extreme_err_overflow_or_ok_all_finite() {
 
 #[test]
 fn unexpected_nan_err() {
-    let data = vec![1.0, 2.0, 3.0, Float::NAN, 1.0, 2.0, 3.0, 5.0, 3.0, 2.0,
-    1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
+    let data = vec![
+        1.0,
+        2.0,
+        3.0,
+        Float::NAN,
+        1.0,
+        2.0,
+        3.0,
+        5.0,
+        3.0,
+        2.0,
+        1.0,
+        2.0,
+        3.0,
+        4.0,
+        5.0,
+        6.0,
+    ];
     let period = 3;
     let result = t3(&data, period, 0.7, None);
     assert!(result.is_err());
@@ -107,10 +118,27 @@ fn unexpected_nan_err() {
 
 #[test]
 fn non_finite_err() {
-    let data = vec![1.0, 2.0, Float::INFINITY, 1.0, 2.0, 3.0, 1.0, 2.0, 3.0,
-    2.0, 3.0, 1.0, 2.0, 3.0, 1.0, 2.0, 3.0];
+    let data = vec![
+        1.0,
+        2.0,
+        Float::INFINITY,
+        1.0,
+        2.0,
+        3.0,
+        1.0,
+        2.0,
+        3.0,
+        2.0,
+        3.0,
+        1.0,
+        2.0,
+        3.0,
+        1.0,
+        2.0,
+        3.0,
+    ];
     let period = 3;
-    let result =  t3(&data, period, 0.7, None);
+    let result = t3(&data, period, 0.7, None);
     assert!(
         result.is_err(),
         "Expected an error for non-finite data, got: {:?}",

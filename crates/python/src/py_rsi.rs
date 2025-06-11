@@ -141,6 +141,8 @@ pub(crate) fn rsi(
 #[pyfunction(signature = (new_value, rsi_state))]
 pub(crate) fn rsi_next(new_value: Float, rsi_state: PyRsiState) -> PyResult<PyRsiState> {
     let mut state: RsiState = rsi_state.into();
-    state.update(new_value).map_err(|e| PyValueError::new_err(format!("{:?}", e)))?;
+    state
+        .update(new_value)
+        .map_err(|e| PyValueError::new_err(format!("{:?}", e)))?;
     Ok(state.into())
 }

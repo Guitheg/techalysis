@@ -50,7 +50,7 @@ use crate::types::Float;
 /// ---
 /// This struct holds the result and the state ([`MacdState`])
 /// of the calculation.
-/// 
+///
 /// Attributes
 /// ---
 /// - `macd`: A vector of [`Float`] representing the calculated MACD line values.
@@ -75,25 +75,24 @@ pub struct MacdResult {
 /// ---
 /// This struct holds the state of the calculation.
 /// It is used to calculate the next values in a incremental way.
-/// 
+///
 /// Attributes
 /// ---
 /// **Last outputs values**
 /// - `macd`: The last calculated MACD value.
 /// - `signal`: The last calculated signal line value.
 /// - `histogram`: The last calculated histogram value.
-/// 
+///
 /// **State values**
 /// - `fast_ema`: The last calculated fast Exponential Moving Average (EMA) value.
 /// - `slow_ema`: The last calculated slow Exponential Moving Average (EMA) value.
-/// 
+///
 /// **Parameters**
 /// - `fast_period`: The period used for the fast EMA calculation.
 /// - `slow_period`: The period used for the slow EMA calculation.
 /// - `signal_period`: The period used for the signal line calculation.
 #[derive(Debug, Clone, Copy)]
 pub struct MacdState {
-
     // Outputs values
     /// The last calculated MACD value
     pub macd: Float,
@@ -119,7 +118,7 @@ pub struct MacdState {
 
 impl State<Float> for MacdState {
     /// Update the [`MacdState`] with a new sample
-    /// 
+    ///
     /// Input Arguments
     /// ---
     /// - `sample`: The new input to update the MACD state.
@@ -141,17 +140,20 @@ impl State<Float> for MacdState {
         }
         if !self.fast_ema.is_finite() {
             return Err(TechalysisError::DataNonFinite(format!(
-                "self.fast_ema = {:?}", self.fast_ema
+                "self.fast_ema = {:?}",
+                self.fast_ema
             )));
         }
         if !self.slow_ema.is_finite() {
             return Err(TechalysisError::DataNonFinite(format!(
-                "self.slow_ema = {:?}", self.slow_ema
+                "self.slow_ema = {:?}",
+                self.slow_ema
             )));
         }
         if !self.signal.is_finite() {
             return Err(TechalysisError::DataNonFinite(format!(
-                "self.signal = {:?}", self.signal
+                "self.signal = {:?}",
+                self.signal
             )));
         }
         if self.fast_period <= 1 {
@@ -203,14 +205,14 @@ impl State<Float> for MacdState {
 /// Calculation of the MACD function
 /// ---
 /// It returns a [`MacdResult`]
-/// 
+///
 /// Input Arguments
 /// ---
 /// - `data`: A slice of [`Float`] representing the input data.
 /// - `fast_period`: The period for the fast EMA calculation.
 /// - `slow_period`: The period for the slow EMA calculation.
 /// - `signal_period`: The period for the signal line calculation.
-/// 
+///
 /// Returns
 /// ---
 /// A `Result` containing a [`MacdResult`],
@@ -256,7 +258,7 @@ pub fn macd(
 /// - `fast_period`: The period for the fast EMA calculation.
 /// - `slow_period`: The period for the slow EMA calculation.
 /// - `signal_period`: The period for the signal line calculation.
-/// 
+///
 /// Output Arguments
 /// ---
 /// - `output_macd`: A mutable slice of [`Float`] where the calculated MACD
@@ -265,7 +267,7 @@ pub fn macd(
 /// line values will be stored.
 /// - `output_histogram`: A mutable slice of [`Float`] where the calculated
 /// histogram values will be stored.
-/// 
+///
 /// Returns
 /// ---
 /// A `Result` containing a [`MacdState`],

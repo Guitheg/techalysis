@@ -199,6 +199,8 @@ pub(crate) fn macd(
 #[pyfunction(signature = (new_value, macd_state,))]
 pub(crate) fn macd_next(new_value: Float, macd_state: PyMacdState) -> PyResult<PyMacdState> {
     let mut state: MacdState = macd_state.into();
-    state.update(new_value).map_err(|e| PyValueError::new_err(format!("{:?}", e)))?;
+    state
+        .update(new_value)
+        .map_err(|e| PyValueError::new_err(format!("{:?}", e)))?;
     Ok(state.into())
 }

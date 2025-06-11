@@ -1,13 +1,16 @@
 use crate::{
     expect_err_overflow_or_ok_with,
     helper::{
-        assert::{approx_eq_float},
+        assert::approx_eq_float,
         generated::{assert_vec_eq_gen_data, load_generated_csv},
     },
 };
 
 use techalysis::{
-    errors::TechalysisError, indicators::bbands::{bbands, BBandsMA, BBandsResult, DeviationMulipliers}, traits::State, types::Float
+    errors::TechalysisError,
+    indicators::bbands::{bbands, BBandsMA, BBandsResult, DeviationMulipliers},
+    traits::State,
+    types::Float,
 };
 
 fn generated_and_no_lookahead_bbands(file_name: &str, period: usize, ma_type: BBandsMA) {
@@ -28,7 +31,11 @@ fn generated_and_no_lookahead_bbands(file_name: &str, period: usize, ma_type: BB
         DeviationMulipliers { up: 2.0, down: 2.0 },
         ma_type,
     );
-    assert!(output.is_ok(), "Failed to calculate BBands: {:?}", output.err());
+    assert!(
+        output.is_ok(),
+        "Failed to calculate BBands: {:?}",
+        output.err()
+    );
     let result = output.unwrap();
 
     assert_vec_eq_gen_data(&upper[0..last_idx], &result.upper);
@@ -62,20 +69,12 @@ fn generated_and_no_lookahead_bbands(file_name: &str, period: usize, ma_type: BB
 
 #[test]
 fn generated_with_no_lookahead_ok() {
-    generated_and_no_lookahead_bbands(
-        "bbands.csv",
-        20,
-        BBandsMA::SMA,
-    );
+    generated_and_no_lookahead_bbands("bbands.csv", 20, BBandsMA::SMA);
 }
 
 #[test]
 fn generated_with_no_lookahead_ema_ok() {
-    generated_and_no_lookahead_bbands(
-        "bbands_matype-1.csv",
-        20,
-        BBandsMA::EMA(None),
-    );
+    generated_and_no_lookahead_bbands("bbands_matype-1.csv", 20, BBandsMA::EMA(None));
 }
 
 #[test]

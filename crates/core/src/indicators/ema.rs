@@ -51,7 +51,7 @@ const DEFAULT_SMOOTHING: Float = 2.0;
 /// ---
 /// This struct holds the result and the state ([`EmaState`])
 /// of the calculation.
-/// 
+///
 /// Attributes
 /// ---
 /// - `values`: A vector of [`Float`] representing the calculated EMA values.
@@ -70,12 +70,12 @@ pub struct EmaResult {
 /// ---
 /// This struct holds the state of the calculation.
 /// It is used to calculate the next values in a incremental way.
-/// 
+///
 /// Attributes
 /// ---
 /// **Last outputs values**
 /// - `ema`: The last calculated Exponential Moving Average (EMA) value.
-/// 
+///
 /// **Parameters**
 /// - `period`: The period used for the EMA calculation.
 /// - `alpha`: The alpha factor used in the EMA calculation.
@@ -96,7 +96,7 @@ pub struct EmaState {
 
 impl State<Float> for EmaState {
     /// Update the [`EmaState`] with a new sample
-    /// 
+    ///
     /// Input Arguments
     /// ---
     /// - `sample`: The new input to update the EMA state.
@@ -115,12 +115,16 @@ impl State<Float> for EmaState {
 
         if !self.ema.is_finite() {
             return Err(TechalysisError::DataNonFinite(format!(
-                "self.ema = {:?}", self.ema
+                "self.ema = {:?}",
+                self.ema
             )));
         }
 
         if !self.alpha.is_finite() {
-            return Err(TechalysisError::DataNonFinite(format!("alpha = {:?}", self.alpha)));
+            return Err(TechalysisError::DataNonFinite(format!(
+                "alpha = {:?}",
+                self.alpha
+            )));
         }
 
         let ema = ema_next_unchecked(sample, self.ema, self.alpha);
@@ -135,13 +139,13 @@ impl State<Float> for EmaState {
 /// Calculation of the EMA function
 /// ---
 /// It returns a [`EmaResult`]
-/// 
+///
 /// Input Arguments
 /// ---
 /// - `data`: A slice of [`Float`] representing the input data.
 /// - `period`: The period for the EMA calculation.
 /// - `alpha`: An optional alpha value for the EMA calculation.
-/// 
+///
 /// Returns
 /// ---
 /// A `Result` containing a [`EmaResult`],
@@ -169,11 +173,11 @@ pub fn ema(
 /// - `data`: A slice of [`Float`] representing the input data.
 /// - `period`: The period for the EMA calculation.
 /// - `alpha`: An optional alpha value for the EMA calculation.
-/// 
+///
 /// Output Arguments
 /// ---
 /// - `output`: A mutable slice of [`Float`] where the calculated EMA values will be stored.
-/// 
+///
 /// Returns
 /// ---
 /// A `Result` containing a [`EmaState`],
@@ -226,7 +230,7 @@ pub fn ema_into(
 /// Converts a period to an alpha value for EMA calculation.
 /// According to the formula:
 /// alpha = smoothing / (period + 1)
-/// 
+///
 /// Input Arguments
 /// ---
 /// - `period`: The period for which to calculate the alpha value.
@@ -262,7 +266,10 @@ pub(crate) fn ema_next_unchecked(new_value: Float, prev_ema: Float, alpha: Float
     new_value * alpha + prev_ema * (1.0 - alpha)
 }
 
-pub(crate) fn get_alpha_value(alpha: Option<Float>, period: usize) -> Result<Float, TechalysisError> {
+pub(crate) fn get_alpha_value(
+    alpha: Option<Float>,
+    period: usize,
+) -> Result<Float, TechalysisError> {
     match alpha {
         Some(a) => Ok(a),
         None => period_to_alpha(period, None),

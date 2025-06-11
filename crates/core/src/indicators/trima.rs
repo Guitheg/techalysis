@@ -40,16 +40,16 @@
 
 //! Triangular Moving Average (TRIMA) implementation
 
-use std::collections::VecDeque;
 use crate::errors::TechalysisError;
 use crate::traits::State;
 use crate::types::Float;
+use std::collections::VecDeque;
 
 /// TRIMA calculation result
 /// ---
 /// This struct holds the result and the state ([`TrimaState`])
 /// of the calculation.
-/// 
+///
 /// Attributes
 /// ---
 /// - `values`: A vector of [`Float`] representing the calculated TRIMA values.
@@ -68,12 +68,12 @@ pub struct TrimaResult {
 /// ---
 /// This struct holds the state of the calculation.
 /// It is used to calculate the next values in a incremental way.
-/// 
+///
 /// Attributes
 /// ---
 /// **Last outputs values**
 /// - `trima`: The last calculated TRIMA value.
-/// 
+///
 /// **State values**
 /// - `weighted_sum`: The weighted sum of the values in the current window.
 /// - `trailing_sum`: The sum of the first half of the values in
@@ -82,7 +82,7 @@ pub struct TrimaResult {
 /// It is used to optimize the calculation of the TRIMA.
 /// - `last_window`: A deque containing the last `period` values used for
 /// the TRIMA calculation.
-/// 
+///
 /// **Parameters**
 /// - `inv_weight_sum`: The inverse of the sum of weights used in the TRIMA calculation.
 /// - `period`: The period used for the TRIMA calculation, which determines
@@ -111,12 +111,11 @@ pub struct TrimaState {
     pub inv_weight_sum: Float,
     /// The period used for the TRIMA calculation, which determines
     pub period: usize,
-
 }
 
 impl State<Float> for TrimaState {
     /// Update the [`TrimaState`] with a new sample
-    /// 
+    ///
     /// Input Arguments
     /// ---
     /// - `sample`: The new input to update the TRIMA state
@@ -133,7 +132,8 @@ impl State<Float> for TrimaState {
         }
         if !self.trima.is_finite() {
             return Err(TechalysisError::DataNonFinite(format!(
-                "prev_trima = {:?}", self.trima
+                "prev_trima = {:?}",
+                self.trima
             )));
         }
         if self.last_window.len() != self.period {
@@ -161,13 +161,7 @@ impl State<Float> for TrimaState {
         let middle_idx = get_middle_idx(self.period);
         let middle_value = vec[middle_idx];
 
-
-        let (
-            trima,
-            new_weighted_sum,
-            new_trailing_sum,
-            new_heading_sum
-        ) = if is_odd {
+        let (trima, new_weighted_sum, new_trailing_sum, new_heading_sum) = if is_odd {
             trima_next_odd_unchecked(
                 sample,
                 middle_value,
@@ -205,20 +199,17 @@ impl State<Float> for TrimaState {
 /// Calculation of the TRIMA function
 /// ---
 /// It returns a [`TrimaResult`]
-/// 
+///
 /// Input Arguments
 /// ---
 /// - `data`: A slice of [`Float`] representing the input data.
 /// - `period`: The period for the TRIMA calculation.
-/// 
+///
 /// Returns
 /// ---
 /// A `Result` containing a [`TrimaResult`],
 /// or a [`TechalysisError`] error if the calculation fails.
-pub fn trima(
-    data: &[Float],
-    period: usize
-) -> Result<TrimaResult, TechalysisError> {
+pub fn trima(data: &[Float], period: usize) -> Result<TrimaResult, TechalysisError> {
     let len = data.len();
     let mut output = vec![0.0; len];
     let trima_state = trima_into(data, period, &mut output)?;
@@ -237,11 +228,11 @@ pub fn trima(
 /// ---
 /// - `data`: A slice of [`Float`] representing the input data.
 /// - `period`: The period for the TRIMA calculation.
-/// 
+///
 /// Output Arguments
 /// ---
 /// - `output`: A mutable slice of [`Float`] where the calculated TRIMA values
-/// 
+///
 /// Returns
 /// ---
 /// A `Result` containing a [`TrimaState`],
@@ -268,7 +259,7 @@ pub fn trima_into(
             "Output array must be at least as long as the input data array".to_string(),
         ));
     }
-    
+
     let (trima, mut sum, mut trailing_sum, mut heading_sum, inv_weight_sum, mut middle_idx) =
         init_trima_unchecked(data, period, output)?;
 
@@ -277,8 +268,8 @@ pub fn trima_into(
         return Err(TechalysisError::Overflow(period - 1, output[period - 1]));
     }
     middle_idx += 1;
-    
-    if is_odd {    
+
+    if is_odd {
         for idx in period..len {
             if !data[idx].is_finite() {
                 return Err(TechalysisError::DataNonFinite(format!(
@@ -323,7 +314,7 @@ pub fn trima_into(
             middle_idx += 1;
         }
     }
-    
+
     Ok(TrimaState {
         trima: output[len - 1],
         weighted_sum: sum,
@@ -400,7 +391,7 @@ fn init_trima_unchecked(
         sum += value * weight;
         output[idx] = Float::NAN;
     }
-    for (local_idx, idx) in (middle_idx+1..period).rev().enumerate() {
+    for (local_idx, idx) in (middle_idx + 1..period).rev().enumerate() {
         let weight = (local_idx + 1) as Float;
         let value = &data[idx];
         if !value.is_finite() {
@@ -459,16 +450,46 @@ mod tests {
         let expected_heading_sum = 9.0; // (4 + 5) = 12, but we only take the second half
         let expected_middle_idx = 2; // middle index for period 5 is 2
         let expected_trima = 3.0; // (1 + 2 + 2 + 3 + 3 + 3 + 4 + 4 + 5) * (1/9) = 3.0
-        
-        let (trima, sum, trailing_sum, heading_sum, inv_weight_sum , middle_idx) = init_trima_unchecked(&data, period, &mut output).unwrap();
 
-        assert!(output.iter().take(period-1).all(|&v| v.is_nan()), "Expected first {} values to be NaN", period - 1);
-        assert!(inv_weight_sum == expected_inv_weight_sum, "Expected inv_weight_sum to be {}, got {}", expected_inv_weight_sum, inv_weight_sum);
-        assert!(middle_idx == expected_middle_idx, "Expected middle_idx to be {expected_middle_idx:?}, got {}", middle_idx);
-        assert!(trailing_sum == expected_trailing_sum, "Expected {expected_trailing_sum:?}, got {}", trailing_sum);
-        assert!(heading_sum == expected_heading_sum, "Expected {expected_heading_sum:?}, got {}", heading_sum);
-        assert!(sum == expected_sum, "Expected {expected_sum:?}, got {}", sum);
-        assert!(trima == expected_trima, "Expected trima {expected_trima:?}, got {}", trima);
+        let (trima, sum, trailing_sum, heading_sum, inv_weight_sum, middle_idx) =
+            init_trima_unchecked(&data, period, &mut output).unwrap();
+
+        assert!(
+            output.iter().take(period - 1).all(|&v| v.is_nan()),
+            "Expected first {} values to be NaN",
+            period - 1
+        );
+        assert!(
+            inv_weight_sum == expected_inv_weight_sum,
+            "Expected inv_weight_sum to be {}, got {}",
+            expected_inv_weight_sum,
+            inv_weight_sum
+        );
+        assert!(
+            middle_idx == expected_middle_idx,
+            "Expected middle_idx to be {expected_middle_idx:?}, got {}",
+            middle_idx
+        );
+        assert!(
+            trailing_sum == expected_trailing_sum,
+            "Expected {expected_trailing_sum:?}, got {}",
+            trailing_sum
+        );
+        assert!(
+            heading_sum == expected_heading_sum,
+            "Expected {expected_heading_sum:?}, got {}",
+            heading_sum
+        );
+        assert!(
+            sum == expected_sum,
+            "Expected {expected_sum:?}, got {}",
+            sum
+        );
+        assert!(
+            trima == expected_trima,
+            "Expected trima {expected_trima:?}, got {}",
+            trima
+        );
     }
 
     #[test]
@@ -482,16 +503,46 @@ mod tests {
         let expected_heading_sum = 15.0; // (4 + 5 + 6) = 15, but we only take the second half
         let expected_middle_idx = 2; // middle index for period 6 is 3
         let expected_trima = 3.5; // (1 + 2 + 2 + 3 + 3 + 3 + 4 + 4 + 4 + 5 + 5 + 6) * (1/12) = 3.5
-        
-        let (trima, sum, trailing_sum, heading_sum, inv_weight_sum , middle_idx) = init_trima_unchecked(&data, period, &mut output).unwrap();
 
-        assert!(output.iter().take(period-1).all(|&v| v.is_nan()), "Expected first {} values to be NaN", period - 1);
-        assert!(inv_weight_sum == expected_inv_weight_sum, "Expected inv_weight_sum to be {}, got {}", expected_inv_weight_sum, inv_weight_sum);
-        assert!(middle_idx == expected_middle_idx, "Expected middle_idx to be {expected_middle_idx:?}, got {}", middle_idx);
-        assert!(trailing_sum == expected_trailing_sum, "Expected {expected_trailing_sum:?}, got {}", trailing_sum);
-        assert!(heading_sum == expected_heading_sum, "Expected {expected_heading_sum:?}, got {}", heading_sum);
-        assert!(sum == expected_sum, "Expected {expected_sum:?}, got {}", sum);
-        assert!(trima == expected_trima, "Expected {expected_trima:?}, got {}", trima);
+        let (trima, sum, trailing_sum, heading_sum, inv_weight_sum, middle_idx) =
+            init_trima_unchecked(&data, period, &mut output).unwrap();
+
+        assert!(
+            output.iter().take(period - 1).all(|&v| v.is_nan()),
+            "Expected first {} values to be NaN",
+            period - 1
+        );
+        assert!(
+            inv_weight_sum == expected_inv_weight_sum,
+            "Expected inv_weight_sum to be {}, got {}",
+            expected_inv_weight_sum,
+            inv_weight_sum
+        );
+        assert!(
+            middle_idx == expected_middle_idx,
+            "Expected middle_idx to be {expected_middle_idx:?}, got {}",
+            middle_idx
+        );
+        assert!(
+            trailing_sum == expected_trailing_sum,
+            "Expected {expected_trailing_sum:?}, got {}",
+            trailing_sum
+        );
+        assert!(
+            heading_sum == expected_heading_sum,
+            "Expected {expected_heading_sum:?}, got {}",
+            heading_sum
+        );
+        assert!(
+            sum == expected_sum,
+            "Expected {expected_sum:?}, got {}",
+            sum
+        );
+        assert!(
+            trima == expected_trima,
+            "Expected {expected_trima:?}, got {}",
+            trima
+        );
     }
 
     #[test]
@@ -502,12 +553,29 @@ mod tests {
         let expected_heading_sum = 11.0; // 5 + 6
         let expected_trailing_sum = 9.0; // 2 + 3 + 4
         let expected_trima = 4.0; // 36 / 9
-        let (trima, sum, trailing_sum, heading_sum) = trima_next_odd_unchecked(6.0, 4.0, 1.0, 27.0, 6.0, 9.0, inv_weight_sum);
+        let (trima, sum, trailing_sum, heading_sum) =
+            trima_next_odd_unchecked(6.0, 4.0, 1.0, 27.0, 6.0, 9.0, inv_weight_sum);
 
-        assert!(trailing_sum == expected_trailing_sum, "Expected trailing_sum {expected_trailing_sum:?}, got {}", trailing_sum);
-        assert!(heading_sum == expected_heading_sum, "Expected heading_sum {expected_heading_sum:?}, got {}", heading_sum);
-        assert!(sum == expected_sum, "Expected sum {expected_sum:?}, got {}", sum);
-        assert!(trima == expected_trima, "Expected {expected_trima:?}, got {}", trima);
+        assert!(
+            trailing_sum == expected_trailing_sum,
+            "Expected trailing_sum {expected_trailing_sum:?}, got {}",
+            trailing_sum
+        );
+        assert!(
+            heading_sum == expected_heading_sum,
+            "Expected heading_sum {expected_heading_sum:?}, got {}",
+            heading_sum
+        );
+        assert!(
+            sum == expected_sum,
+            "Expected sum {expected_sum:?}, got {}",
+            sum
+        );
+        assert!(
+            trima == expected_trima,
+            "Expected {expected_trima:?}, got {}",
+            trima
+        );
     }
 
     #[test]
@@ -518,12 +586,29 @@ mod tests {
         let expected_trailing_sum = 12.0; // 3 + 4 + 5
         let expected_sum = 45.0; // 3 + 4 + 4 + 5 + 5 + 5 + 6 + 6 + 7
         let expected_trima = 5.0; // 45 / 9
-        let (trima, sum, trailing_sum, heading_sum) = trima_next_odd_unchecked(7.0, 5.0, 2.0, 36.0, 9.0, 11.0, inv_weight_sum);
+        let (trima, sum, trailing_sum, heading_sum) =
+            trima_next_odd_unchecked(7.0, 5.0, 2.0, 36.0, 9.0, 11.0, inv_weight_sum);
 
-        assert!(trailing_sum == expected_trailing_sum, "Expected trailing_sum {expected_trailing_sum:?}, got {}", trailing_sum);
-        assert!(heading_sum == expected_heading_sum, "Expected heading_sum {expected_heading_sum:?}, got {}", heading_sum);
-        assert!(sum == expected_sum, "Expected sum {expected_sum:?}, got {}", sum);
-        assert!(trima == expected_trima, "Expected {expected_trima:?}, got {}", trima);
+        assert!(
+            trailing_sum == expected_trailing_sum,
+            "Expected trailing_sum {expected_trailing_sum:?}, got {}",
+            trailing_sum
+        );
+        assert!(
+            heading_sum == expected_heading_sum,
+            "Expected heading_sum {expected_heading_sum:?}, got {}",
+            heading_sum
+        );
+        assert!(
+            sum == expected_sum,
+            "Expected sum {expected_sum:?}, got {}",
+            sum
+        );
+        assert!(
+            trima == expected_trima,
+            "Expected {expected_trima:?}, got {}",
+            trima
+        );
     }
 
     #[test]
@@ -534,23 +619,48 @@ mod tests {
         let expected_trailing_sum = 15.0; // 4 + 5 + 6
         let expected_sum = 54.0; // 4 + 5 + 5 + 6 + 6 + 6 + 7 + 7 + 8
         let expected_trima = 6.0; // 54 / 9
-        let (trima, sum, trailing_sum, heading_sum) = trima_next_odd_unchecked(8.0, 6.0, 3.0, 45.0, 12.0, 13.0, inv_weight_sum);
+        let (trima, sum, trailing_sum, heading_sum) =
+            trima_next_odd_unchecked(8.0, 6.0, 3.0, 45.0, 12.0, 13.0, inv_weight_sum);
 
-        assert!(trailing_sum == expected_trailing_sum, "Expected trailing_sum {expected_trailing_sum:?}, got {}", trailing_sum);
-        assert!(heading_sum == expected_heading_sum, "Expected heading_sum {expected_heading_sum:?}, got {}", heading_sum);
-        assert!(sum == expected_sum, "Expected sum {expected_sum:?}, got {}", sum);
-        assert!(trima == expected_trima, "Expected {expected_trima:?}, got {}", trima);
+        assert!(
+            trailing_sum == expected_trailing_sum,
+            "Expected trailing_sum {expected_trailing_sum:?}, got {}",
+            trailing_sum
+        );
+        assert!(
+            heading_sum == expected_heading_sum,
+            "Expected heading_sum {expected_heading_sum:?}, got {}",
+            heading_sum
+        );
+        assert!(
+            sum == expected_sum,
+            "Expected sum {expected_sum:?}, got {}",
+            sum
+        );
+        assert!(
+            trima == expected_trima,
+            "Expected {expected_trima:?}, got {}",
+            trima
+        );
     }
-
 
     #[test]
     fn next_trima_unchecked_even_ok() {
         let period = 6;
         let inv_weight_sum = trima_inv_weight_sum(period).unwrap();
-        let (trima, sum, trailing_sum, heading_sum) = trima_next_even_unchecked(7.0, 4.0, 1.0, 42.0, 6.0, 15.0, inv_weight_sum);
+        let (trima, sum, trailing_sum, heading_sum) =
+            trima_next_even_unchecked(7.0, 4.0, 1.0, 42.0, 6.0, 15.0, inv_weight_sum);
 
-        assert!(trailing_sum == 9.0, "Expected trailing_sum 9.0, got {}", trailing_sum);
-        assert!(heading_sum == 18.0, "Expected heading_sum 18.0, got {}", heading_sum);
+        assert!(
+            trailing_sum == 9.0,
+            "Expected trailing_sum 9.0, got {}",
+            trailing_sum
+        );
+        assert!(
+            heading_sum == 18.0,
+            "Expected heading_sum 18.0, got {}",
+            heading_sum
+        );
         assert!(sum == 54.0, "Expected sum 54.0, got {}", sum);
         assert!(trima == 4.5, "Expected 4.5, got {}", trima);
     }

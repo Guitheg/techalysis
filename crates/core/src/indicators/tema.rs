@@ -53,7 +53,7 @@ use crate::types::Float;
 /// ---
 /// This struct holds the result and the state ([`TemaState`])
 /// of the calculation.
-/// 
+///
 /// Attributes
 /// ---
 /// - `values`: A vector of [`Float`] representing the calculated TEMA values.
@@ -72,12 +72,12 @@ pub struct TemaResult {
 /// ---
 /// This struct holds the state of the calculation.
 /// It is used to calculate the next values in a incremental way.
-/// 
+///
 /// Attributes
 /// ---
 /// **Last outputs values**
 /// - `tema`: The last calculated Triple Exponential Moving Average (TEMA) value.
-/// 
+///
 /// **State values**
 /// - `ema_1`: The last calculated Exponential Moving Average (EMA) value for
 /// the EMA.
@@ -85,7 +85,7 @@ pub struct TemaResult {
 /// the EMA2.
 /// - `ema_3`: The last calculated Exponential Moving Average (EMA) value for
 /// the EMA3.
-/// 
+///
 /// **Parameters**
 /// - `period`: The period used for the TEMA calculation.
 /// - `alpha`: The alpha factor used in the TEMA calculation,
@@ -114,7 +114,7 @@ pub struct TemaState {
 
 impl State<Float> for TemaState {
     /// Update the [`TemaState`] with a new sample
-    /// 
+    ///
     /// Input Arguments
     /// ---
     /// - `sample`: The new input to update the TEMA state
@@ -133,24 +133,30 @@ impl State<Float> for TemaState {
 
         if !self.ema_1.is_finite() {
             return Err(TechalysisError::DataNonFinite(format!(
-                "self.ema_1 = {:?}", self.ema_1
+                "self.ema_1 = {:?}",
+                self.ema_1
             )));
         }
 
         if !self.ema_2.is_finite() {
             return Err(TechalysisError::DataNonFinite(format!(
-                "self.ema_2 = {:?}", self.ema_2
+                "self.ema_2 = {:?}",
+                self.ema_2
             )));
         }
 
         if !self.ema_3.is_finite() {
             return Err(TechalysisError::DataNonFinite(format!(
-                "self.ema_3 = {:?}", self.ema_3
+                "self.ema_3 = {:?}",
+                self.ema_3
             )));
         }
 
         if !self.alpha.is_finite() {
-            return Err(TechalysisError::BadParam(format!("self.alpha = {:?}", self.alpha)));
+            return Err(TechalysisError::BadParam(format!(
+                "self.alpha = {:?}",
+                self.alpha
+            )));
         }
 
         let (tema, ema_1, ema_2, ema_3) =
@@ -172,11 +178,11 @@ impl State<Float> for TemaState {
 /// Calculation of the TEMA function
 /// ---
 /// It returns a [`TemaResult`]
-/// 
+///
 /// Input Arguments
 /// ---
 /// - `data`: A slice of [`Float`] representing the input data.
-/// 
+///
 /// Returns
 /// ---
 /// A `Result` containing a [`TemaResult`],
@@ -207,12 +213,12 @@ pub fn tema(
 /// - `period`: The period for the TEMA calculation.
 /// - `alpha`: An optional alpha value for the TEMA calculation.
 /// Used by the inner EMA calculation.
-/// 
+///
 /// Output Arguments
 /// ---
 /// - `output`: A mutable slice of [`Float`] where the calculated TEMA values
 /// will be stored.
-/// 
+///
 /// Returns
 /// ---
 /// A `Result` containing a [`TemaState`],
@@ -324,7 +330,7 @@ fn calculate_tema(ema_1: Float, ema_2: Float, ema_3: Float) -> Float {
 }
 
 /// Calculate the period to skip for TEMA.
-/// 
+///
 /// Also known as the "lookback period"
 pub fn tema_skip_period_unchecked(period: usize) -> usize {
     3 * (period - 1)

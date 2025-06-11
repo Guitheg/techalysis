@@ -5,7 +5,10 @@ use crate::helper::{
 use crate::{assert_vec_float_eq, expect_err_overflow_or_ok_with};
 use proptest::{prop_assert, prop_assert_eq, proptest};
 use techalysis::{
-    errors::TechalysisError, indicators::rsi::{rsi, RsiResult}, traits::State, types::Float
+    errors::TechalysisError,
+    indicators::rsi::{rsi, RsiResult},
+    traits::State,
+    types::Float,
 };
 
 fn generated_and_no_lookahead_rsi(file_name: &str, period: usize) {
@@ -21,7 +24,11 @@ fn generated_and_no_lookahead_rsi(file_name: &str, period: usize) {
     let input_prev = &input[0..last_idx];
 
     let output = rsi(input_prev, period);
-    assert!(output.is_ok(), "Failed to calculate RSI: {:?}", output.err());
+    assert!(
+        output.is_ok(),
+        "Failed to calculate RSI: {:?}",
+        output.err()
+    );
     let result = output.unwrap();
 
     assert_vec_eq_gen_data(&expected[0..last_idx], &result.values);
@@ -40,7 +47,7 @@ fn generated_and_no_lookahead_rsi(file_name: &str, period: usize) {
 
 #[test]
 fn generated_with_no_lookahead_ok() {
-  generated_and_no_lookahead_rsi("rsi.csv",14);
+    generated_and_no_lookahead_rsi("rsi.csv", 14);
 }
 
 #[test]

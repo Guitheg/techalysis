@@ -50,7 +50,7 @@ use crate::types::Float;
 /// ---
 /// This struct holds the result of the Bollinger Bands calculation.
 /// It contains the upper, middle, and lower bands as well as the state of the calculation.
-/// 
+///
 /// Attributes
 /// ---
 /// - `values`: The calculated DEMA values.
@@ -69,16 +69,16 @@ pub struct DemaResult {
 /// ---
 /// This struct holds the state of the calculation.
 /// It is used to calculate the next values in a incremental way.
-/// 
+///
 /// Attributes
 /// ---
 /// **Last outputs values**
 /// - `dema`: The last calculated DEMA value.
-/// 
+///
 /// **State values**
 /// - `ema_1`: The last calculated EMA value.
 /// - `ema_2`: The last calculated EMA2 value.
-/// 
+///
 /// **Parameters**
 /// - `period`: The period used for the DEMA calculation.
 /// - `alpha`: The alpha factor used for the EMA calculation.
@@ -103,7 +103,7 @@ pub struct DemaState {
 
 impl State<Float> for DemaState {
     /// Update the [`DemaState`] with a new sample
-    /// 
+    ///
     /// Input Arguments
     /// ---
     /// - `sample`: The new input value to update the state with.
@@ -121,24 +121,24 @@ impl State<Float> for DemaState {
 
         if !self.ema_1.is_finite() {
             return Err(TechalysisError::DataNonFinite(format!(
-                "self.ema_1 = {:?}", self.ema_1
+                "self.ema_1 = {:?}",
+                self.ema_1
             )));
         }
         if !self.ema_2.is_finite() {
             return Err(TechalysisError::DataNonFinite(format!(
-                "self.ema_2 = {:?}", self.ema_2
+                "self.ema_2 = {:?}",
+                self.ema_2
             )));
         }
         if !self.alpha.is_finite() {
-            return Err(TechalysisError::DataNonFinite(format!("self.alpha = {:?}", self.alpha)));
+            return Err(TechalysisError::DataNonFinite(format!(
+                "self.alpha = {:?}",
+                self.alpha
+            )));
         }
 
-        let (dema, ema_1, ema_2) = dema_next_unchecked(
-            sample,
-            self.ema_1, 
-            self.ema_2,
-            self.alpha
-        );
+        let (dema, ema_1, ema_2) = dema_next_unchecked(sample, self.ema_1, self.ema_2, self.alpha);
 
         if !dema.is_finite() {
             return Err(TechalysisError::Overflow(0, dema));
@@ -153,11 +153,11 @@ impl State<Float> for DemaState {
 /// Calculation of the DEMA function
 /// ---
 /// It returns a [`DemaResult`]
-/// 
+///
 /// Input Arguments
 /// ---
 /// - `data`: A slice of [`Float`] values representing the input data.
-/// 
+///
 /// Returns
 /// ---
 /// A `Result` containing a [`DemaResult`] with the calculated DEMA values and state,
@@ -187,14 +187,14 @@ pub fn dema(
 /// - `data`: A slice of [`Float`] values representing the input data.
 /// - `period`: The period for the DEMA calculation.
 /// - `alpha`: An optional alpha value for the EMA calculation. If `None`, it will be calculated
-/// 
+///
 /// Output Arguments
 /// ---
 /// - `output`: A mutable slice of [`Float`] where the DEMA values will be stored.
-/// 
+///
 /// Returns
 /// ---
-/// A `Result` containing a [`DemaState`] 
+/// A `Result` containing a [`DemaState`]
 /// or a [`TechalysisError`] error if the calculation fails.
 pub fn dema_into(
     data: &[Float],
@@ -299,7 +299,7 @@ fn calculate_dema(ema_1: Float, ema_2: Float) -> Float {
 }
 
 /// Calculate the period to skip for DEMA.
-/// 
+///
 /// Also known as the "lookback period"
 pub fn dema_skip_period_unchecked(period: usize) -> usize {
     2 * (period - 1)

@@ -43,14 +43,14 @@
 use crate::errors::TechalysisError;
 use crate::indicators::ema::{ema_next_unchecked, get_alpha_value};
 use crate::indicators::tema::{init_tema_unchecked, tema_skip_period_unchecked};
-use crate::types::Float;
 use crate::traits::State;
+use crate::types::Float;
 
 /// T3 calculation result
 /// ---
 /// This struct holds the result and the state ([`T3State`])
 /// of the calculation.
-/// 
+///
 /// Attributes
 /// ---
 /// - `values`: A vector of [`Float`] representing the calculated T3 values.
@@ -68,19 +68,19 @@ pub struct T3Result {
 /// ---
 /// This struct holds the state of the calculation.
 /// It is used to calculate the next values in a incremental way.
-/// 
+///
 /// Attributes
 /// ---
 /// **Last outputs values**
 /// - `t3`: The last calculated T3 value.
-/// 
+///
 /// **State values**
 /// - `ema1`: The last calculated EMA1 value.
 /// - `ema2`: The last calculated EMA2 value.
 /// - `ema3`: The last calculated EMA3 value.
 /// - `ema4`: The last calculated EMA4 value.
 /// - `ema5`: The last calculated EMA5 value.
-/// 
+///
 /// **Parameters**
 /// - `period`: The period used for the T3 calculation.
 /// - `volume_factor`: The volume_factor used for the T3 calculation.
@@ -93,7 +93,7 @@ pub struct T3State {
     // State values
     /// The last calculated EMA values.
     pub ema_values: T3EmaValues,
-    
+
     // Parameters
     /// The period used for the T3 calculation.
     pub period: usize,
@@ -104,7 +104,7 @@ pub struct T3State {
     /// It is typically set to a value between 0.0 and 1.0.
     /// A common value is 0.7, but it can be adjusted based on the desired sensitivity.
     pub volume_factor: Float,
-    
+
     /// The T3 coefficients used in the T3 calculation.
     /// These coefficients are derived from the volume_factor and are used in the T3 calculation.
     pub t3_coefficients: T3Coefficients,
@@ -146,7 +146,7 @@ pub struct T3EmaValues {
 
 impl State<Float> for T3State {
     /// Update the [`T3State`] with a new sample
-    /// 
+    ///
     /// Input Arguments
     /// ---
     /// - `sample`: The new input to update the T3 state
@@ -157,24 +157,37 @@ impl State<Float> for T3State {
             )));
         }
         if !self.t3.is_finite() {
-            return Err(TechalysisError::DataNonFinite(format!(
-                "t3 = {}",
-                self.t3
-            )));
+            return Err(TechalysisError::DataNonFinite(format!("t3 = {}", self.t3)));
         }
-        if !self.ema_values.ema1.is_finite() || !self.ema_values.ema2.is_finite() || !self.ema_values.ema3.is_finite()
-            || !self.ema_values.ema4.is_finite() || !self.ema_values.ema5.is_finite() || !self.ema_values.ema6.is_finite()
+        if !self.ema_values.ema1.is_finite()
+            || !self.ema_values.ema2.is_finite()
+            || !self.ema_values.ema3.is_finite()
+            || !self.ema_values.ema4.is_finite()
+            || !self.ema_values.ema5.is_finite()
+            || !self.ema_values.ema6.is_finite()
         {
             return Err(TechalysisError::DataNonFinite(format!(
                 "ema1 = {}, ema2 = {}, ema3 = {}, ema4 = {}, ema5 = {}, ema6 = {}",
-                self.ema_values.ema1, self.ema_values.ema2, self.ema_values.ema3, self.ema_values.ema4, self.ema_values.ema5, self.ema_values.ema6
+                self.ema_values.ema1,
+                self.ema_values.ema2,
+                self.ema_values.ema3,
+                self.ema_values.ema4,
+                self.ema_values.ema5,
+                self.ema_values.ema6
             )));
         }
 
-        if !self.t3_coefficients.c1.is_finite() || !self.t3_coefficients.c2.is_finite() || !self.t3_coefficients.c3.is_finite() || !self.t3_coefficients.c4.is_finite() {
+        if !self.t3_coefficients.c1.is_finite()
+            || !self.t3_coefficients.c2.is_finite()
+            || !self.t3_coefficients.c3.is_finite()
+            || !self.t3_coefficients.c4.is_finite()
+        {
             return Err(TechalysisError::BadParam(format!(
                 "c1 = {}, c2 = {}, c3 = {}, c4 = {}",
-                self.t3_coefficients.c1, self.t3_coefficients.c2, self.t3_coefficients.c3, self.t3_coefficients.c4
+                self.t3_coefficients.c1,
+                self.t3_coefficients.c2,
+                self.t3_coefficients.c3,
+                self.t3_coefficients.c4
             )));
         }
 
@@ -192,9 +205,8 @@ impl State<Float> for T3State {
             )));
         }
 
-        let (t3, ema_values) = t3_next_unchecked(
-            sample, &self.ema_values, &self.t3_coefficients, self.alpha
-        );
+        let (t3, ema_values) =
+            t3_next_unchecked(sample, &self.ema_values, &self.t3_coefficients, self.alpha);
 
         if !t3.is_finite() {
             return Err(TechalysisError::Overflow(0, t3));
@@ -210,14 +222,14 @@ impl State<Float> for T3State {
 /// Calculation of the T3 function
 /// ---
 /// It returns a [`T3Result`]
-/// 
+///
 /// Input Arguments
 /// ---
 /// - `data`: A slice of [`Float`] representing the input data.
 /// - `period`: The period used for the T3 calculation.
 /// - `volume_factor`: The volume factor used for the T3 calculation.
 /// - `alpha`: The alpha value used for the T3 calculation.
-/// 
+///
 /// Returns
 /// ---
 /// A `Result` containing a [`T3Result`],
@@ -229,18 +241,12 @@ pub fn t3(
     alpha: Option<Float>,
 ) -> Result<T3Result, TechalysisError> {
     let mut output = vec![0.0; data.len()];
-    
-    let t3_state = t3_into(
-        data,
-        period,
-        volume_factor,
-        alpha,
-        output.as_mut_slice()
-    )?;
+
+    let t3_state = t3_into(data, period, volume_factor, alpha, output.as_mut_slice())?;
 
     Ok(T3Result {
         values: output,
-        state: t3_state
+        state: t3_state,
     })
 }
 
@@ -255,11 +261,11 @@ pub fn t3(
 /// - `period`: The period used for the T3 calculation.
 /// - `volume_factor`: The volume factor used for the T3 calculation.
 /// - `alpha`: The alpha value used for the T3 calculation.
-/// 
+///
 /// Output Arguments
 /// ---
 /// - `output`: A mutable slice of [`Float`] where the T3 values will be stored.
-/// 
+///
 /// Returns
 /// ---
 /// A `Result` containing a [`T3State`],
@@ -308,15 +314,15 @@ pub fn t3_into(
         1.0 / period as Float,
         skip_period,
         alpha,
-        output
+        output,
     )?;
 
     output[skip_period] = t3;
     if !output[skip_period].is_finite() {
-        return Err(TechalysisError::Overflow(skip_period, output[skip_period]))
+        return Err(TechalysisError::Overflow(skip_period, output[skip_period]));
     }
-    
-    for idx in skip_period+1..len {
+
+    for idx in skip_period + 1..len {
         if !data[idx].is_finite() {
             return Err(TechalysisError::DataNonFinite(format!(
                 "data[{}] = {}",
@@ -335,7 +341,7 @@ pub fn t3_into(
     }
 
     Ok(T3State {
-        t3: output[len-1],
+        t3: output[len - 1],
         period,
         alpha,
         ema_values: t3_ema_values,
@@ -388,7 +394,7 @@ fn init_t3_unchecked(
     inv_period: Float,
     skip_period: usize,
     alpha: Float,
-    output: &mut [Float]
+    output: &mut [Float],
 ) -> Result<(Float, T3EmaValues), TechalysisError> {
     let tema_skip_period = tema_skip_period_unchecked(period);
     let (_, mut ema1, mut ema2, mut ema3) =
@@ -456,7 +462,7 @@ fn init_t3_unchecked(
     ema5 = ema_next_unchecked(ema4, ema5, alpha);
     sum_ema6 += ema5;
     let ema6 = sum_ema6 * inv_period;
-    
+
     Ok((
         t3_from_coefficients_unchecked(
             ema3,
@@ -475,11 +481,12 @@ fn init_t3_unchecked(
             ema4,
             ema5,
             ema6,
-        }))
+        },
+    ))
 }
 
 /// Calculate the period to skip for T3.
-/// 
+///
 /// Also known as the "lookback period"
 #[inline(always)]
 pub fn t3_skip_period_unchecked(period: usize) -> usize {
@@ -517,7 +524,7 @@ fn t3_from_coefficients_unchecked(
     c3: Float,
     c4: Float,
 ) -> Float {
-    c1*ema6 + c2*ema5 + c3*ema4 + c4*ema3
+    c1 * ema6 + c2 * ema5 + c3 * ema4 + c4 * ema3
 }
 
 #[cfg(test)]
@@ -526,15 +533,11 @@ mod tests {
 
     use super::*;
 
-
     #[test]
     fn init_t3_unchecked_nominal_case() {
         let data = vec![
-            1.0,2.0,3.0,4.0,5.0,
-            6.0,7.0,8.0,9.0,10.0,
-            11.0,12.0,13.0,14.0,15.0,
-            16.0,17.0,18.0,19.0,20.0,
-            21.0,22.0,23.0,24.0,25.0,
+            1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0,
+            17.0, 18.0, 19.0, 20.0, 21.0, 22.0, 23.0, 24.0, 25.0,
         ];
         let period = 5;
         let output = vec![0.0; data.len()];
@@ -554,11 +557,16 @@ mod tests {
             1.0 / period as Float,
             t3_skip_period_unchecked(period),
             alpha,
-            &mut output.clone()
-        ).unwrap();
+            &mut output.clone(),
+        )
+        .unwrap();
 
         assert!(t3.is_finite());
-        assert!(t3 - expected_t3 < 1e-8, "Expected: {}, got: {}", expected_t3, t3);
-
+        assert!(
+            t3 - expected_t3 < 1e-8,
+            "Expected: {}, got: {}",
+            expected_t3,
+            t3
+        );
     }
 }

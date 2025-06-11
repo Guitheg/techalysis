@@ -34,7 +34,7 @@
 */
 
 use numpy::{IntoPyArray, PyArray1, PyArrayMethods, PyReadonlyArray1, PyUntypedArrayMethods};
-use pyo3::{pymethods, exceptions::PyValueError, pyclass, pyfunction, Py, PyResult, Python};
+use pyo3::{exceptions::PyValueError, pyclass, pyfunction, pymethods, Py, PyResult, Python};
 use techalysis::indicators::t3::{t3_into, T3Coefficients, T3EmaValues, T3State};
 use techalysis::traits::State;
 use techalysis::types::Float;
@@ -177,24 +177,18 @@ pub(crate) fn t3(
     vfactor: Float,
     alpha: Option<Float>,
     release_gil: bool,
-) -> PyResult<(
-    Py<PyArray1<Float>>,
-    PyT3State
-)> {
+) -> PyResult<(Py<PyArray1<Float>>, PyT3State)> {
     let len = data.len();
     let input_slice = data.as_slice()?;
 
     if release_gil {
         let mut output = vec![0.0; len];
-        
+
         let state = py
             .allow_threads(|| t3_into(input_slice, period, vfactor, alpha, output.as_mut_slice()))
             .map_err(|e| PyValueError::new_err(format!("{:?}", e)))?;
 
-        Ok((
-            output.into_pyarray(py).into(),
-            state.into()
-        ))
+        Ok((output.into_pyarray(py).into(), state.into()))
     } else {
         let py_array_out = PyArray1::<Float>::zeros(py, [len], false);
         let py_array_ptr = unsafe { py_array_out.as_slice_mut()? };
@@ -202,20 +196,15 @@ pub(crate) fn t3(
         let state = t3_into(input_slice, period, vfactor, alpha, py_array_ptr)
             .map_err(|e| PyValueError::new_err(format!("{:?}", e)))?;
 
-        Ok((
-            py_array_out.into(),
-            state.into()
-        ))
+        Ok((py_array_out.into(), state.into()))
     }
 }
 
 #[pyfunction(signature = (new_value, t3_state))]
-pub(crate) fn t3_next(
-    new_value: Float,
-    t3_state: PyT3State
-) -> PyResult<PyT3State> {
+pub(crate) fn t3_next(new_value: Float, t3_state: PyT3State) -> PyResult<PyT3State> {
     let mut t3_state: T3State = t3_state.into();
-    t3_state.update(new_value)
+    t3_state
+        .update(new_value)
         .map_err(|e| PyValueError::new_err(format!("{:?}", e)))?;
 
     Ok(t3_state.into())

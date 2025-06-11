@@ -1,5 +1,8 @@
 use techalysis::{
-    errors::TechalysisError, indicators::macd::{macd, MacdResult}, traits::State, types::Float
+    errors::TechalysisError,
+    indicators::macd::{macd, MacdResult},
+    traits::State,
+    types::Float,
 };
 
 use crate::{
@@ -10,7 +13,12 @@ use crate::{
     },
 };
 
-fn generated_and_no_lookahead_macd(file_name: &str, fast_period: usize, slow_period: usize, signal_period: usize) {
+fn generated_and_no_lookahead_macd(
+    file_name: &str,
+    fast_period: usize,
+    slow_period: usize,
+    signal_period: usize,
+) {
     let columns = load_generated_csv(file_name).unwrap();
     let input = columns.get("close").unwrap();
 
@@ -22,13 +30,12 @@ fn generated_and_no_lookahead_macd(file_name: &str, fast_period: usize, slow_per
     let expected_signal = columns.get("signal").unwrap();
     let expected_histogram = columns.get("histogram").unwrap();
 
-    let output = macd(
-        &input[0..last_idx],
-        fast_period,
-        slow_period,
-        signal_period,
+    let output = macd(&input[0..last_idx], fast_period, slow_period, signal_period);
+    assert!(
+        output.is_ok(),
+        "Failed to calculate MACD: {:?}",
+        output.err()
     );
-    assert!(output.is_ok(), "Failed to calculate MACD: {:?}", output.err());
     let result = output.unwrap();
 
     assert_vec_eq_gen_data(&expected_macd[0..last_idx], &result.macd);
@@ -62,12 +69,7 @@ fn generated_and_no_lookahead_macd(file_name: &str, fast_period: usize, slow_per
 
 #[test]
 fn generated_with_no_lookahead_ok() {
-    generated_and_no_lookahead_macd(
-        "macd.csv",
-        12,
-        26,
-        9,
-    );
+    generated_and_no_lookahead_macd("macd.csv", 12, 26, 9);
 }
 
 #[test]
@@ -82,12 +84,7 @@ fn generated_with_no_lookahead_fast16_slow36_signal12_ok() {
 
 #[test]
 fn generated_with_no_lookahead_signal32_ok() {
-    generated_and_no_lookahead_macd(
-        "macd_signalperiod-32.csv",
-        12,
-        26,
-        32,
-    );
+    generated_and_no_lookahead_macd("macd_signalperiod-32.csv", 12, 26, 32);
 }
 
 #[test]

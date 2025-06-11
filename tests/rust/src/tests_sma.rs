@@ -6,7 +6,10 @@ use crate::helper::{
 use crate::expect_err_overflow_or_ok_with;
 use proptest::{collection::vec, prelude::*};
 use techalysis::{
-    errors::TechalysisError, indicators::sma::{sma, SmaResult}, traits::State, types::Float
+    errors::TechalysisError,
+    indicators::sma::{sma, SmaResult},
+    traits::State,
+    types::Float,
 };
 
 fn generated_and_no_lookahead_sma(file_name: &str, period: usize) {
@@ -22,7 +25,11 @@ fn generated_and_no_lookahead_sma(file_name: &str, period: usize) {
     let input_prev = &input[0..last_idx];
 
     let output = sma(input_prev, period);
-    assert!(output.is_ok(), "Failed to calculate SMA: {:?}", output.err());
+    assert!(
+        output.is_ok(),
+        "Failed to calculate SMA: {:?}",
+        output.err()
+    );
     let result = output.unwrap();
 
     assert_vec_eq_gen_data(&expected[0..last_idx], &result.values);

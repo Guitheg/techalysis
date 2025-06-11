@@ -7,7 +7,10 @@ use crate::{
 };
 use proptest::{collection::vec, prelude::*};
 use techalysis::{
-    errors::TechalysisError, indicators::ema::{ema, period_to_alpha, EmaResult}, traits::State, types::Float
+    errors::TechalysisError,
+    indicators::ema::{ema, period_to_alpha, EmaResult},
+    traits::State,
+    types::Float,
 };
 
 fn generated_and_no_lookahead_ema(file_name: &str, period: usize) {
@@ -23,7 +26,11 @@ fn generated_and_no_lookahead_ema(file_name: &str, period: usize) {
     let input_prev = &input[0..last_idx];
 
     let output = ema(input_prev, period, None);
-    assert!(output.is_ok(), "Failed to calculate EMA: {:?}", output.err());
+    assert!(
+        output.is_ok(),
+        "Failed to calculate EMA: {:?}",
+        output.err()
+    );
     let result = output.unwrap();
 
     assert_vec_eq_gen_data(&expected[0..last_idx], &result.values);
@@ -42,10 +49,7 @@ fn generated_and_no_lookahead_ema(file_name: &str, period: usize) {
 
 #[test]
 fn generated_with_no_lookahead_ok() {
-    generated_and_no_lookahead_ema(
-        "ema.csv",
-        30,
-    );
+    generated_and_no_lookahead_ema("ema.csv", 30);
 }
 
 #[test]

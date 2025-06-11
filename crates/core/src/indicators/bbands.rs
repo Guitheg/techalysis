@@ -51,7 +51,7 @@ use std::collections::VecDeque;
 /// ---
 /// This struct holds the result of the Bollinger Bands calculation.
 /// It contains the upper, middle, and lower bands as well as the state of the calculation.
-/// 
+///
 /// Attributes
 /// ---
 /// - `upper`: The upper Bollinger Band values.
@@ -72,24 +72,23 @@ pub struct BBandsResult {
     pub state: BBandsState,
 }
 
-
 /// Bollinger Bands calculation state
 /// ---
 /// This struct holds the state of the Bollinger Bands calculation.
 /// It is used to calculate the next values in the Bollinger Bands series in
 /// an incremental way.
-/// 
+///
 /// Attributes
 /// ---
 /// **Last outputs values**
 /// - `upper`: The last upper Bollinger Band value.
 /// - `middle`: The last middle Bollinger Band value (usually a moving average).
 /// - `lower`: The last lower Bollinger Band value.
-/// 
+///
 /// **State values**
 /// - `moving_averages`: The state of the moving averages used in the calculation.
 /// - `last_window`: A deque containing the last `period` values used for the calculation.
-/// 
+///
 /// **Parameters**
 /// - `period`: The number of periods used to calculate the moving average and
 /// standard deviation.
@@ -123,9 +122,9 @@ pub struct BBandsState {
 
 /// Deviation multipliers for Bollinger Bands.
 /// ---
-/// 
+///
 /// This struct holds the multipliers for the standard deviation used to calculate the upper and lower Bollinger Bands.
-/// 
+///
 /// Attributes
 /// ---
 /// - `up`: The multiplier for the upper Bollinger Band.
@@ -140,9 +139,9 @@ pub struct DeviationMulipliers {
 
 /// Moving average state for Bollinger Bands.
 /// ---
-/// 
+///
 /// This struct holds the state of the moving averages used in the Bollinger Bands calculation.
-/// 
+///
 /// Attributes
 /// ---
 /// - `sma`: The simple moving average value.
@@ -161,9 +160,9 @@ pub struct MovingAverageState {
 
 /// Type of moving average used in Bollinger Bands.
 /// ---
-/// 
+///
 /// This enum defines the type of moving average used in the Bollinger Bands calculation.
-/// 
+///
 /// Variants
 /// ---
 /// - `SMA`: Simple Moving Average.
@@ -178,7 +177,7 @@ pub enum BBandsMA {
 
 impl State<Float> for BBandsState {
     /// Update the [`BBandsState`] with a new sample
-    /// 
+    ///
     /// Input Arguments
     /// ---
     /// - `sample`: The new input value to update the Bollinger Bands state. Generally, it is the closing price.
@@ -206,7 +205,8 @@ impl State<Float> for BBandsState {
         }
         if !self.middle.is_finite() {
             return Err(TechalysisError::DataNonFinite(format!(
-                "self.middle = {:?}", self.middle
+                "self.middle = {:?}",
+                self.middle
             )));
         }
         if !self.moving_averages.ma_square.is_finite() {
@@ -296,14 +296,14 @@ impl State<Float> for BBandsState {
 }
 
 /// Calculate Bollinger Bands for a given data array and return the result.
-/// 
+///
 /// Input Arguments
 /// ---
 /// - `data`: A slice of `Float` values representing the data to calculate the Bollinger Bands on.
 /// - `period`: The time period over which to calculate the Bollinger Bands.
 /// - `std_dev_mul`: A struct containing the multipliers for the standard deviation used to calculate the upper and lower bands.
 /// - `ma_type`: The type of moving average to use (SMA or EMA).
-/// 
+///
 /// Returns
 /// ---
 /// A `Result` containing a [`BBandsResult`] with the upper, middle, and lower bands,
@@ -337,20 +337,20 @@ pub fn bbands(
 }
 
 /// Calculate Bollinger Bands and store the results in provided output arrays and return the state.
-/// 
+///
 /// Input Arguments
 /// ---
 /// - `data`: A slice of `Float` values representing the data to calculate the Bollinger Bands on.
 /// - `period`: The time period over which to calculate the Bollinger Bands.
 /// - `std_dev_mul`: A struct containing the multipliers for the standard deviation used to calculate the upper and lower bands.
 /// - `ma_type`: The type of moving average to use (SMA or EMA).
-/// 
+///
 /// Output Arguments
 /// ---
 /// - `output_upper`: A mutable slice to store the upper Bollinger Band values.
 /// - `output_middle`: A mutable slice to store the middle Bollinger Band values.
 /// - `output_lower`: A mutable slice to store the lower Bollinger Band values.
-/// 
+///
 /// Returns
 /// ---
 /// A `Result` containing a [`BBandsState`] with the last calculated values and state, or an error if the calculation fails.

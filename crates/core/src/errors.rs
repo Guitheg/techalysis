@@ -4,7 +4,7 @@ use crate::types::Float;
 /// ---
 /// This enum defines the various error types that can occur
 /// during the execution of the Techalysis library.
-/// 
+///
 /// Variants
 /// ---
 /// - `BadParam(String)`: Indicates that a parameter passed to a function is invalid.

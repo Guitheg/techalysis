@@ -48,7 +48,7 @@ use crate::types::Float;
 /// ---
 /// This struct holds the result and the state ([`RsiState`])
 /// of the calculation.
-/// 
+///
 /// Attributes
 /// ---
 /// - `values`: A vector of [`Float`] representing the calculated RSI values.
@@ -67,17 +67,17 @@ pub struct RsiResult {
 /// ---
 /// This struct holds the state of the calculation.
 /// It is used to calculate the next values in a incremental way.
-/// 
+///
 /// Attributes
 /// ---
 /// **Last outputs values**
 /// - `rsi`: The last calculated RSI value.
-/// 
+///
 /// **State values**
 /// - `prev_value`: The previous input value used for the RSI calculation.
 /// - `avg_gain`: The average gain calculated from the input data.
 /// - `avg_loss`: The average loss calculated from the input data.
-/// 
+///
 /// **Parameters**
 /// - `period`: The period used for the RSI calculation.
 #[derive(Debug, Clone, Copy)]
@@ -101,7 +101,7 @@ pub struct RsiState {
 
 impl State<Float> for RsiState {
     /// Update the [`RsiState`] with a new sample
-    /// 
+    ///
     /// Input Arguments
     /// ---
     /// - `sample`: The new input to update the RSI state.
@@ -119,17 +119,20 @@ impl State<Float> for RsiState {
         }
         if !self.prev_value.is_finite() {
             return Err(TechalysisError::DataNonFinite(format!(
-                "prev_value = {:?}", self.prev_value
+                "prev_value = {:?}",
+                self.prev_value
             )));
         }
         if !self.avg_gain.is_finite() {
             return Err(TechalysisError::DataNonFinite(format!(
-                "self.avg_gain = {:?}", self.avg_gain
+                "self.avg_gain = {:?}",
+                self.avg_gain
             )));
         }
         if !self.avg_loss.is_finite() {
             return Err(TechalysisError::DataNonFinite(format!(
-                "self.avg_loss = {:?}", self.avg_loss
+                "self.avg_loss = {:?}",
+                self.avg_loss
             )));
         }
 
@@ -153,20 +156,17 @@ impl State<Float> for RsiState {
 /// Calculation of the RSI function
 /// ---
 /// It returns a [`RsiResult`]
-/// 
+///
 /// Input Arguments
 /// ---
 /// - `data`: A slice of [`Float`] representing the input data.
 /// - `period`: The period for the RSI calculation.
-/// 
+///
 /// Returns
 /// ---
 /// A `Result` containing a [`RsiResult`],
 /// or a [`TechalysisError`] error if the calculation fails.
-pub fn rsi(
-    data: &[Float],
-    period: usize
-) -> Result<RsiResult, TechalysisError> {
+pub fn rsi(data: &[Float], period: usize) -> Result<RsiResult, TechalysisError> {
     let size: usize = data.len();
     let mut output = vec![0.0; size];
     let rsi_state = rsi_into(data, period, output.as_mut_slice())?;
@@ -185,11 +185,11 @@ pub fn rsi(
 /// ---
 /// - `data`: A slice of [`Float`] representing the input data.
 /// - `period`: The period for the RSI calculation.
-/// 
+///
 /// Output Arguments
 /// ---
 /// - `output`: A mutable slice of [`Float`] where the RSI values will be stored.
-/// 
+///
 /// Returns
 /// ---
 /// A `Result` containing a [`RsiState`],

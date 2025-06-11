@@ -49,7 +49,7 @@ use std::collections::VecDeque;
 /// ---
 /// This struct holds the result and the state ([`SmaState`])
 /// of the calculation.
-/// 
+///
 /// Attributes
 /// ---
 /// - `values`: A vector of [`Float`] representing the calculated SMA values.
@@ -68,16 +68,16 @@ pub struct SmaResult {
 /// ---
 /// This struct holds the state of the calculation.
 /// It is used to calculate the next values in a incremental way.
-/// 
+///
 /// Attributes
 /// ---
 /// **Last outputs values**
 /// - `sma`: The last calculated Simple Moving Average (SMA) value.
-/// 
+///
 /// **State values**
 /// - `last_window`: A deque containing the last `period` values used for
 /// the SMA calculation.
-/// 
+///
 /// **Parameters**
 /// - `period`: The period used for the SMA calculation, which determines
 /// how many values are averaged to compute the SMA.
@@ -86,7 +86,7 @@ pub struct SmaState {
     // Outputs
     /// The last calculated Simple Moving Average (SMA) value.
     pub sma: Float,
-    
+
     // State values
     /// A deque containing the last `period` values used for
     /// the SMA calculation.
@@ -98,10 +98,9 @@ pub struct SmaState {
     pub period: usize,
 }
 
-
 impl State<Float> for SmaState {
     /// Update the [`SmaState`] with a new sample
-    /// 
+    ///
     /// Input Arguments
     /// ---
     /// - `sample`: The new input to update the SMA state
@@ -118,17 +117,16 @@ impl State<Float> for SmaState {
         }
         if !self.sma.is_finite() {
             return Err(TechalysisError::DataNonFinite(format!(
-                "self.sma = {:?}", self.sma
+                "self.sma = {:?}",
+                self.sma
             )));
         }
         if self.last_window.len() != self.period {
-            return Err(TechalysisError::BadParam(
-                format!(
-                    "SMA state last_window length ({}) does not match period ({})",
-                    self.last_window.len(),
-                    self.period
-                )
-            ));
+            return Err(TechalysisError::BadParam(format!(
+                "SMA state last_window length ({}) does not match period ({})",
+                self.last_window.len(),
+                self.period
+            )));
         }
 
         for (idx, &value) in self.last_window.iter().enumerate() {
@@ -146,18 +144,13 @@ impl State<Float> for SmaState {
             .ok_or(TechalysisError::InsufficientData)?;
         window.push_back(sample);
 
-        let sma = sma_next_unchecked(
-            sample,
-            old_value,
-            self.sma,
-            1.0 / (self.period as Float)
-        );
+        let sma = sma_next_unchecked(sample, old_value, self.sma, 1.0 / (self.period as Float));
         if !sma.is_finite() {
             return Err(TechalysisError::Overflow(0, sma));
         }
         self.sma = sma;
         self.last_window = window;
-        
+
         Ok(())
     }
 }
@@ -165,11 +158,11 @@ impl State<Float> for SmaState {
 /// Calculation of the SMA function
 /// ---
 /// It returns a [`SmaResult`]
-/// 
+///
 /// Input Arguments
 /// ---
 /// - `data`: A slice of [`Float`] representing the input data.
-/// 
+///
 /// Returns
 /// ---
 /// A `Result` containing a [`SmaResult`],
@@ -193,12 +186,12 @@ pub fn sma(data: &[Float], period: usize) -> Result<SmaResult, TechalysisError> 
 /// ---
 /// - `data`: A slice of [`Float`] representing the input data.
 /// - `period`: The period for the SMA calculation.
-/// 
+///
 /// Output Arguments
 /// ---
 /// - `output`: A mutable slice of [`Float`] where the calculated SMA values
 /// will be stored.
-/// 
+///
 /// Returns
 /// ---
 /// A `Result` containing a [`SmaState`],
