@@ -42,7 +42,7 @@
 
 use crate::errors::TechalysisError;
 use crate::indicators::ema::{ema_next_unchecked, get_alpha_value};
-use crate::indicators::tema::{init_tema_unchecked, tema_skip_period_unchecked};
+use crate::indicators::sma::init_sma_unchecked;
 use crate::traits::State;
 use crate::types::Float;
 
@@ -125,6 +125,20 @@ pub struct T3Coefficients {
     pub c4: Float,
 }
 
+impl T3Coefficients {
+    fn new(volume_factor: Float) -> Self {
+        let vfactor_square = volume_factor.powi(2);
+        let vfactor_cube = volume_factor.powi(3);
+        T3Coefficients {
+            c1: -vfactor_cube,
+            c2: 3.0*vfactor_square + 3.0 * vfactor_cube,
+            c3: -3.0 * volume_factor - 6.0 * vfactor_square - 3.0 * vfactor_cube,
+            c4: 1.0 + 3.0 * volume_factor + 3.0 * vfactor_square + vfactor_cube,
+        }
+    }
+}
+
+
 /// Ema values used in the T3 calculation
 ///     
 /// These values are used to store the last calculated EMA values
@@ -205,15 +219,15 @@ impl State<Float> for T3State {
             )));
         }
 
-        let (t3, ema_values) =
-            t3_next_unchecked(sample, &self.ema_values, &self.t3_coefficients, self.alpha);
+        
+        let t3 = t3_next_unchecked(sample, &mut self.ema_values, &self.t3_coefficients, self.alpha);
 
         if !t3.is_finite() {
             return Err(TechalysisError::Overflow(0, t3));
         }
 
         self.t3 = t3;
-        self.ema_values = ema_values;
+        // ema values update in place (no need to reassign)
 
         Ok(())
     }
@@ -298,12 +312,7 @@ pub fn t3_into(
         )));
     }
 
-    let t3_coefficients = T3Coefficients {
-        c1: c1_unchecked(volume_factor),
-        c2: c2_unchecked(volume_factor),
-        c3: c3_unchecked(volume_factor),
-        c4: c4_unchecked(volume_factor),
-    };
+    let t3_coefficients = T3Coefficients::new(volume_factor);
 
     let alpha = get_alpha_value(alpha, period)?;
 
@@ -329,11 +338,11 @@ pub fn t3_into(
                 idx, data[idx]
             )));
         }
-        (output[idx], t3_ema_values) = t3_next_unchecked(
+        output[idx] = t3_next_unchecked(
             data[idx],
-            &t3_ema_values,
+            &mut t3_ema_values,
             &t3_coefficients,
-            2.0 / (period as Float + 1.0),
+            alpha
         );
         if !output[idx].is_finite() {
             return Err(TechalysisError::Overflow(idx, output[idx]));
@@ -353,36 +362,25 @@ pub fn t3_into(
 #[inline(always)]
 fn t3_next_unchecked(
     new_value: Float,
-    ema_values: &T3EmaValues,
+    ema_values: &mut T3EmaValues,
     t3_coefficients: &T3Coefficients,
     alpha: Float,
-) -> (Float, T3EmaValues) {
-    let ema1 = ema_next_unchecked(new_value, ema_values.ema1, alpha);
-    let ema2 = ema_next_unchecked(ema1, ema_values.ema2, alpha);
-    let ema3 = ema_next_unchecked(ema2, ema_values.ema3, alpha);
-    let ema4 = ema_next_unchecked(ema3, ema_values.ema4, alpha);
-    let ema5 = ema_next_unchecked(ema4, ema_values.ema5, alpha);
-    let ema6 = ema_next_unchecked(ema5, ema_values.ema6, alpha);
-    let t3 = t3_from_coefficients_unchecked(
-        ema3,
-        ema4,
-        ema5,
-        ema6,
+) -> Float {
+    ema_values.ema1 = ema_next_unchecked(new_value, ema_values.ema1, alpha);
+    ema_values.ema2 = ema_next_unchecked(ema_values.ema1, ema_values.ema2, alpha);
+    ema_values.ema3 = ema_next_unchecked(ema_values.ema2, ema_values.ema3, alpha);
+    ema_values.ema4 = ema_next_unchecked(ema_values.ema3, ema_values.ema4, alpha);
+    ema_values.ema5 = ema_next_unchecked(ema_values.ema4, ema_values.ema5, alpha);
+    ema_values.ema6 = ema_next_unchecked(ema_values.ema5, ema_values.ema6, alpha);
+    t3_from_coefficients_unchecked(
+        ema_values.ema3,
+        ema_values.ema4,
+        ema_values.ema5,
+        ema_values.ema6,
         t3_coefficients.c1,
         t3_coefficients.c2,
         t3_coefficients.c3,
         t3_coefficients.c4,
-    );
-    (
-        t3,
-        T3EmaValues {
-            ema1,
-            ema2,
-            ema3,
-            ema4,
-            ema5,
-            ema6,
-        },
     )
 }
 
@@ -396,15 +394,46 @@ fn init_t3_unchecked(
     alpha: Float,
     output: &mut [Float],
 ) -> Result<(Float, T3EmaValues), TechalysisError> {
-    let tema_skip_period = tema_skip_period_unchecked(period);
-    let (_, mut ema1, mut ema2, mut ema3) =
-        init_tema_unchecked(data, period, inv_period, tema_skip_period, alpha, output)?;
-    output[tema_skip_period] = Float::NAN;
+    // Initialiaztion of ema1
+    let mut ema1 = init_sma_unchecked(data, period, inv_period, output)?;
+
+    // Initialiaztion of ema2
+    let skip_period_2 = 2 * (period - 1);
+    let mut sum_ema2 = ema1;
+    for idx in period..=skip_period_2 {
+        if !data[idx].is_finite() {
+            return Err(TechalysisError::DataNonFinite(format!(
+                "data[{idx}] = {:?}",
+                data[idx]
+            )));
+        }
+        ema1 = ema_next_unchecked(data[idx], ema1, alpha);
+        sum_ema2 += ema1;
+        output[idx] = Float::NAN;
+    }
+    let mut ema2 = sum_ema2 * inv_period;
+
+    // Initialiaztion of ema3
+    let skip_period_3 = 3 * (period - 1);
+    let mut sum_ema3 = ema2;
+    for idx in skip_period_2 + 1..=skip_period_3 {
+        if !data[idx].is_finite() {
+            return Err(TechalysisError::DataNonFinite(format!(
+                "data[{idx}] = {:?}",
+                data[idx]
+            )));
+        }
+        ema1 = ema_next_unchecked(data[idx], ema1, alpha);
+        ema2 = ema_next_unchecked(ema1, ema2, alpha);
+        sum_ema3 += ema2;
+        output[idx] = Float::NAN;
+    }
+    let mut ema3 = sum_ema3 * inv_period;
 
     // Initialiaztion of ema4
     let skip_period_4 = 4 * (period - 1);
     let mut sum_ema4 = ema3;
-    for idx in tema_skip_period + 1..=skip_period_4 {
+    for idx in skip_period_3 + 1..=skip_period_4 {
         if !data[idx].is_finite() {
             return Err(TechalysisError::DataNonFinite(format!(
                 "data[{idx}] = {:?}",
@@ -494,26 +523,6 @@ pub fn t3_skip_period_unchecked(period: usize) -> usize {
 }
 
 #[inline(always)]
-fn c1_unchecked(volume_factor: Float) -> Float {
-    -volume_factor.powi(3)
-}
-
-#[inline(always)]
-fn c2_unchecked(volume_factor: Float) -> Float {
-    3.0 * volume_factor.powi(2) + 3.0 * volume_factor.powi(3)
-}
-
-#[inline(always)]
-fn c3_unchecked(volume_factor: Float) -> Float {
-    -3.0 * volume_factor - 6.0 * volume_factor.powi(2) - 3.0 * volume_factor.powi(3)
-}
-
-#[inline(always)]
-fn c4_unchecked(volume_factor: Float) -> Float {
-    1.0 + 3.0 * volume_factor + 3.0 * volume_factor.powi(2) + volume_factor.powi(3)
-}
-
-#[inline(always)]
 #[allow(clippy::too_many_arguments)]
 fn t3_from_coefficients_unchecked(
     ema3: Float,
@@ -542,12 +551,7 @@ mod tests {
         ];
         let period = 5;
         let output = vec![0.0; data.len()];
-        let t3_coefficients = T3Coefficients {
-            c1: c1_unchecked(0.7),
-            c2: c2_unchecked(0.7),
-            c3: c3_unchecked(0.7),
-            c4: c4_unchecked(0.7),
-        };
+        let t3_coefficients = T3Coefficients::new(0.7);
         let expected_t3 = 23.2; // Expected T3 value for the given data and period
         let alpha = period_to_alpha(period, None).unwrap();
 

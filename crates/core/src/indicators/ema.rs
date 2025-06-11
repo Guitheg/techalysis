@@ -235,7 +235,7 @@ pub fn ema_into(
 /// ---
 /// - `period`: The period for which to calculate the alpha value.
 /// - `smoothing`: Optional smoothing factor, defaults to 2.0 if not provided.
-/// 
+///
 /// Returns
 /// ---
 /// A `Result` containing the calculated alpha value as `Float`, or a
