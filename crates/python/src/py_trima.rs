@@ -46,13 +46,13 @@ pub struct PyTrimaState {
     #[pyo3(get)]
     pub trima: Float,
     #[pyo3(get)]
-    pub sum: Float,
+    pub weighted_sum: Float,
     #[pyo3(get)]
     pub trailing_sum: Float,
     #[pyo3(get)]
     pub heading_sum: Float,
     #[pyo3(get)]
-    pub window: Vec<Float>,
+    pub last_window: Vec<Float>,
     #[pyo3(get)]
     pub inv_weight_sum: Float,
     #[pyo3(get)]
@@ -63,19 +63,19 @@ impl PyTrimaState {
     #[new]
     pub fn new(
         trima: Float,
-        sum: Float,
+        weighted_sum: Float,
         trailing_sum: Float,
         heading_sum: Float,
-        window: Vec<Float>,
+        last_window: Vec<Float>,
         inv_weight_sum: Float,
         period: usize,
     ) -> Self {
         PyTrimaState {
             trima,
-            sum,
+            weighted_sum,
             trailing_sum,
             heading_sum,
-            window,
+            last_window,
             inv_weight_sum,
             period
         }
@@ -93,10 +93,10 @@ impl From<TrimaState> for PyTrimaState {
     fn from(state: TrimaState) -> Self {
         PyTrimaState {
             trima: state.trima,
-            sum: state.weighted_sum,
+            weighted_sum: state.weighted_sum,
             trailing_sum: state.trailing_sum,
             heading_sum: state.heading_sum,
-            window: state.last_window.into(),
+            last_window: state.last_window.into(),
             inv_weight_sum: state.inv_weight_sum,
             period: state.period,
         }
@@ -107,10 +107,10 @@ impl From<PyTrimaState> for TrimaState {
     fn from(py_state: PyTrimaState) -> Self {
         TrimaState {
             trima: py_state.trima,
-            weighted_sum: py_state.sum,
+            weighted_sum: py_state.weighted_sum,
             trailing_sum: py_state.trailing_sum,
             heading_sum: py_state.heading_sum,
-            last_window: py_state.window.into(),
+            last_window: py_state.last_window.into(),
             inv_weight_sum: py_state.inv_weight_sum,
             period: py_state.period,
         }

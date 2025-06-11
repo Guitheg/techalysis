@@ -35,7 +35,6 @@
 
 use numpy::{IntoPyArray, PyArray1, PyArrayMethods, PyReadonlyArray1, PyUntypedArrayMethods};
 use pyo3::{exceptions::PyValueError, pyclass, pyfunction, pymethods, Py, PyResult, Python};
-use techalysis::indicators::ema::period_to_alpha;
 use techalysis::indicators::tema::{tema_into, TemaState};
 use techalysis::traits::State;
 use techalysis::types::Float;
@@ -54,7 +53,7 @@ pub struct PyTemaState {
     #[pyo3(get)]
     pub period: usize,
     #[pyo3(get)]
-    pub alpha: Option<Float>,
+    pub alpha: Float,
 }
 #[pymethods]
 impl PyTemaState {
@@ -65,7 +64,7 @@ impl PyTemaState {
         ema_2: Float,
         ema_3: Float,
         period: usize,
-        alpha: Option<Float>,
+        alpha: Float,
     ) -> Self {
         PyTemaState {
             tema,
@@ -96,7 +95,7 @@ impl From<TemaState> for PyTemaState {
             ema_2: state.ema_2,
             ema_3: state.ema_3,
             period: state.period,
-            alpha: state.alpha.into(),
+            alpha: state.alpha,
         }
     }
 }
@@ -109,9 +108,7 @@ impl From<PyTemaState> for TemaState {
             ema_2: py_state.ema_2,
             ema_3: py_state.ema_3,
             period: py_state.period,
-            alpha: py_state.alpha.unwrap_or(
-                period_to_alpha(py_state.period, None).unwrap_or(2.0 / py_state.period as Float),
-            ),
+            alpha: py_state.alpha,
         }
     }
 }

@@ -44,7 +44,7 @@ use crate::errors::TechalysisError;
 use crate::indicators::dema::{
     dema_next_unchecked, dema_skip_period_unchecked, init_dema_unchecked,
 };
-use crate::indicators::ema::{ema_next_unchecked, period_to_alpha};
+use crate::indicators::ema::{ema_next_unchecked, get_alpha_value};
 
 use crate::traits::State;
 use crate::types::Float;
@@ -124,6 +124,7 @@ impl State<Float> for TemaState {
                 "Period must be greater than 1".to_string(),
             ));
         }
+
         if !sample.is_finite() {
             return Err(TechalysisError::DataNonFinite(format!(
                 "sample = {sample:?}",
@@ -135,29 +136,35 @@ impl State<Float> for TemaState {
                 "self.ema_1 = {:?}", self.ema_1
             )));
         }
+
         if !self.ema_2.is_finite() {
             return Err(TechalysisError::DataNonFinite(format!(
                 "self.ema_2 = {:?}", self.ema_2
             )));
         }
+
         if !self.ema_3.is_finite() {
             return Err(TechalysisError::DataNonFinite(format!(
                 "self.ema_3 = {:?}", self.ema_3
             )));
         }
+
         if !self.alpha.is_finite() {
             return Err(TechalysisError::BadParam(format!("self.alpha = {:?}", self.alpha)));
         }
 
         let (tema, ema_1, ema_2, ema_3) =
             tema_next_unchecked(sample, self.ema_1, self.ema_2, self.ema_3, self.alpha);
+
         if !tema.is_finite() {
             return Err(TechalysisError::Overflow(0, tema));
         }
+
         self.tema = tema;
         self.ema_1 = ema_1;
         self.ema_2 = ema_2;
         self.ema_3 = ema_3;
+
         Ok(())
     }
 }
@@ -230,10 +237,7 @@ pub fn tema_into(
         ));
     }
 
-    let alpha = match alpha {
-        Some(alpha) => alpha,
-        None => period_to_alpha(period, None)?,
-    };
+    let alpha = get_alpha_value(alpha, period)?;
     let (output_value, mut ema_1, mut ema_2, mut ema_3) =
         init_tema_unchecked(data, period, inv_period, skip_period, alpha, output)?;
     output[skip_period] = output_value;
@@ -268,7 +272,7 @@ pub fn tema_into(
 }
 
 #[inline(always)]
-fn tema_next_unchecked(
+pub(crate) fn tema_next_unchecked(
     new_value: Float,
     prev_ema_1: Float,
     prev_ema_2: Float,

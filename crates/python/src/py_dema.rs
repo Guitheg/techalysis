@@ -36,7 +36,6 @@
 use numpy::{IntoPyArray, PyArray1, PyArrayMethods, PyReadonlyArray1, PyUntypedArrayMethods};
 use pyo3::{exceptions::PyValueError, pyclass, pyfunction, pymethods, Py, PyResult, Python};
 use techalysis::indicators::dema::{dema_into, DemaState};
-use techalysis::indicators::ema::period_to_alpha;
 use techalysis::traits::State;
 use techalysis::types::Float;
 
@@ -52,7 +51,7 @@ pub struct PyDemaState {
     #[pyo3(get)]
     pub period: usize,
     #[pyo3(get)]
-    pub alpha: Option<Float>,
+    pub alpha: Float,
 }
 #[pymethods]
 impl PyDemaState {
@@ -62,7 +61,7 @@ impl PyDemaState {
         ema_1: Float,
         ema_2: Float,
         period: usize,
-        alpha: Option<Float>,
+        alpha: Float,
     ) -> Self {
         PyDemaState {
             dema,
@@ -91,7 +90,7 @@ impl From<DemaState> for PyDemaState {
             ema_1: state.ema_1,
             ema_2: state.ema_2,
             period: state.period,
-            alpha: state.alpha.into(),
+            alpha: state.alpha,
         }
     }
 }
@@ -103,9 +102,7 @@ impl From<PyDemaState> for DemaState {
             ema_1: py_state.ema_1,
             ema_2: py_state.ema_2,
             period: py_state.period,
-            alpha: py_state.alpha.unwrap_or(
-                period_to_alpha(py_state.period, None).unwrap_or(2.0 / py_state.period as Float),
-            ),
+            alpha: py_state.alpha,
         }
     }
 }

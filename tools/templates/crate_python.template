@@ -36,6 +36,7 @@
 use numpy::{IntoPyArray, PyArray1, PyArrayMethods, PyReadonlyArray1, PyUntypedArrayMethods};
 use pyo3::{pymethods, exceptions::PyValueError, pyclass, pyfunction, Py, PyResult, Python};
 use techalysis::indicators::${indicator_name}::{${indicator_name}_into, ${IndicatorName}State};
+use techalysis::traits::State;
 use techalysis::types::Float;
 
 #[pyclass(name = "${IndicatorName}State")]
@@ -81,13 +82,16 @@ impl From<Py${IndicatorName}State> for ${IndicatorName}State {
 }
 
 // TODO: DEFINE SIGNATURE
-#[pyfunction(signature = (/*SIGNATURE_HERE*/))]
+#[pyfunction(signature = (data, period = 14))]
 pub(crate) fn ${indicator_name}(
     py: Python,
+    data: PyReadonlyArray1<Float>,
+    period: Float
     // TODO: DEFINE INPUT ARGUMENTS
     release_gil: bool,
 ) -> PyResult<(
     // TODO: DEFINE OUTPUTS
+    Py<PyArray1<Float>>,
     Py${IndicatorName}State
 )> {
     // TODO: GET INPUT DATA
@@ -96,44 +100,44 @@ pub(crate) fn ${indicator_name}(
 
     if release_gil {
         // TODO: DEFINE OUTPUTS
-        // let mut output = vec![0.0; len];
+        let mut output = vec![0.0; len];
         
         // TODO: IMPL WITH GIL RELEASE
-        // let state = py
-        //     .allow_threads(|| ${indicator_name}_into(input_slice, ..., output.as_mut_slice()))
-        //     .map_err(|e| PyValueError::new_err(format!("{:?}", e)))?;
+        let state = py
+             .allow_threads(|| ${indicator_name}_into(input_slice, period, output.as_mut_slice()))
+             .map_err(|e| PyValueError::new_err(format!("{:?}", e)))?;
 
         // TODO: RETURN OUTPUTS
-        // Ok((
-        //     output.into_pyarray(py).into(),
-        //     state.into()
-        // ))
+        Ok((
+            output.into_pyarray(py).into(),
+            state.into()
+        ))
     } else {
         // TODO: DEFINE OUTPUTS (PYTHON HEAP)
-        // let py_array_out = PyArray1::<Float>::zeros(py, [len], false);
-        // let py_array_ptr = unsafe { py_array_out.as_slice_mut()? };
+        let py_array_out = PyArray1::<Float>::zeros(py, [len], false);
+        let py_array_ptr = unsafe { py_array_out.as_slice_mut()? };
 
         // TODO: IMPL WITHOUT GIL RELEASE
-        // let state = ${indicator_name}_into(input_slice, ..., py_array_ptr)
-        //     .map_err(|e| PyValueError::new_err(format!("{:?}", e)))?;
+        let state = ${indicator_name}_into(input_slice, period, py_array_ptr)
+            .map_err(|e| PyValueError::new_err(format!("{:?}", e)))?;
 
         // TODO: RETURN OUTPUTS
-        // Ok((
-        //     py_array_out.into(),
-        //     state.into()
-        // ))
+        Ok((
+            py_array_out.into(),
+            state.into()
+        ))
     }
 }
 
 // TODO: DEFINE SIGNATURE AND INPUT ARGUMENTS
-#[pyfunction(signature = (/*SIGNATURE HERE*/, ${indicator_name}_state))]
+#[pyfunction(signature = (new_value, ${indicator_name}_state))]
 pub(crate) fn ${indicator_name}_next(
     /*INPUT ARGUMENTS HERE*/
+    new_value: Float,
     ${indicator_name}_state: Py${IndicatorName}State
 ) -> PyResult<Py${IndicatorName}State> {
-    let ${indicator_name}_state: ${IndicatorName}State = ${indicator_name}_state.into();
-    let ${indicator_name}_state = ${indicator_name}_state
-        .next(/*INPUT ARGUMENTS HERE*/)
+    let mut ${indicator_name}_state: ${IndicatorName}State = ${indicator_name}_state.into();
+    ${indicator_name}_state.update(new_value)
         .map_err(|e| PyValueError::new_err(format!("{:?}", e)))?;
 
     Ok(${indicator_name}_state.into())

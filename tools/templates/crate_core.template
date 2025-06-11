@@ -129,12 +129,12 @@ pub fn ${indicator_name}(
     // TODO: DEFINE ARGUMENTS OF INDICATOR FUNCTION
 ) -> Result<${IndicatorName}Result, TechalysisError> {
     // TODO: INITIALIZE OUTPUTS
-    let mut output = vec![0.0; data_array.len()];
+    let mut output = vec![0.0; data.len()];
     
     let ${indicator_name}_state = ${indicator_name}_into(
         data,
         period,
-        output
+        output.as_mut_slice()
         // TODO: ARGUMENTS AND OUTPUTS ARGUMENTS
     )?;
 
@@ -184,6 +184,7 @@ fn ${indicator_name}_next_unchecked(
     // TODO: CORE ARGUMENTS FOR INCREMENTAL
 ) -> Float {
     // TODO: IMPLEMENTS CORE INCREMENTAL LOGIC
+    0.0
 }
 
 #[inline(always)]
@@ -191,5 +192,5 @@ fn init_${indicator_name}_unchecked(
     // TODO: DEFINIE INIT ARGUMENTS
 ) -> Result<Float, TechalysisError> {
     // TODO: IMPLEMENTS INIT
-    Ok(())
+    Ok(0.0)
 }

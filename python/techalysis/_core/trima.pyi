@@ -1,34 +1,42 @@
 
 from dataclasses import dataclass
-from typing import NamedTuple, Optional, Tuple
+from typing import NamedTuple, List, Tuple
 
 from numpy.typing import NDArray
 
 @dataclass(frozen=True)
 class TrimaState:
     """State for the Trima computation"""
-    # TODO: DEFINE STATE ATTRIBUTES
+    trima: float
+    weighted_sum: float
+    trailing_sum: float
+    heading_sum: float
+    last_window: List[float]
+    inv_weight_sum: float
+    period: int
     ...
 
 class TrimaResult(NamedTuple):
     """Result of the Trima computation"""
-    # TODO: DEFINE RESULTS OUTPUTS ATTRIBUTES
+    values: NDArray
     state: TrimaState
 
 def trima(
-    # TODO: DEFINE ARGUMENTS INPUTS
+    data: NDArray,
+    period: int = 14,
     release_gil: bool = False
 ) -> TrimaResult | Tuple[NDArray, TrimaState]:
-    # TODO: FILL THE DOCUMENTATION
     """
-    Trima: ...
+    Trima: Triangular Moving Average
     ----------
-    TODO: DESCRIPTION
 
     Parameters
     ----------
-    TODO:ARG_NAME : TODO:ARG_TYPE
-        TODO:DESCRIPTION
+    data : NDArray
+        One dimensional array of numeric observations. Must have
+        ``len(data) >= period``.
+    period : int, default 14
+        Size of the rolling window (must be ``> 0``).
 
     release_gil : bool, default False
         If ``True``, the GIL is released during the computation.
@@ -38,13 +46,15 @@ def trima(
     -------
     TrimaResult
         A named tuple containing the result of the Trima computation.
-        - ... TODO:OUTPUTS
-        - state: **TrimaState** with (TODO:ATTRIBUTES)
+        - values: **NDArray** with the computed Trima values.
+        - state: **TrimaState** with (trima: float, weighted_sum: float,
+          trailing_sum: float, heading_sum: float, last_window: List[float],
+          inv_weight_sum: float, period: int).
     """
     ...
 
 def trima_next(
-    # TODO: DEFINE ARGUMENTS INPUTS
+    new_value: float,
     state: TrimaState
 ) -> TrimaState:
     """
@@ -52,8 +62,8 @@ def trima_next(
 
     Parameters
     ----------
-    TODO:ARG_NAME : TODO:ARG_TYPE
-        TODO:DESCRIPTION
+    new_value : float
+        The new value to include in the Trima computation.
     
     state : TrimaState
         The current state of the Trima computation.

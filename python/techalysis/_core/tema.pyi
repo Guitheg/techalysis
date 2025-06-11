@@ -37,7 +37,7 @@ def tema(
         ``len(data) >= period``.
     period : int, default 14
         Size of the rolling window (must be ``> 0``).
-    alpha : float, default ``3.0 / (period + 1)``
+    alpha : float, default ``2.0 / (period + 1)``
         Smoothing factor. If not provided, it is calculated based on the period.
 
     release_gil : bool, default False

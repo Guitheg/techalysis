@@ -1,6 +1,7 @@
 from collections import namedtuple
 
 FCT_TO_NAMEDTUPLE = {
+    "t3": namedtuple("T3Result", ["values" ,"state"]),
     "trima": namedtuple("TrimaResult", ["values", "state"]),
     "tema": namedtuple("TemaResult", ["values" ,"state"]),
     "dema": namedtuple("DemaResult", ["values" ,"state"]),

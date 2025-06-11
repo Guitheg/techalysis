@@ -19,3 +19,5 @@ pub(crate) mod tests_dema;
 pub(crate) mod tests_tema;
 #[cfg(test)]
 pub(crate) mod tests_trima;
+#[cfg(test)]
+pub(crate) mod tests_t3;

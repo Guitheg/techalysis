@@ -43,8 +43,8 @@ Built for developers and quants who need the performance of Rust with the ease o
   |                           | **wma** - Weighted Moving Average                               | ✅        |
   |                           | **dema** - Double Exponential Moving Average                    | ✅        |
   |                           | **tema** - Triple Exponential Moving Average                    | ✅        |
-  |                           | **trima** - Triangular Moving Average                           | ⬜        |
-  |                           | **t3** - Triple Exponential Moving Average                      | ⬜        |
+  |                           | **trima** - Triangular Moving Average                           | ✅        |
+  |                           | **t3** - Tillson Moving Average                                 | ✅        |
   |                           | **kama** - Kaufman Adaptive Moving Average                      | ⬜        |
   |                           | **mama** - MESA Adaptive Moving Average                         | ⬜        |
   |                           | **mavp** - Moving Average with Variable Period                  | ⬜        |

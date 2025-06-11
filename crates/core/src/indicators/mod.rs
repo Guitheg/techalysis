@@ -1,4 +1,5 @@
 
+pub mod t3;
 pub mod bbands;
 pub mod dema;
 pub mod ema;

@@ -1,5 +1,6 @@
 use pyo3::prelude::*;
 
+mod py_t3;
 mod py_trima;
 mod py_bbands;
 mod py_dema;
@@ -48,6 +49,10 @@ fn _core(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(py_trima::trima, m)?)?;
     m.add_function(wrap_pyfunction!(py_trima::trima_next, m)?)?;
     m.add_class::<py_trima::PyTrimaState>()?;
+
+    m.add_function(wrap_pyfunction!(py_t3::t3, m)?)?;
+    m.add_function(wrap_pyfunction!(py_t3::t3_next, m)?)?;
+    m.add_class::<py_t3::PyT3State>()?;
 
     Ok(())
 }

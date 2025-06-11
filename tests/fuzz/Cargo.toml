@@ -75,3 +75,9 @@ path = "fuzz_targets/fuzz_trima.rs"
 test = false
 doc = false
 bench = false
+[[bin]]
+name = "t3"
+path = "fuzz_targets/fuzz_t3.rs"
+test = false
+doc = false
+bench = false

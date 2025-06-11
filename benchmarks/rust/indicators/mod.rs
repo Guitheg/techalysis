@@ -7,3 +7,4 @@ pub(crate) mod bench_sma;
 pub(crate) mod bench_tema;
 pub(crate) mod bench_trima;
 pub(crate) mod bench_wma;
+pub(crate) mod bench_t3;
