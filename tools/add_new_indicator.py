@@ -3,8 +3,11 @@ from pathlib import Path
 import argparse
 from utils.logger import logger
 from string import Template
+import subprocess
 
 ROOT = Path(__file__).parent.parent
+
+DEFAULT_CONTRIBUTOR_NAME = "Unknown"
 
 # TEMPLATES
 TEMPLATE_DIR = ROOT / "tools" / "templates"
@@ -39,7 +42,11 @@ TEMPLATES_TO_FILE = {
     "tests_rust.template": "tests/rust/src/tests_{name}.rs",
 }
 
-def create_from_template(indicator_name: str, indicator_camel_case: str = None):
+def create_from_template(
+    indicator_name: str,
+    indicator_camel_case: str = None,
+    contributor_name: str = DEFAULT_CONTRIBUTOR_NAME
+):
     for template_file, target_file in TEMPLATES_TO_FILE.items():
         template_path = TEMPLATE_DIR / template_file
         target_path = Path(__file__).parent.parent / target_file.format(name=indicator_name)
@@ -50,6 +57,8 @@ def create_from_template(indicator_name: str, indicator_camel_case: str = None):
             target_f.write(template_content.substitute({
                 "indicator_name": indicator_name,
                 "IndicatorName": indicator_name.capitalize() if (indicator_camel_case is None) else indicator_camel_case,
+                "INDICATORNAME": indicator_name.upper(),
+                "ContributorName": contributor_name
             }))
         logger.info(f"➕ Created {target_path}")
 
@@ -182,10 +191,22 @@ def parse_args():
     )
     return parser.parse_args()
 
+def get_contributor_name() -> str:
+    try:
+        contributor_name = subprocess.check_output(
+            ["git", "config", "user.name"], stderr=subprocess.DEVNULL
+        ).decode().strip()
+        if not contributor_name:
+            contributor_name = DEFAULT_CONTRIBUTOR_NAME
+    except Exception:
+        contributor_name = DEFAULT_CONTRIBUTOR_NAME
+    return contributor_name
+
 def main():
     args = parse_args()
     logger.info(f"✨ Adding new indicator template: {args.name}")
-    create_from_template(args.name, args.camel_case)
+    contributor_name = get_contributor_name()
+    create_from_template(args.name, args.camel_case, contributor_name)
     add_to_bench_timeit(args.name)
     add_to_python_stub_init(args.name)
     add_to_fuzz_tests_cargo(args.name)

@@ -1,73 +1,196 @@
+/*
+    BSD 3-Clause License
+
+    Copyright (c) 2025, Guillaume GOBIN (Guitheg)
+
+    Redistribution and use in source and binary forms, with or without modification,
+    are permitted provided that the following conditions are met:
+
+    1. Redistributions of source code must retain the above copyright notice,
+    this list of conditions and the following disclaimer.
+
+    2. Redistributions in binary form must reproduce the above copyright notice,
+    this list of conditions and the following disclaimer in the documentation and/or
+    other materials provided with the distribution.
+
+    3. Neither the name of the copyright holder nor the names of its contributors
+    may be used to endorse or promote products derived from this software without
+    specific prior written permission.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+    WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+    DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+    FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+    DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+    SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+    CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+    OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
+    THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
+/*
+    List of contributors:
+    - ${ContributorName}: Initial implementation
+*/
+
+/*
+    TODO: REMOVE IF NOT APPLICABLE
+    Inspired by TA-LIB ${INDICATORNAME} implementation
+*/
+
+//! (TODO: COMPLETE NAME) (${INDICATORNAME}) implementation
+
 use crate::errors::TechalysisError;
 use crate::types::Float;
+use crate::traits::State;
 
+/// ${INDICATORNAME} calculation result
+/// ---
+/// This struct holds the result and the state ([`${IndicatorName}State`])
+/// of the calculation.
+/// 
+/// Attributes
+/// ---
+/// TODO: ATTRIBUTES
+/// - `state`: A [`${IndicatorName}State`], which can be used to calculate
+/// the next values incrementally.
 #[derive(Debug)]
 pub struct ${IndicatorName}Result {
     // TODO: IMPLEMENTS RESULT ATTRIBUTES
-    // pub ..
+    pub values: Vec<Float>,
+    /// The [`${IndicatorName}State`] state of the ${INDICATORNAME} calculation.
     pub state: ${IndicatorName}State,
 }
 
+/// ${INDICATORNAME} calculation state
+/// ---
+/// This struct holds the state of the calculation.
+/// It is used to calculate the next values in a incremental way.
+/// 
+/// Attributes
+/// ---
+/// **Last outputs values**
+/// TODO: OUTPUTS ATTRIBUTES
+/// 
+/// **State values**
+/// TODO: STATE ATTRIBUTES
+/// 
+/// **Parameters**
+/// TODO: PARAMETERS ATTRIBUTES
 #[derive(Debug, Clone, Copy)]
 pub struct ${IndicatorName}State {
+    // TODO: IMPLEMENTS OUTPUTS ATTRIBUTES
+    // Outputs
+    pub ${indicator_name}: Float,
+
     // TODO: IMPLEMENTS STATE ATTRIBUTES
-    // pub ...
+    // State values
+    
+    // TODO: IMPLEMENTS PARAMETERS ATTRIBUTES
+    // Parameters
+    pub period: usize
 }
 
-impl From<${IndicatorName}Result> for Vec<f64> {
-    fn from(result: ${IndicatorName}Result) -> Self {
-        // TODO: IMPLEMENTS FROM IMPL
+impl State<Float> for ${IndicatorName}State {
+    /// Update the [`${IndicatorName}State`] with a new sample
+    /// 
+    /// Input Arguments
+    /// ---
+    /// - `sample`: The new input to update the ${INDICATORNAME} state
+    fn update(&mut self, sample: Float) -> Result<(), TechalysisError> {
+        if !sample.is_finite() {
+            return Err(TechalysisError::DataNonFinite(format!(
+                "sample = {sample:?}",
+            )));
+        }
+        // TODO: IMPLEMENTS UPDATE METHODS
+
+        Ok(())
     }
 }
 
-impl ${IndicatorName}State {
-    pub fn next(&self
-        // TODO: IMPLEMENTS ARGUMENTS OF NEXT METHODS
-    ) -> Result<${IndicatorName}State, TechalysisError> {
-        ${indicator_name}_next(
-            // TODO: IMPLEMENTS ARGUMENTS OF NEXT FUNCTION
-        )
-    }
-}
-
-pub fn ${indicator_name}_next(
-    // TODO: ARGUMENTS FOR INCREMENTAL
-) -> Result<${IndicatorName}State, TechalysisError> {
-    // TODO: CHECK INPUT ARGUMENTS
-
-    //TODO: USE ${indicator_name}_next_unchecked(...);
-    Ok(${IndicatorName}State {
-        // TODO: STATE ATTRIBUTES TO RETURN
-    })
-}
-
+/// Calculation of the ${INDICATORNAME} function
+/// ---
+/// It returns a [`${IndicatorName}Result`]
+/// TODO: DESCRIPTION
+/// 
+/// Input Arguments
+/// ---
+/// TODO: INPUT ARGS DESCRIPTION
+/// 
+/// Returns
+/// ---
+/// A `Result` containing a [`${IndicatorName}Result`],
+/// or a [`TechalysisError`] error if the calculation fails.
 pub fn ${indicator_name}(
-    // TODO: IMPLEMENTS ARGUMENTS OF INDICATOR FUNCTION
+    data: &[Float],
+    period: usize
+    // TODO: DEFINE ARGUMENTS OF INDICATOR FUNCTION
 ) -> Result<${IndicatorName}Result, TechalysisError> {
     // TODO: INITIALIZE OUTPUTS
+    let mut output = vec![0.0; data.len()];
     
     let ${indicator_name}_state = ${indicator_name}_into(
+        data,
+        period,
+        output.as_mut_slice()
         // TODO: ARGUMENTS AND OUTPUTS ARGUMENTS
     )?;
 
     Ok(${IndicatorName}Result {
         // TODO: OUTPUT AND STATES TO RESULT
+        values: output,
+        state: ${indicator_name}_state
     })
 }
 
+/// Calculation of the ${INDICATORNAME} function
+/// ---
+/// It stores the results in the provided output arrays and
+/// return the state [`${IndicatorName}State`].
+/// TODO: DESCRIPTION
+///
+/// Input Arguments
+/// ---
+/// TODO: INPUT ARGS DESCRIPTIONS
+/// 
+/// Output Arguments
+/// ---
+/// TODO: OUTPUT ARGS DESCRIPTIONS
+/// 
+/// Returns
+/// ---
+/// A `Result` containing a [`${IndicatorName}State`],
+/// or a [`TechalysisError`] error if the calculation fails.
 pub fn ${indicator_name}_into(
+    data: &[Float],
+    period: usize,
+    output: &mut [Float],
     // TODO: ARGUMENTS AND OUTPUTS ARGUMENTS
 ) -> Result<${IndicatorName}State, TechalysisError> {
+    let len = data.len();
+
     // TODO: IMPLEMENTS CORE FUNCTION LOGIC
 
     Ok(${IndicatorName}State {
-        // TODO: STATE ATTRIBUTES TO RETURN
+        ${indicator_name}: output[len-1],
+        period
     })
 }
 
 #[inline(always)]
-pub fn ${indicator_name}_next_unchecked(
+fn ${indicator_name}_next_unchecked(
     // TODO: CORE ARGUMENTS FOR INCREMENTAL
-) -> f64 {
+) -> Float {
     // TODO: IMPLEMENTS CORE INCREMENTAL LOGIC
+    0.0
+}
+
+#[inline(always)]
+fn init_${indicator_name}_unchecked(
+    // TODO: DEFINIE INIT ARGUMENTS
+) -> Result<Float, TechalysisError> {
+    // TODO: IMPLEMENTS INIT
+    Ok(0.0)
 }

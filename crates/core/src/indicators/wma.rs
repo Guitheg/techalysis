@@ -1,109 +1,190 @@
-use std::collections::VecDeque;
+/*
+    BSD 3-Clause License
+
+    Copyright (c) 2025, Guillaume GOBIN (Guitheg)
+
+    Redistribution and use in source and binary forms, with or without modification,
+    are permitted provided that the following conditions are met:
+
+    1. Redistributions of source code must retain the above copyright notice,
+    this list of conditions and the following disclaimer.
+
+    2. Redistributions in binary form must reproduce the above copyright notice,
+    this list of conditions and the following disclaimer in the documentation and/or
+    other materials provided with the distribution.
+
+    3. Neither the name of the copyright holder nor the names of its contributors
+    may be used to endorse or promote products derived from this software without
+    specific prior written permission.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+    WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+    DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+    FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+    DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+    SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+    CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+    OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
+    THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
+/*
+    List of contributors:
+    - Guitheg: Initial implementation
+*/
+
+/*
+    Inspired by TA-LIB WMA implementation
+*/
+
+//! Weighted Moving Average (WMA) implementation
 
 use crate::errors::TechalysisError;
+use crate::traits::State;
 use crate::types::Float;
+use std::collections::VecDeque;
 
+/// WMA calculation result
+/// ---
+/// This struct holds the result and the state ([`WmaState`])
+/// of the calculation.
+///
+/// Attributes
+/// ---
+/// - `values`: A vector of [`Float`] representing the calculated WMA values.
+/// - `state`: A [`WmaState`], which can be used to calculate
+///   the next values incrementally.
 #[derive(Debug)]
 pub struct WmaResult {
+    /// The calculated WMA values.
     pub values: Vec<Float>,
+    /// A [`WmaState`], which can be used to calculate
+    /// the next values incrementally.
     pub state: WmaState,
 }
 
+/// WMA calculation state
+/// ---
+/// This struct holds the state of the calculation.
+/// It is used to calculate the next values in a incremental way.
+///
+/// Attributes
+/// ---
+/// **Last outputs values**
+/// - `wma`: The last calculated WMA value.
+///
+/// **State values**
+/// - `period_sub`: The sumation to subtract from the period sum.
+/// - `period_sum`: The weighted sum of the previous window.
+/// - `last_window`: A deque containing the last `period` values used for
+///   the WMA calculation.
+///
+/// **Parameters**
+/// - `period`: The period used for the WMA calculation, which determines
+///   how many values are averaged to compute the WMA.
 #[derive(Debug, Clone)]
 pub struct WmaState {
+    // Outputs
+    /// The last calculated WMA value
     pub wma: Float,
-    pub period: usize,
+
+    // State values
+    /// The sumation to subtract from the period sum
     pub period_sub: Float,
+    /// The weighted sum of the previous window
     pub period_sum: Float,
-    pub window: VecDeque<Float>,
+    /// A deque containing the last `period` values used for
+    /// the WMA calculation
+    pub last_window: VecDeque<Float>,
+
+    // Parameters
+    /// The period used for the WMA calculation, which determines
+    pub period: usize,
 }
 
-impl From<WmaResult> for Vec<f64> {
-    fn from(result: WmaResult) -> Self {
-        result.values
-    }
-}
-
-impl WmaState {
-    pub fn next(&self, new_value: Float) -> Result<WmaState, TechalysisError> {
-        wma_next(
-            new_value,
-            self.wma,
-            self.period,
-            self.period_sub,
-            self.period_sum,
-            &self.window,
-        )
-    }
-}
-
-pub fn wma_next(
-    new_value: Float,
-    prev_wma: Float,
-    period: usize,
-    period_sub: Float,
-    period_sum: Float,
-    window: &VecDeque<Float>,
-) -> Result<WmaState, TechalysisError> {
-    if period <= 1 {
-        return Err(TechalysisError::BadParam(
-            "WMA period must be greater than 1".to_string(),
-        ));
-    }
-    if !new_value.is_finite() {
-        return Err(TechalysisError::DataNonFinite(format!(
-            "new_value = {new_value:?}"
-        )));
-    }
-    if !prev_wma.is_finite() {
-        return Err(TechalysisError::DataNonFinite(format!(
-            "prev_wma = {prev_wma:?}"
-        )));
-    }
-    if window.len() != period {
-        return Err(TechalysisError::BadParam(
-            "Window length must match the WMA period".to_string(),
-        ));
-    }
-
-    for (idx, &value) in window.iter().enumerate() {
-        if !value.is_finite() {
+impl State<Float> for WmaState {
+    /// Update the [`WmaState`] with a new sample
+    ///
+    /// Input Arguments
+    /// ---
+    /// - `sample`: The new input to update the WMA state
+    fn update(&mut self, sample: Float) -> Result<(), TechalysisError> {
+        if self.period <= 1 {
+            return Err(TechalysisError::BadParam(
+                "WMA period must be greater than 1".to_string(),
+            ));
+        }
+        if !sample.is_finite() {
             return Err(TechalysisError::DataNonFinite(format!(
-                "window[{idx}] = {value:?}"
+                "sample = {sample:?}"
             )));
         }
+        if !self.wma.is_finite() {
+            return Err(TechalysisError::DataNonFinite(format!(
+                "self.wma = {:?}",
+                self.wma
+            )));
+        }
+        if self.last_window.len() != self.period {
+            return Err(TechalysisError::BadParam(format!(
+                "WMA state window length ({}) does not match period ({})",
+                self.last_window.len(),
+                self.period
+            )));
+        }
+
+        for (idx, &value) in self.last_window.iter().enumerate() {
+            if !value.is_finite() {
+                return Err(TechalysisError::DataNonFinite(format!(
+                    "window[{idx}] = {value:?}"
+                )));
+            }
+        }
+
+        let mut window = self.last_window.clone();
+        let inv_weight_sum = inv_weight_sum_linear(self.period);
+
+        let old_value = window
+            .pop_front()
+            .ok_or(TechalysisError::InsufficientData)?;
+        window.push_back(sample);
+
+        let (wma, new_period_sub, new_period_sum) = wma_next_unchecked(
+            sample,
+            old_value,
+            self.period as Float,
+            self.period_sub,
+            self.period_sum,
+            inv_weight_sum,
+        );
+
+        if !wma.is_finite() {
+            return Err(TechalysisError::Overflow(0, wma));
+        }
+
+        self.wma = wma;
+        self.period_sub = new_period_sub;
+        self.period_sum = new_period_sum;
+        self.last_window = window;
+
+        Ok(())
     }
-
-    let mut window = window.clone();
-    let inv_weight_sum = inv_weight_sum_linear(period);
-
-    let old_value = window
-        .pop_front()
-        .ok_or(TechalysisError::InsufficientData)?;
-    window.push_back(new_value);
-
-    let (wma, new_period_sub, new_period_sum) = wma_next_unchecked(
-        new_value,
-        old_value,
-        period as Float,
-        period_sub,
-        period_sum,
-        inv_weight_sum,
-    );
-
-    if !wma.is_finite() {
-        return Err(TechalysisError::Overflow(0, wma));
-    }
-
-    Ok(WmaState {
-        wma,
-        period,
-        period_sub: new_period_sub,
-        period_sum: new_period_sum,
-        window,
-    })
 }
 
+/// Calculation of the WMA function
+/// ---
+/// It returns a [`WmaResult`]
+///
+/// Input Arguments
+/// ---
+/// - `data`: A slice of [`Float`] representing the input data.
+/// - `period`: The period for the WMA calculation.
+///
+/// Returns
+/// ---
+/// A `Result` containing a [`WmaResult`],
+/// or a [`TechalysisError`] error if the calculation fails.
 pub fn wma(data: &[Float], period: usize) -> Result<WmaResult, TechalysisError> {
     let len = data.len();
     let mut output = vec![0.0; len];
@@ -114,6 +195,24 @@ pub fn wma(data: &[Float], period: usize) -> Result<WmaResult, TechalysisError> 
     })
 }
 
+/// Calculation of the WMA function
+/// ---
+/// It stores the results in the provided output arrays and
+/// return the state [`WmaState`].
+///
+/// Input Arguments
+/// ---
+/// - `data`: A slice of [`Float`] representing the input data.
+/// - `period`: The period for the WMA calculation.
+///
+/// Output Arguments
+/// ---
+/// - `output`: A mutable slice of [`Float`] where the calculated WMA values
+///
+/// Returns
+/// ---
+/// A `Result` containing a [`WmaState`],
+/// or a [`TechalysisError`] error if the calculation fails.
 pub fn wma_into(
     data: &[Float],
     period: usize,
@@ -164,12 +263,12 @@ pub fn wma_into(
         period,
         period_sub,
         period_sum,
-        window: VecDeque::from(data[len - period..len].to_vec()),
+        last_window: VecDeque::from(data[len - period..len].to_vec()),
     })
 }
 
 #[inline(always)]
-pub fn wma_next_unchecked(
+fn wma_next_unchecked(
     new_value: Float,
     old_value: Float,
     period: Float,
@@ -187,7 +286,7 @@ pub fn wma_next_unchecked(
 }
 
 #[inline(always)]
-pub(crate) fn init_wma_unchecked(
+fn init_wma_unchecked(
     data: &[Float],
     period: usize,
     inv_weight_sum: Float,

@@ -8,135 +8,73 @@ use crate::{
 
 use techalysis::{
     errors::TechalysisError,
-    indicators::bbands::{bbands, BBandsMA, BBandsResult, BBandsState, DeviationMulipliers},
+    indicators::bbands::{bbands, BBandsMA, BBandsResult, DeviationMulipliers},
+    traits::State,
     types::Float,
 };
 
-#[test]
-fn generated() {
-    let columns = load_generated_csv("bbands.csv").unwrap();
-
+fn generated_and_no_lookahead_bbands(file_name: &str, period: usize, ma_type: BBandsMA) {
+    let columns = load_generated_csv(file_name).unwrap();
     let input = columns.get("close").unwrap();
+
+    let len = input.len();
+    let next_count = 5;
+    let last_idx = len - (1 + next_count);
 
     let upper = columns.get("upper").unwrap();
     let middle = columns.get("middle").unwrap();
     let lower = columns.get("lower").unwrap();
 
     let output = bbands(
-        input,
-        20,
+        &input[0..last_idx],
+        period,
         DeviationMulipliers { up: 2.0, down: 2.0 },
-        BBandsMA::SMA,
+        ma_type,
     );
-    assert!(output.is_ok());
-    let result = output.unwrap();
-
-    assert_vec_eq_gen_data(upper, &result.upper);
-    assert_vec_eq_gen_data(middle, &result.middle);
-    assert_vec_eq_gen_data(lower, &result.lower);
-}
-
-#[test]
-fn generated_ema() {
-    let columns = load_generated_csv("bbands_matype-1.csv").unwrap();
-
-    let input = columns.get("close").unwrap();
-
-    let upper = columns.get("upper").unwrap();
-    let middle = columns.get("middle").unwrap();
-    let lower = columns.get("lower").unwrap();
-
-    let output = bbands(
-        input,
-        20,
-        DeviationMulipliers { up: 2.0, down: 2.0 },
-        BBandsMA::EMA(None),
+    assert!(
+        output.is_ok(),
+        "Failed to calculate BBands: {:?}",
+        output.err()
     );
-    assert!(output.is_ok());
     let result = output.unwrap();
-
-    assert_vec_eq_gen_data(upper, &result.upper);
-    assert_vec_eq_gen_data(middle, &result.middle);
-    assert_vec_eq_gen_data(lower, &result.lower);
-}
-
-#[test]
-fn no_lookahead() {
-    let columns = load_generated_csv("bbands.csv").unwrap();
-
-    let input = columns.get("close").unwrap();
-
-    let len = input.len();
-    let last_idx = len - 2;
-
-    let upper = columns.get("upper").unwrap();
-    let middle = columns.get("middle").unwrap();
-    let lower = columns.get("lower").unwrap();
-
-    let input_prev = &input[0..last_idx];
-
-    let result = bbands(
-        input_prev,
-        20,
-        DeviationMulipliers { up: 2.0, down: 2.0 },
-        BBandsMA::SMA,
-    )
-    .unwrap();
 
     assert_vec_eq_gen_data(&upper[0..last_idx], &result.upper);
     assert_vec_eq_gen_data(&middle[0..last_idx], &result.middle);
     assert_vec_eq_gen_data(&lower[0..last_idx], &result.lower);
 
-    let new_state = result.state.next(input[last_idx]).unwrap();
-    assert!(
-        approx_eq_float(new_state.upper, upper[last_idx], 1e-8),
-        "Expected last value to be {}, but got {}",
-        upper[last_idx],
-        new_state.upper
-    );
+    let mut state = result.state;
+
+    for i in 0..next_count {
+        state.update(input[last_idx + i]).unwrap();
+        assert!(
+            approx_eq_float(state.upper, upper[last_idx + i], 1e-8),
+            "Next expected {}, but got {}",
+            upper[last_idx + i],
+            state.upper
+        );
+        assert!(
+            approx_eq_float(state.middle, middle[last_idx + i], 1e-8),
+            "Next expected {}, but got {}",
+            middle[last_idx + i],
+            state.middle
+        );
+        assert!(
+            approx_eq_float(state.lower, lower[last_idx + i], 1e-8),
+            "Next expected {}, but got {}",
+            lower[last_idx + i],
+            state.lower
+        );
+    }
 }
 
 #[test]
-fn no_lookahead_ema() {
-    let columns = load_generated_csv("bbands_matype-1.csv").unwrap();
+fn generated_with_no_lookahead_ok() {
+    generated_and_no_lookahead_bbands("bbands.csv", 20, BBandsMA::SMA);
+}
 
-    let input = columns.get("close").unwrap();
-
-    let len = input.len();
-    let last_idx = len - 3;
-
-    let upper = columns.get("upper").unwrap();
-    let middle = columns.get("middle").unwrap();
-    let lower = columns.get("lower").unwrap();
-
-    let input_prev = &input[0..last_idx];
-
-    let result = bbands(
-        input_prev,
-        20,
-        DeviationMulipliers { up: 2.0, down: 2.0 },
-        BBandsMA::EMA(None),
-    )
-    .unwrap();
-
-    assert_vec_eq_gen_data(&upper[0..last_idx], &result.upper);
-    assert_vec_eq_gen_data(&middle[0..last_idx], &result.middle);
-    assert_vec_eq_gen_data(&lower[0..last_idx], &result.lower);
-
-    let new_state = result.state.next(input[last_idx]).unwrap();
-    assert!(
-        approx_eq_float(new_state.upper, upper[last_idx], 1e-8),
-        "Expected last value to be {}, but got {}",
-        upper[last_idx],
-        new_state.upper
-    );
-    let new_state = new_state.next(input[last_idx + 1]).unwrap();
-    assert!(
-        approx_eq_float(new_state.upper, upper[last_idx + 1], 1e-8),
-        "Expected last value to be {}, but got {}",
-        upper[last_idx],
-        new_state.upper
-    );
+#[test]
+fn generated_with_no_lookahead_ema_ok() {
+    generated_and_no_lookahead_bbands("bbands_matype-1.csv", 20, BBandsMA::EMA(None));
 }
 
 #[test]
@@ -297,7 +235,9 @@ fn next_with_finite_extreme_err_overflow_or_ok_all_finite() {
         BBandsMA::SMA,
     )
     .unwrap();
-    expect_err_overflow_or_ok_with!(result.state.next(Float::MAX - 5.0), |state: BBandsState| {
+    let mut state = result.state;
+    let output = state.update(Float::MAX - 5.0);
+    expect_err_overflow_or_ok_with!(output, |_| {
         assert!(state.upper.is_finite(), "Expected all values to be finite");
         assert!(state.middle.is_finite(), "Expected all values to be finite");
         assert!(state.lower.is_finite(), "Expected all values to be finite");

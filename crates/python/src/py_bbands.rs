@@ -1,8 +1,44 @@
+/*
+    BSD 3-Clause License
+
+    Copyright (c) 2025, Guillaume GOBIN (Guitheg)
+
+    Redistribution and use in source and binary forms, with or without modification,
+    are permitted provided that the following conditions are met:
+
+    1. Redistributions of source code must retain the above copyright notice,
+    this list of conditions and the following disclaimer.
+
+    2. Redistributions in binary form must reproduce the above copyright notice,
+    this list of conditions and the following disclaimer in the documentation and/or
+    other materials provided with the distribution.
+
+    3. Neither the name of the copyright holder nor the names of its contributors
+    may be used to endorse or promote products derived from this software without
+    specific prior written permission.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+    WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+    DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+    FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+    DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+    SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+    CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+    OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
+    THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+/*
+    List of contributors:
+    - Guitheg: Initial implementation
+*/
+
 use numpy::{IntoPyArray, PyArray1, PyArrayMethods, PyReadonlyArray1, PyUntypedArrayMethods};
 use pyo3::{exceptions::PyValueError, pyclass, pyfunction, pymethods, Py, PyResult, Python};
 use techalysis::indicators::bbands::{
     bbands_into, BBandsMA, BBandsState, DeviationMulipliers, MovingAverageState,
 };
+use techalysis::traits::State;
 use techalysis::types::Float;
 
 #[pyclass(name = "BBandsState")]
@@ -83,12 +119,12 @@ impl From<BBandsState> for PyBBandsState {
             upper: state.upper,
             middle: state.middle,
             lower: state.lower,
-            mean_sma: state.ma.sma,
-            mean_sq: state.ma.ma_sq,
-            window: state.window.into(),
+            mean_sma: state.moving_averages.sma,
+            mean_sq: state.moving_averages.ma_square,
+            window: state.last_window.into(),
             period: state.period,
-            std_up: state.std.up,
-            std_down: state.std.down,
+            std_up: state.std_dev_mult.up,
+            std_down: state.std_dev_mult.down,
             ma_type: state.ma_type.into(),
         }
     }
@@ -100,13 +136,13 @@ impl From<PyBBandsState> for BBandsState {
             upper: py_state.upper,
             middle: py_state.middle,
             lower: py_state.lower,
-            ma: MovingAverageState {
+            moving_averages: MovingAverageState {
                 sma: py_state.mean_sma,
-                ma_sq: py_state.mean_sq,
+                ma_square: py_state.mean_sq,
             },
-            window: py_state.window.into(),
+            last_window: py_state.window.into(),
             period: py_state.period,
-            std: DeviationMulipliers {
+            std_dev_mult: DeviationMulipliers {
                 up: py_state.std_up,
                 down: py_state.std_down,
             },
@@ -217,9 +253,9 @@ pub(crate) fn bbands_next(
     new_value: Float,
     bbands_state: PyBBandsState,
 ) -> PyResult<PyBBandsState> {
-    let bbands_state: BBandsState = bbands_state.into();
-    let bbands_state = bbands_state
-        .next(new_value)
+    let mut bbands_state: BBandsState = bbands_state.into();
+    bbands_state
+        .update(new_value)
         .map_err(|e| PyValueError::new_err(format!("{:?}", e)))?;
 
     Ok(bbands_state.into())

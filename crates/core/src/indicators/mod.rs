@@ -1,6 +1,10 @@
-pub mod wma;
 pub mod bbands;
+pub mod dema;
 pub mod ema;
 pub mod macd;
 pub mod rsi;
 pub mod sma;
+pub mod t3;
+pub mod tema;
+pub mod trima;
+pub mod wma;

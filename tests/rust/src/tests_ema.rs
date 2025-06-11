@@ -8,40 +8,48 @@ use crate::{
 use proptest::{collection::vec, prelude::*};
 use techalysis::{
     errors::TechalysisError,
-    indicators::ema::{ema, period_to_alpha, EmaResult, EmaState},
+    indicators::ema::{ema, period_to_alpha, EmaResult},
+    traits::State,
     types::Float,
 };
 
-#[test]
-fn generated() {
-    let columns = load_generated_csv("ema.csv").unwrap();
+fn generated_and_no_lookahead_ema(file_name: &str, period: usize) {
+    let columns = load_generated_csv(file_name).unwrap();
     let input = columns.get("close").unwrap();
-    let output = ema(input, 30, None);
-    assert!(output.is_ok());
-    let out = output.unwrap().values;
+
+    let len = input.len();
+    let next_count = 5;
+    let last_idx = len - (1 + next_count);
+
     let expected = columns.get("out").unwrap();
-    assert_vec_eq_gen_data(&out, expected);
-    assert!(out.len() == input.len());
+
+    let input_prev = &input[0..last_idx];
+
+    let output = ema(input_prev, period, None);
+    assert!(
+        output.is_ok(),
+        "Failed to calculate EMA: {:?}",
+        output.err()
+    );
+    let result = output.unwrap();
+
+    assert_vec_eq_gen_data(&expected[0..last_idx], &result.values);
+
+    let mut new_state = result.state;
+    for i in 0..next_count {
+        new_state.update(input[last_idx + i]).unwrap();
+        assert!(
+            approx_eq_float(new_state.ema, expected[last_idx + i], 1e-8),
+            "Next expected {}, but got {}",
+            expected[last_idx + i],
+            new_state.ema
+        );
+    }
 }
 
 #[test]
-fn no_lookahead() {
-    let columns = load_generated_csv("ema.csv").unwrap();
-    let input = columns.get("close").unwrap();
-    let expected = columns.get("out").unwrap();
-    let output = ema(&input[0..input.len() - 1], 30, None);
-    assert!(output.is_ok());
-    let result = output.unwrap();
-    assert_vec_eq_gen_data(&result.values, &expected[0..&expected.len() - 1]);
-    let new_output = result.state.next(input[input.len() - 1]);
-    assert!(new_output.is_ok());
-    let new_state = new_output.unwrap();
-    assert!(
-        approx_eq_float(new_state.ema, expected[expected.len() - 1], 1e-8),
-        "Expected last value to be {}, but got {}",
-        expected[expected.len() - 1],
-        new_state.ema
-    );
+fn generated_with_no_lookahead_ok() {
+    generated_and_no_lookahead_ema("ema.csv", 30);
 }
 
 #[test]
@@ -127,7 +135,8 @@ fn next_with_finite_neg_extreme_err_overflow_or_ok_all_finite() {
     let data = vec![5.0, 10.0, 30.0, 3.0, 5.0, 6.0, 8.0];
     let period = 3;
     let result = ema(&data, period, None).unwrap();
-    expect_err_overflow_or_ok_with!(result.state.next(Float::MIN + 5.0), |state: EmaState| {
+    let mut state = result.state;
+    expect_err_overflow_or_ok_with!(state.update(Float::MIN + 5.0), |_| {
         assert!(state.ema.is_finite(), "Expected all values to be finite");
     });
 }

@@ -1,6 +1,42 @@
+/*
+    BSD 3-Clause License
+
+    Copyright (c) 2025, Guillaume GOBIN (Guitheg)
+
+    Redistribution and use in source and binary forms, with or without modification,
+    are permitted provided that the following conditions are met:
+
+    1. Redistributions of source code must retain the above copyright notice,
+    this list of conditions and the following disclaimer.
+
+    2. Redistributions in binary form must reproduce the above copyright notice,
+    this list of conditions and the following disclaimer in the documentation and/or
+    other materials provided with the distribution.
+
+    3. Neither the name of the copyright holder nor the names of its contributors
+    may be used to endorse or promote products derived from this software without
+    specific prior written permission.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+    WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+    DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+    FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+    DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+    SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+    CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+    OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
+    THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+/*
+    List of contributors:
+    - Guitheg: Initial implementation
+*/
+
 use numpy::{IntoPyArray, PyArray1, PyArrayMethods, PyReadonlyArray1, PyUntypedArrayMethods};
 use pyo3::{exceptions::PyValueError, pyclass, pyfunction, pymethods, Py, PyResult, Python};
-use techalysis::indicators::macd::{macd_into, macd_next as core_macd_next, MacdState};
+use techalysis::indicators::macd::{macd_into, MacdState};
+use techalysis::traits::State;
 use techalysis::types::Float;
 
 #[pyclass(name = "MacdState")]
@@ -70,6 +106,20 @@ impl From<MacdState> for PyMacdState {
             fast_period: state.fast_period,
             slow_period: state.slow_period,
             signal_period: state.signal_period,
+        }
+    }
+}
+impl From<PyMacdState> for MacdState {
+    fn from(py_state: PyMacdState) -> Self {
+        MacdState {
+            macd: py_state.macd,
+            signal: py_state.signal,
+            histogram: py_state.histogram,
+            fast_ema: py_state.fast_ema,
+            slow_ema: py_state.slow_ema,
+            fast_period: py_state.fast_period,
+            slow_period: py_state.slow_period,
+            signal_period: py_state.signal_period,
         }
     }
 }
@@ -148,15 +198,9 @@ pub(crate) fn macd(
 
 #[pyfunction(signature = (new_value, macd_state,))]
 pub(crate) fn macd_next(new_value: Float, macd_state: PyMacdState) -> PyResult<PyMacdState> {
-    let state = core_macd_next(
-        new_value,
-        macd_state.fast_ema,
-        macd_state.slow_ema,
-        macd_state.signal,
-        macd_state.fast_period,
-        macd_state.slow_period,
-        macd_state.signal_period,
-    )
-    .map_err(|e| PyValueError::new_err(format!("{:?}", e)))?;
+    let mut state: MacdState = macd_state.into();
+    state
+        .update(new_value)
+        .map_err(|e| PyValueError::new_err(format!("{:?}", e)))?;
     Ok(state.into())
 }

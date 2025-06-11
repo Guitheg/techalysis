@@ -6,52 +6,48 @@ use crate::{assert_vec_float_eq, expect_err_overflow_or_ok_with};
 use proptest::{prop_assert, prop_assert_eq, proptest};
 use techalysis::{
     errors::TechalysisError,
-    indicators::rsi::{rsi, RsiResult, RsiState},
+    indicators::rsi::{rsi, RsiResult},
+    traits::State,
     types::Float,
 };
 
-#[test]
-fn generated() {
-    let columns = load_generated_csv("rsi.csv").unwrap();
+fn generated_and_no_lookahead_rsi(file_name: &str, period: usize) {
+    let columns = load_generated_csv(file_name).unwrap();
     let input = columns.get("close").unwrap();
-    let output = rsi(input, 14);
-    assert!(output.is_ok());
-    let out = output.unwrap().values;
+
+    let len = input.len();
+    let next_count = 5;
+    let last_idx = len - (1 + next_count);
+
     let expected = columns.get("out").unwrap();
-    assert_vec_eq_gen_data(&out, expected);
-    assert!(out.len() == input.len());
+
+    let input_prev = &input[0..last_idx];
+
+    let output = rsi(input_prev, period);
+    assert!(
+        output.is_ok(),
+        "Failed to calculate RSI: {:?}",
+        output.err()
+    );
+    let result = output.unwrap();
+
+    assert_vec_eq_gen_data(&expected[0..last_idx], &result.values);
+
+    let mut new_state = result.state;
+    for i in 0..next_count {
+        new_state.update(input[last_idx + i]).unwrap();
+        assert!(
+            approx_eq_float(new_state.rsi, expected[last_idx + i], 1e-8),
+            "Next expected {}, but got {}",
+            expected[last_idx + i],
+            new_state.rsi
+        );
+    }
 }
 
 #[test]
-fn no_lookahead() {
-    let columns = load_generated_csv("rsi.csv").unwrap();
-    let input = columns.get("close").unwrap();
-    let len = input.len();
-    let input_minus_1 = &input[0..len - 1];
-    let last_input = input[len - 1];
-    let expected = columns.get("out").unwrap();
-    let expected_minus_1 = &expected[0..len - 1];
-    let last_expected = expected[len - 1];
-
-    let output_minus_1 = rsi(input_minus_1, 14);
-    assert!(output_minus_1.is_ok());
-    let result_minus_1 = output_minus_1.unwrap();
-    assert_vec_eq_gen_data(&result_minus_1.values, expected_minus_1);
-    let output = rsi(input, 14).unwrap();
-    assert_vec_eq_gen_data(&output.values[0..len - 1], &result_minus_1.values);
-    let next_state = result_minus_1.state.next(last_input).unwrap();
-    assert!(
-        approx_eq_float(next_state.rsi, last_expected, 1e-8),
-        "Expected last value to be {}, but got {}",
-        expected[len - 1],
-        next_state.rsi
-    );
-    assert!(
-        approx_eq_float(next_state.rsi, output.state.rsi, 1e-8),
-        "Expected last value to be {}, but got {}",
-        output.state.rsi,
-        next_state.rsi
-    );
+fn generated_with_no_lookahead_ok() {
+    generated_and_no_lookahead_rsi("rsi.csv", 14);
 }
 
 #[test]
@@ -217,8 +213,9 @@ fn next_with_finite_neg_extreme_err_overflow_or_ok_all_finite() {
     let data = vec![5.0, 10.0, 30.0, 3.0, 5.0, 6.0, 8.0];
     let period = 3;
     let result = rsi(&data, period).unwrap();
-    expect_err_overflow_or_ok_with!(result.state.next(Float::MIN + 5.0), |result: RsiState| {
-        assert!(result.rsi.is_finite(), "Expected all values to be finite");
+    let mut state = result.state;
+    expect_err_overflow_or_ok_with!(state.update(Float::MIN + 5.0), |_| {
+        assert!(state.rsi.is_finite(), "Expected all values to be finite");
     });
 }
 
