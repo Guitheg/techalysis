@@ -57,7 +57,7 @@ use crate::types::Float;
 /// - `signal`: A vector of [`Float`] representing the calculated signal line values.
 /// - `histogram`: A vector of [`Float`] representing the calculated histogram values.
 /// - `state`: A [`MacdState`], which can be used to calculate
-/// the next values incrementally.
+///   the next values incrementally.
 #[derive(Debug)]
 pub struct MacdResult {
     /// The calculated MACD line values.
@@ -262,11 +262,11 @@ pub fn macd(
 /// Output Arguments
 /// ---
 /// - `output_macd`: A mutable slice of [`Float`] where the calculated MACD
-/// values will be stored.
+///   values will be stored.
 /// - `output_signal`: A mutable slice of [`Float`] where the calculated signal
-/// line values will be stored.
+///   line values will be stored.
 /// - `output_histogram`: A mutable slice of [`Float`] where the calculated
-/// histogram values will be stored.
+///   histogram values will be stored.
 ///
 /// Returns
 /// ---

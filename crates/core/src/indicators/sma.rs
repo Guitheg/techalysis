@@ -54,7 +54,7 @@ use std::collections::VecDeque;
 /// ---
 /// - `values`: A vector of [`Float`] representing the calculated SMA values.
 /// - `state`: A [`SmaState`], which can be used to calculate
-/// the next values incrementally.
+///   the next values incrementally.
 #[derive(Debug)]
 pub struct SmaResult {
     /// The calculated SMA values.
@@ -76,11 +76,11 @@ pub struct SmaResult {
 ///
 /// **State values**
 /// - `last_window`: A deque containing the last `period` values used for
-/// the SMA calculation.
+///   the SMA calculation.
 ///
 /// **Parameters**
 /// - `period`: The period used for the SMA calculation, which determines
-/// how many values are averaged to compute the SMA.
+///   how many values are averaged to compute the SMA.
 #[derive(Debug, Clone)]
 pub struct SmaState {
     // Outputs
@@ -190,7 +190,7 @@ pub fn sma(data: &[Float], period: usize) -> Result<SmaResult, TechalysisError> 
 /// Output Arguments
 /// ---
 /// - `output`: A mutable slice of [`Float`] where the calculated SMA values
-/// will be stored.
+///   will be stored.
 ///
 /// Returns
 /// ---

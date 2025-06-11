@@ -55,7 +55,7 @@ use crate::types::Float;
 /// ---
 /// - `values`: A vector of [`Float`] representing the calculated T3 values.
 /// - `state`: A [`T3State`], which can be used to calculate
-/// the next values incrementally.
+///   the next values incrementally.
 #[derive(Debug)]
 pub struct T3Result {
     /// The calculated T3 values.
@@ -291,7 +291,7 @@ pub fn t3_into(
         )));
     }
 
-    if !volume_factor.is_finite() || volume_factor < 0.0 || volume_factor > 1.0 {
+    if !volume_factor.is_finite() || !(0.0..=1.0).contains(&volume_factor) {
         return Err(TechalysisError::BadParam(format!(
             "Volume factor must be between 0.0 and 1.0, got: {}",
             volume_factor
@@ -346,7 +346,7 @@ pub fn t3_into(
         alpha,
         ema_values: t3_ema_values,
         t3_coefficients,
-        volume_factor: volume_factor,
+        volume_factor,
     })
 }
 
@@ -514,6 +514,7 @@ fn c4_unchecked(volume_factor: Float) -> Float {
 }
 
 #[inline(always)]
+#[allow(clippy::too_many_arguments)]
 fn t3_from_coefficients_unchecked(
     ema3: Float,
     ema4: Float,

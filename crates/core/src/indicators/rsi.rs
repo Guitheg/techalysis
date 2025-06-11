@@ -53,7 +53,7 @@ use crate::types::Float;
 /// ---
 /// - `values`: A vector of [`Float`] representing the calculated RSI values.
 /// - `state`: A [`RsiState`], which can be used to calculate
-/// the next values incrementally.
+///   the next values incrementally.
 #[derive(Debug)]
 pub struct RsiResult {
     /// The calculated RSI values.

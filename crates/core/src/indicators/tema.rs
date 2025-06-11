@@ -58,7 +58,7 @@ use crate::types::Float;
 /// ---
 /// - `values`: A vector of [`Float`] representing the calculated TEMA values.
 /// - `state`: A [`TemaState`], which can be used to calculate
-/// the next values incrementally.
+///   the next values incrementally.
 #[derive(Debug)]
 pub struct TemaResult {
     /// The calculated TEMA values.
@@ -80,16 +80,16 @@ pub struct TemaResult {
 ///
 /// **State values**
 /// - `ema_1`: The last calculated Exponential Moving Average (EMA) value for
-/// the EMA.
+///   the EMA.
 /// - `ema_2`: The last calculated Exponential Moving Average (EMA) value for
-/// the EMA2.
+///   the EMA2.
 /// - `ema_3`: The last calculated Exponential Moving Average (EMA) value for
-/// the EMA3.
+///   the EMA3.
 ///
 /// **Parameters**
 /// - `period`: The period used for the TEMA calculation.
 /// - `alpha`: The alpha factor used in the TEMA calculation,
-/// which is traditionally calculated as `smoothing / (period + 1)`.
+///   which is traditionally calculated as `smoothing / (period + 1)`.
 #[derive(Debug, Clone, Copy)]
 pub struct TemaState {
     // Outputs
@@ -212,12 +212,12 @@ pub fn tema(
 /// - `data`: A slice of [`Float`] representing the input data.
 /// - `period`: The period for the TEMA calculation.
 /// - `alpha`: An optional alpha value for the TEMA calculation.
-/// Used by the inner EMA calculation.
+///   Used by the inner EMA calculation.
 ///
 /// Output Arguments
 /// ---
 /// - `output`: A mutable slice of [`Float`] where the calculated TEMA values
-/// will be stored.
+///   will be stored.
 ///
 /// Returns
 /// ---

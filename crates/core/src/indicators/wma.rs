@@ -54,7 +54,7 @@ use std::collections::VecDeque;
 /// ---
 /// - `values`: A vector of [`Float`] representing the calculated WMA values.
 /// - `state`: A [`WmaState`], which can be used to calculate
-/// the next values incrementally.
+///   the next values incrementally.
 #[derive(Debug)]
 pub struct WmaResult {
     /// The calculated WMA values.
@@ -78,11 +78,11 @@ pub struct WmaResult {
 /// - `period_sub`: The sumation to subtract from the period sum.
 /// - `period_sum`: The weighted sum of the previous window.
 /// - `last_window`: A deque containing the last `period` values used for
-/// the WMA calculation.
+///   the WMA calculation.
 ///
 /// **Parameters**
 /// - `period`: The period used for the WMA calculation, which determines
-/// how many values are averaged to compute the WMA.
+///   how many values are averaged to compute the WMA.
 #[derive(Debug, Clone)]
 pub struct WmaState {
     // Outputs

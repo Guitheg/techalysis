@@ -56,7 +56,7 @@ const DEFAULT_SMOOTHING: Float = 2.0;
 /// ---
 /// - `values`: A vector of [`Float`] representing the calculated EMA values.
 /// - `state`: A [`EmaState`], which can be used to calculate
-/// the next values incrementally.
+///   the next values incrementally.
 #[derive(Debug)]
 pub struct EmaResult {
     /// The calculated EMA values.
@@ -79,7 +79,7 @@ pub struct EmaResult {
 /// **Parameters**
 /// - `period`: The period used for the EMA calculation.
 /// - `alpha`: The alpha factor used in the EMA calculation.
-/// Traditionally, it is calculated as `smoothing / (period + 1)`.
+///   Traditionally, it is calculated as `smoothing / (period + 1)`.
 #[derive(Debug, Clone, Copy)]
 pub struct EmaState {
     // Outputs values
@@ -235,6 +235,7 @@ pub fn ema_into(
 /// ---
 /// - `period`: The period for which to calculate the alpha value.
 /// - `smoothing`: Optional smoothing factor, defaults to 2.0 if not provided.
+/// 
 /// Returns
 /// ---
 /// A `Result` containing the calculated alpha value as `Float`, or a

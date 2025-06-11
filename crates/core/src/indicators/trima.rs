@@ -54,7 +54,7 @@ use std::collections::VecDeque;
 /// ---
 /// - `values`: A vector of [`Float`] representing the calculated TRIMA values.
 /// - `state`: A [`TrimaState`], which can be used to calculate
-/// the next values incrementally.
+///   the next values incrementally.
 #[derive(Debug)]
 pub struct TrimaResult {
     /// The calculated TRIMA values.
@@ -77,16 +77,16 @@ pub struct TrimaResult {
 /// **State values**
 /// - `weighted_sum`: The weighted sum of the values in the current window.
 /// - `trailing_sum`: The sum of the first half of the values in
-/// the current window. It is used to optimize the calculation of the TRIMA.
+///   the current window. It is used to optimize the calculation of the TRIMA.
 /// - `heading_sum`: The sum of the second half of the values in the current window.
-/// It is used to optimize the calculation of the TRIMA.
+///   It is used to optimize the calculation of the TRIMA.
 /// - `last_window`: A deque containing the last `period` values used for
-/// the TRIMA calculation.
+///   the TRIMA calculation.
 ///
 /// **Parameters**
 /// - `inv_weight_sum`: The inverse of the sum of weights used in the TRIMA calculation.
 /// - `period`: The period used for the TRIMA calculation, which determines
-/// how many values are averaged to compute the TRIMA.
+///   how many values are averaged to compute the TRIMA.
 #[derive(Debug, Clone)]
 pub struct TrimaState {
     // Outputs

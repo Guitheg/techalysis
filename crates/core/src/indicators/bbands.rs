@@ -58,7 +58,7 @@ use std::collections::VecDeque;
 /// - `middle`: The middle Bollinger Band values (usually a moving average).
 /// - `lower`: The lower Bollinger Band values.
 /// - `state`: A [`BBandsState`], which can be used to calculate the next values
-/// incrementally.
+///   incrementally.
 #[derive(Debug)]
 pub struct BBandsResult {
     /// The upper Bollinger Band values.
@@ -91,9 +91,9 @@ pub struct BBandsResult {
 ///
 /// **Parameters**
 /// - `period`: The number of periods used to calculate the moving average and
-/// standard deviation.
+///   standard deviation.
 /// - `std_dev_mult`: The multipliers for the standard deviation used to calculate
-/// the upper and lower bands.
+///   the upper and lower bands.
 /// - `ma_type`: The type of moving average used (SMA or EMA).
 #[derive(Debug, Clone)]
 pub struct BBandsState {
@@ -146,7 +146,7 @@ pub struct DeviationMulipliers {
 /// ---
 /// - `sma`: The simple moving average value.
 /// - `ma_square`: The square of the moving average value, used for variance calculation.
-/// The moving average depends on the `ma_type` used in the Bollinger Bands calculation.
+///   The moving average depends on the `ma_type` used in the Bollinger Bands calculation.
 #[derive(Debug, Clone, Copy)]
 pub struct MovingAverageState {
     /// The simple moving average value.

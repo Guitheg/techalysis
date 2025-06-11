@@ -55,7 +55,7 @@ use crate::types::Float;
 /// ---
 /// - `values`: The calculated DEMA values.
 /// - `state`: A [`DemaState`], which can be used to calculate the next values
-/// incrementally.
+///   incrementally.
 #[derive(Debug)]
 pub struct DemaResult {
     /// The calculated DEMA values.
