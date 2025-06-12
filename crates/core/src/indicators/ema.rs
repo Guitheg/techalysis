@@ -264,7 +264,7 @@ pub fn period_to_alpha(period: usize, smoothing: Option<Float>) -> Result<Float,
 
 #[inline(always)]
 pub(crate) fn ema_next_unchecked(new_value: Float, prev_ema: Float, alpha: Float) -> Float {
-    (new_value - prev_ema) * alpha + prev_ema
+    new_value * alpha + prev_ema * (1.0 - alpha)
 }
 
 pub(crate) fn get_alpha_value(

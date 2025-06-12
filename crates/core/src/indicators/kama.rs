@@ -43,7 +43,6 @@
 use std::collections::VecDeque;
 
 use crate::errors::TechalysisError;
-use crate::indicators::ema::ema_next_unchecked;
 use crate::traits::State;
 use crate::types::Float;
 
@@ -335,15 +334,15 @@ fn init_kama_unchecked(
     let prev_kama = data[period - 1];
     let period_roc = (data[period] - data[0]).abs();
 
-    let er = if roc_sum < period_roc {
+    let mut sc = if roc_sum < period_roc {
         1.0
     } else {
         period_roc / roc_sum
-    };
-    let mut sc = er * SC_DELTA + SC_SLOW;
+    } * SC_DELTA
+        + SC_SLOW;
     sc *= sc;
 
-    Ok((ema_next_unchecked(data[period], prev_kama, sc), roc_sum))
+    Ok(((data[period] - prev_kama) * sc + prev_kama, roc_sum))
 }
 
 #[inline(always)]
@@ -355,14 +354,11 @@ fn kama_next_unchecked(
     roc_sum: Float,
     prev_kama: Float,
 ) -> (Float, Float) {
-    let roc1 = (new_value - prev_value).abs();
     let diff = (new_value - trailing_value).abs();
-    let roc_sum = roc_sum - trailing_roc + roc1;
-    let er = if roc_sum <= diff { 1.0 } else { diff / roc_sum };
-
-    let mut sc = er * SC_DELTA + SC_SLOW;
+    let roc_sum = roc_sum - trailing_roc + (new_value - prev_value).abs();
+    let mut sc = if roc_sum <= diff { 1.0 } else { diff / roc_sum } * SC_DELTA + SC_SLOW;
     sc *= sc;
-    (ema_next_unchecked(new_value, prev_kama, sc), roc_sum)
+    ((new_value - prev_kama) * sc + prev_kama, roc_sum)
 }
 
 #[cfg(test)]

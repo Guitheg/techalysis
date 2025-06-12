@@ -45,9 +45,7 @@ Built for developers and quants who need the performance of Rust with the ease o
   |                           | **tema** - Triple Exponential Moving Average                    | ✅        |
   |                           | **trima** - Triangular Moving Average                           | ✅        |
   |                           | **t3** - Tillson Triple Moving Average                          | ✅        |
-  |                           | **kama** - Kaufman Adaptive Moving Average                      | ⬜        |
-  |                           | **mama** - MESA Adaptive Moving Average                         | ⬜        |
-  |                           | **mavp** - Moving Average with Variable Period                  | ⬜        |
+  |                           | **kama** - Kaufman Adaptive Moving Average                      | ✅        |
   | **_Momentum_**            |||
   |                           | **macd** - Moving Average Convergence Divergence                | ✅        |
   |                           | **adx** - Average Directional Movement Index                    | ⬜        |
