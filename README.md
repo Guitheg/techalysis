@@ -36,7 +36,7 @@ Techalib matches TA-LIB in performance and, for specific indicators, achieves ev
 
 ![](benchmarks/graph/BenchResults_50k_13062025.png)
 
-![](benchmarks/graph/BenchResults_50k_13062025.png)
+![](benchmarks/graph/BenchResults_5M_13062025.png)
 
 ## 📊 Supported indicators
 
