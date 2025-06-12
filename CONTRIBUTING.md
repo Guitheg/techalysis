@@ -32,6 +32,16 @@
         cargo build
         cargo test
         ```
+    - Install `cargo-fuzz` for fuzz tests
+        ```
+        cargo install cargo-fuzz
+        ```
+    - Run fuzz test with
+        ```
+        bash tests/fuzz/run_target.sh <target_name>
+        # or
+        bash tests/fuzz/run_all.sh
+        ```
 
 3. Python Environment
 
