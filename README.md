@@ -2,130 +2,81 @@
 
 **Techalib** is a fast, reliable, and ergonomic technical analysis library written in Rust, with seamless Python bindings.
 
-Built for developers and quants who need the performance of Rust with the ease of use of Python.
+Inspired by TA-LIB, Techalib has been extensively tested against it to ensure accuracy and performance.
 
-## 🚀 Features
-
-- ⚡ **High performance**
-  Core engine written in Rust with optimized algorithms — at least as fast as TA-Lib
-
-- 🧠 **Ergonomic API**
-  Designed for Python developers with a clean and intuitive interface and well documented.
-
-- 🔒 **Safe and reliable**
-  Backed by a large test suite, consistency checks against TA-Lib and fuzz testing
-
-- 🧩 **Easy integration**
-  Use seamlessly in both Python and Rust projects
-
-- ⏱️ **Real-time updates**
-  Indicators support incremental computation via internal state objects and a next() method — ideal for streaming data or large datasets
-
-- 🐍 **Python friendly**
-  Pythonic API with rich return types using NamedTuples, and optional GIL unlocking for true multithreaded performance
-
-- 🖥️ **Multi-platform**
-  Supports macOS, Linux, and Windows
-
-- 📊 Supported Indicators
-  | **Category**              | **Function name - Name**                                        | **Status** |
-  | ----------------          | ---------------------------------------------                   | ---------- |
-  | **_Overlap_**             |||
-  |                           | **ichimoku** - Ichimoku kinkō hyō                               | ⬜        |
-  |                           | **bbands** - Bollinger Bands                                    | ✅        |
-  |                           | **sar** - Parabolic SAR                                         | ⬜        |
-  |                           | **sarext** - Parabolic SAR, Extended                            | ⬜        |
-  |                           | **ht_trend** - Hilbert Transform, Instantaneous Trendline       | ⬜        |
-  |                           | **midpoint** - MidPoint over period                             | ⬜        |
-  |                           | **midprice** - Midpoint Price over period                       | ⬜        |
-  | _Moving Average_          | **sma** - Simple Moving Average                                 | ✅        |
-  |                           | **ema** - Exponential Moving Average                            | ✅        |
-  |                           | **wma** - Weighted Moving Average                               | ✅        |
-  |                           | **dema** - Double Exponential Moving Average                    | ✅        |
-  |                           | **tema** - Triple Exponential Moving Average                    | ✅        |
-  |                           | **trima** - Triangular Moving Average                           | ✅        |
-  |                           | **t3** - Tillson Triple Moving Average                          | ✅        |
-  |                           | **kama** - Kaufman Adaptive Moving Average                      | ✅        |
-  | **_Momentum_**            |||
-  |                           | **macd** - Moving Average Convergence Divergence                | ✅        |
-  |                           | **adx** - Average Directional Movement Index                    | ⬜        |
-  |                           | **adxr** - Average Directional Movement Index Rating            | ⬜        |
-  |                           | **aroon** - Aroon                                               | ⬜        |
-  |                           | **bop** - Balance Of Power                                      | ⬜        |
-  |                           | **cci** - Commodity Channel Index                               | ⬜        |
-  |                           | **dx** - Directional Movement Index                             | ⬜        |
-  |                           | **minus_di** - Minus Directional Indicator                      | ⬜        |
-  |                           | **minus_dm** - Minus Directional Movement                       | ⬜        |
-  |                           | **plus_di** - Plus Directional Indicator                        | ⬜        |
-  |                           | **plus_dm** - Plus Directional Movement                         | ⬜        |
-  |                           | **roc** - Rate of change                                        | ⬜        |
-  |                           | **rocp** - Rate of change Percentage                            | ⬜        |
-  |                           | **rocr** - Rate of change ratio                                 | ⬜        |
-  |                           | **rocr100** - Rate of change ratio 100 scale                    | ⬜        |
-  |                           | **trix** - 1-day Rate-Of-Change (ROC) of a Triple Smooth EMA    | ⬜        |
-  |  _Oscillator_             | **rsi** - Relative Strength Index                               | ✅        |
-  |                           | **aroonosc** - Aroon Oscillator                                 | ⬜        |
-  |                           | **cmo** - Chande Momentum Oscillator                            | ⬜        |
-  |                           | **mfi** - Money Flow Index                                      | ⬜        |
-  |                           | **ppo** - Percentage Price Oscillator                           | ⬜        |
-  |                           | **stoch** - Stochastic                                          | ⬜        |
-  |                           | **stochf** - Stochastic Fast                                    | ⬜        |
-  |                           | **stochrsi** - Stochastic Relative Strength Index               | ⬜        |
-  |                           | **ultosc** - Ultimate Oscillator                                | ⬜        |
-  |                           | **willr** - Williams' %R                                        | ⬜        |
-  |                           | **apo** - Absolute Price Oscillator                             | ⬜        |
-  | **_Volume_**              |||
-  |                           | **ad** - Chaikin A/D Line                                       | ⬜        |
-  |                           | **adosc** - Chaikin A/D Oscillator                              | ⬜        |
-  |                           | **obv** - On Balance Volume                                     | ⬜        |
-  | **_Cycle_**               |||
-  |                           | _Work in progress..._                                           | ⬜        |
-  | **_Price Transform_**     |||
-  |                           | _Work in progress..._                                           | ⬜        |
-  | **_Volatility_**          |||
-  |                           | **atr** - Average True Range                                    | ⬜        |
-  |                           | **natr** - Normalized Average True Range                        | ⬜        |
-  |                           | **trange** - True Range                                         | ⬜        |
-  | **_Pattern Recognition_** |||
-  |                           | _Work in progress..._                                           | ⬜        |
-  | **_Statistic_**           |||
-  |                           | _Work in progress..._                                           | ⬜        |
+🚧 Techalib is in active development. More features, indicators, and improvements will come.
 
 ## 📦 Installation
 
-**Available soon on PyPI and Cargo**
+Rust
+---
+
+**Available soon on Cargo**
+
+Python
+---
+
+**Available soon on PyPI**
 
 ## 📚 Documentation
 
+Rust
+---
+
 **Available soon**
 
+Python
+---
 
-## For developers
+**Available soon**
 
-### Build with maturin
+## ⚡ Benchmarks
 
-```
-maturin develop --release
-```
+Techalib matches TA-LIB in performance and, for specific indicators, achieves even faster execution through algorithmic optimizations.
 
-### Fuzz requirements
+![](benchmarks/graph/BenchResults_50k_13062025.png)
 
-Install `cargo-fuzz` (more info [here](https://github.com/rust-fuzz/cargo-fuzz)):
+![](benchmarks/graph/BenchResults_5M_13062025.png)
 
-```
-cargo install cargo-fuzz
-```
+## 📊 Supported indicators
 
-### Pre-commit installation
+The number of supported indicators is set to increase.
 
-This project uses [pre-commit](https://pre-commit.com/) to enforce code quality checks. To set up the hooks, follow these steps:
+| **Category**              | **Function name - Name**                                        | **Status** |
+| ----------------          | ---------------------------------------------                   | ---------- |
+| **_Overlap_**             |||
+|                           | **bbands** - Bollinger Bands                                    | ✅        |
+|                           | **midpoint** - MidPoint over period                             | ⬜        |
+|                           | **midprice** - Midpoint Price over period                       | ⬜        |
+| _Moving Average_          | **sma** - Simple Moving Average                                 | ✅        |
+|                           | **ema** - Exponential Moving Average                            | ✅        |
+|                           | **wma** - Weighted Moving Average                               | ✅        |
+|                           | **dema** - Double Exponential Moving Average                    | ✅        |
+|                           | **tema** - Triple Exponential Moving Average                    | ✅        |
+|                           | **trima** - Triangular Moving Average                           | ✅        |
+|                           | **t3** - Tillson Triple Moving Average                          | ✅        |
+|                           | **kama** - Kaufman Adaptive Moving Average                      | ✅        |
+| **_Momentum_**            |||
+|                           | **macd** - Moving Average Convergence Divergence                | ✅        |
+|                           | **adx** - Average Directional Movement Index                    | ⬜        |
+|                           | **aroon** - Aroon                                               | ⬜        |
+|                           | **dx** - Directional Movement Index                             | ⬜        |
+|                           | **minus_di** - Minus Directional Indicator                      | ⬜        |
+|                           | **minus_dm** - Minus Directional Movement                       | ⬜        |
+|                           | **plus_di** - Plus Directional Indicator                        | ⬜        |
+|                           | **plus_dm** - Plus Directional Movement                         | ⬜        |
+|                           | **roc** - Rate of change                                        | ⬜        |
+|                           | **rocr** - Rate of change ratio                                 | ⬜        |
+|                           | **rocr100** - Rate of change ratio 100 scale                    | ⬜        |
+| _Oscillator_              | **rsi** - Relative Strength Index                               | ✅        |
+|                           | **aroonosc** - Aroon Oscillator                                 | ⬜        |
+| **_Volume_**              |||
+|                           | **ad** - Chaikin A/D Line                                       | ⬜        |
+| **_Volatility_**          |||
+|                           | **atr** - Average True Range                                    | ⬜        |
 
-1. Install `pre-commit` if you don't already have it:
- ```bash
- pip install pre-commit
- ```
+## 🤓 Contribution
 
-2. Install the hooks
- ```
- pre-commit install
- ```
+To contribute to the techalib project, first fork the repository and create a new branch from upstream/main using a proper naming convention (feat/, fix/, etc.). Set up your development environment by installing Python, Rust, and project dependencies, then build the project and run tests. If you're adding a new indicator, use the provided tools to generate boilerplate code and test data, and follow the inserted TODO comments. Follow the commit message guidelines and rebase your branch onto the latest changes from upstream/main. Finally, open a pull request with a clear description, allow edits by maintainers, and be ready to respond to review feedback.
+
+For a more detailed description please read this [guidelines](CONTRIBUTING.md) before submitting a pull request.
