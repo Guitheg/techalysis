@@ -301,7 +301,7 @@ pub fn t3_into(
         return Err(TechalysisError::InsufficientData);
     }
 
-    if !period <= 1 {
+    if period <= 1 {
         return Err(TechalysisError::BadParam(format!(
             "Period must be greater than 1, got: {}",
             period
