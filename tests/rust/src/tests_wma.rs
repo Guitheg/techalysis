@@ -6,8 +6,8 @@ use crate::{
     },
 };
 
-use techalysis::{
-    errors::TechalysisError,
+use techalib::{
+    errors::TechalibError,
     indicators::wma::{wma, WmaResult},
     traits::State,
     types::Float,
@@ -64,7 +64,7 @@ fn period_1_err() {
     let input = vec![0.0; 100];
     let result = wma(&input, 1);
     assert!(result.is_err());
-    assert!(matches!(result, Err(TechalysisError::BadParam(_))));
+    assert!(matches!(result, Err(TechalibError::BadParam(_))));
 }
 
 #[test]
@@ -72,7 +72,7 @@ fn empty_input_err() {
     let data: [Float; 0] = [];
     let result = wma(&data, 3);
     assert!(result.is_err());
-    assert!(matches!(result, Err(TechalysisError::InsufficientData)));
+    assert!(matches!(result, Err(TechalibError::InsufficientData)));
 }
 
 #[test]
@@ -80,7 +80,7 @@ fn unexpected_nan_err() {
     let input = vec![1.0, 2.0, Float::NAN, 4.0];
     let result = wma(&input, 3);
     assert!(result.is_err());
-    assert!(matches!(result, Err(TechalysisError::DataNonFinite(_))));
+    assert!(matches!(result, Err(TechalibError::DataNonFinite(_))));
 }
 
 #[test]
@@ -88,7 +88,7 @@ fn non_finite_err() {
     let input = vec![1.0, 2.0, Float::INFINITY, 4.0];
     let result = wma(&input, 3);
     assert!(result.is_err());
-    assert!(matches!(result, Err(TechalysisError::DataNonFinite(_))));
+    assert!(matches!(result, Err(TechalibError::DataNonFinite(_))));
 }
 
 #[test]

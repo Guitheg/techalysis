@@ -1,6 +1,6 @@
 use criterion::BenchmarkId;
 use rand::{rngs::StdRng, Rng, SeedableRng};
-use techalysis::{indicators::dema::dema, types::Float};
+use techalib::{indicators::dema::dema, types::Float};
 
 fn bench_dema(c: &mut criterion::Criterion) {
     let mut bench_group = c.benchmark_group("dema");

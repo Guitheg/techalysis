@@ -42,7 +42,7 @@
 
 use std::collections::VecDeque;
 
-use crate::errors::TechalysisError;
+use crate::errors::TechalibError;
 use crate::traits::State;
 use crate::types::Float;
 
@@ -117,26 +117,26 @@ impl State<Float> for KamaState {
     /// Input Arguments
     /// ---
     /// - `sample`: The new input to update the KAMA state
-    fn update(&mut self, sample: Float) -> Result<(), TechalysisError> {
+    fn update(&mut self, sample: Float) -> Result<(), TechalibError> {
         if !sample.is_finite() {
-            return Err(TechalysisError::DataNonFinite(format!(
-                "sample = {sample:?}",
-            )));
+            return Err(TechalibError::DataNonFinite(
+                format!("sample = {sample:?}",),
+            ));
         }
 
         if self.period <= 1 {
-            return Err(TechalysisError::BadParam(
+            return Err(TechalibError::BadParam(
                 "KAMA period must be greater than 1".to_string(),
             ));
         }
         if !self.kama.is_finite() {
-            return Err(TechalysisError::DataNonFinite(format!(
+            return Err(TechalibError::DataNonFinite(format!(
                 "kama = {kama:?}",
                 kama = self.kama
             )));
         }
         if self.last_window.len() != self.period {
-            return Err(TechalysisError::BadParam(format!(
+            return Err(TechalibError::BadParam(format!(
                 "KAMA state last_window length must be equal to period ({}), got: {}",
                 self.period,
                 self.last_window.len()
@@ -145,7 +145,7 @@ impl State<Float> for KamaState {
 
         for (idx, &value) in self.last_window.iter().enumerate() {
             if !value.is_finite() {
-                return Err(TechalysisError::DataNonFinite(format!(
+                return Err(TechalibError::DataNonFinite(format!(
                     "window[{idx}] = {value:?}"
                 )));
             }
@@ -153,10 +153,8 @@ impl State<Float> for KamaState {
 
         let mut window = self.last_window.clone();
 
-        let new_trailing_value = window
-            .pop_front()
-            .ok_or(TechalysisError::InsufficientData)?;
-        let prev_value = *window.back().ok_or(TechalysisError::InsufficientData)?;
+        let new_trailing_value = window.pop_front().ok_or(TechalibError::InsufficientData)?;
+        let prev_value = *window.back().ok_or(TechalibError::InsufficientData)?;
         window.push_back(sample);
 
         let (kama, roc_sum) = kama_next_unchecked(
@@ -169,7 +167,7 @@ impl State<Float> for KamaState {
         );
 
         if !kama.is_finite() {
-            return Err(TechalysisError::Overflow(0, kama));
+            return Err(TechalibError::Overflow(0, kama));
         }
         self.kama = kama;
         self.roc_sum = roc_sum;
@@ -202,8 +200,8 @@ pub fn lookback_from_period(period: usize) -> usize {
 /// Returns
 /// ---
 /// A `Result` containing a [`KamaResult`],
-/// or a [`TechalysisError`] error if the calculation fails.
-pub fn kama(data: &[Float], period: usize) -> Result<KamaResult, TechalysisError> {
+/// or a [`TechalibError`] error if the calculation fails.
+pub fn kama(data: &[Float], period: usize) -> Result<KamaResult, TechalibError> {
     let mut output = vec![0.0; data.len()];
 
     let kama_state = kama_into(data, period, output.as_mut_slice())?;
@@ -231,21 +229,21 @@ pub fn kama(data: &[Float], period: usize) -> Result<KamaResult, TechalysisError
 /// Returns
 /// ---
 /// A `Result` containing a [`KamaState`],
-/// or a [`TechalysisError`] error if the calculation fails.
+/// or a [`TechalibError`] error if the calculation fails.
 pub fn kama_into(
     data: &[Float],
     period: usize,
     output: &mut [Float],
-) -> Result<KamaState, TechalysisError> {
+) -> Result<KamaState, TechalibError> {
     let len = data.len();
     let lookback = lookback_from_period(period);
 
     if len <= lookback {
-        return Err(TechalysisError::InsufficientData);
+        return Err(TechalibError::InsufficientData);
     }
 
     if period <= 1 {
-        return Err(TechalysisError::BadParam(format!(
+        return Err(TechalibError::BadParam(format!(
             "Period must be greater than 1, got: {}",
             period
         )));
@@ -254,13 +252,13 @@ pub fn kama_into(
     let (kama, mut roc_sum) = init_kama_unchecked(data, lookback, output)?;
 
     if !kama.is_finite() {
-        return Err(TechalysisError::Overflow(lookback, output[lookback]));
+        return Err(TechalibError::Overflow(lookback, output[lookback]));
     }
     output[lookback] = kama;
 
     for idx in lookback + 1..len {
         if !data[idx].is_finite() {
-            return Err(TechalysisError::DataNonFinite(format!(
+            return Err(TechalibError::DataNonFinite(format!(
                 "data[{}] = {:?}",
                 idx, data[idx]
             )));
@@ -276,7 +274,7 @@ pub fn kama_into(
         );
 
         if !output[idx].is_finite() {
-            return Err(TechalysisError::Overflow(idx, output[idx]));
+            return Err(TechalibError::Overflow(idx, output[idx]));
         }
     }
 
@@ -294,18 +292,18 @@ fn init_kama_unchecked(
     data: &[Float],
     period: usize,
     output: &mut [Float],
-) -> Result<(Float, Float), TechalysisError> {
+) -> Result<(Float, Float), TechalibError> {
     let mut roc_sum = 0.0;
     output[0] = Float::NAN;
 
     if !data[0].is_finite() {
-        return Err(TechalysisError::DataNonFinite(format!(
+        return Err(TechalibError::DataNonFinite(format!(
             "data[{}] = {:?}",
             0, data[0]
         )));
     }
     if !data[1].is_finite() {
-        return Err(TechalysisError::DataNonFinite(format!(
+        return Err(TechalibError::DataNonFinite(format!(
             "data[{}] = {:?}",
             1, data[1]
         )));
@@ -316,7 +314,7 @@ fn init_kama_unchecked(
 
     for idx in 2..period {
         if !data[idx].is_finite() {
-            return Err(TechalysisError::DataNonFinite(format!(
+            return Err(TechalibError::DataNonFinite(format!(
                 "data[{}] = {:?}",
                 idx, data[idx]
             )));
@@ -325,7 +323,7 @@ fn init_kama_unchecked(
         output[idx] = Float::NAN;
     }
     if !data[period].is_finite() {
-        return Err(TechalysisError::DataNonFinite(format!(
+        return Err(TechalibError::DataNonFinite(format!(
             "data[{}] = {:?}",
             period, data[period]
         )));

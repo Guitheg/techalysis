@@ -4,8 +4,8 @@ use crate::helper::{
 };
 use crate::{assert_vec_float_eq, expect_err_overflow_or_ok_with};
 use proptest::{prop_assert, prop_assert_eq, proptest};
-use techalysis::{
-    errors::TechalysisError,
+use techalib::{
+    errors::TechalibError,
     indicators::rsi::{rsi, RsiResult},
     traits::State,
     types::Float,
@@ -56,7 +56,7 @@ fn empty_input() {
     let period = 14;
     let result = rsi(&data, period);
     assert!(result.is_err());
-    assert!(matches!(result, Err(TechalysisError::InsufficientData)));
+    assert!(matches!(result, Err(TechalibError::InsufficientData)));
 }
 
 #[test]
@@ -65,7 +65,7 @@ fn input_shorter_than_period() {
     let period = 5;
     let result = rsi(data, period);
     assert!(result.is_err());
-    assert!(matches!(result, Err(TechalysisError::InsufficientData)));
+    assert!(matches!(result, Err(TechalibError::InsufficientData)));
 }
 
 #[test]
@@ -74,7 +74,7 @@ fn input_length_equals_period() {
     let period = 3;
     let result = rsi(data, period);
     assert!(result.is_err());
-    assert!(matches!(result, Err(TechalysisError::InsufficientData)));
+    assert!(matches!(result, Err(TechalibError::InsufficientData)));
 }
 
 #[test]
@@ -83,7 +83,7 @@ fn period_1() {
     let period = 1;
     let result = rsi(data, period);
     assert!(result.is_err());
-    assert!(matches!(result, Err(TechalysisError::BadParam(_))));
+    assert!(matches!(result, Err(TechalibError::BadParam(_))));
 }
 
 #[test]
@@ -161,7 +161,7 @@ fn input_with_nans() {
     let period = 2;
     let result = rsi(data, period);
     assert!(result.is_err());
-    assert!(matches!(result, Err(TechalysisError::DataNonFinite(_))));
+    assert!(matches!(result, Err(TechalibError::DataNonFinite(_))));
 }
 
 #[test]
@@ -170,7 +170,7 @@ fn period_zero() {
     let period = 0;
     let result = rsi(data, period);
     assert!(result.is_err());
-    assert!(matches!(result, Err(TechalysisError::InsufficientData)));
+    assert!(matches!(result, Err(TechalibError::InsufficientData)));
 }
 
 #[test]
@@ -178,7 +178,7 @@ fn unexpected_nan_err() {
     let data = vec![1.0, 2.0, 3.0, Float::NAN, 5.0, 6.0, 7.0];
     let result = rsi(&data, 3);
     assert!(result.is_err());
-    assert!(matches!(result, Err(TechalysisError::DataNonFinite(_))));
+    assert!(matches!(result, Err(TechalibError::DataNonFinite(_))));
 }
 
 #[test]
@@ -186,7 +186,7 @@ fn non_finite_err() {
     let data = vec![1.0, 2.0, 3.0, Float::INFINITY, 5.0, 6.0, 7.0];
     let result = rsi(&data, 3);
     assert!(result.is_err());
-    assert!(matches!(result, Err(TechalysisError::DataNonFinite(_))));
+    assert!(matches!(result, Err(TechalibError::DataNonFinite(_))));
 }
 
 #[test]
@@ -231,9 +231,9 @@ proptest! {
         if data.len() <= period || period <= 1 {
             prop_assert!(result.is_err());
             if period <= 1 && data.len() > 1 {
-                prop_assert!(matches!(result, Err(TechalysisError::BadParam(_))));
+                prop_assert!(matches!(result, Err(TechalibError::BadParam(_))));
             } else {
-                prop_assert!(matches!(result, Err(TechalysisError::InsufficientData)));
+                prop_assert!(matches!(result, Err(TechalibError::InsufficientData)));
             }
         } else {
             let rsi_values = result.unwrap().values;

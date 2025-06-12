@@ -41,7 +41,7 @@
 //! Moving Average Convergence Divergence (MACD) implementation
 
 use super::ema::period_to_alpha;
-use crate::errors::TechalysisError;
+use crate::errors::TechalibError;
 use crate::indicators::ema::ema_next_unchecked;
 use crate::traits::State;
 use crate::types::Float;
@@ -122,9 +122,9 @@ impl State<Float> for MacdState {
     /// Input Arguments
     /// ---
     /// - `sample`: The new input to update the MACD state.
-    fn update(&mut self, sample: Float) -> Result<(), TechalysisError> {
+    fn update(&mut self, sample: Float) -> Result<(), TechalibError> {
         if self.fast_period >= self.slow_period {
-            return Err(TechalysisError::BadParam(
+            return Err(TechalibError::BadParam(
                 "Fast period must be less than slow period".to_string(),
             ));
         }
@@ -134,40 +134,40 @@ impl State<Float> for MacdState {
         let signal_alpha = period_to_alpha(self.signal_period, None)?;
 
         if !sample.is_finite() {
-            return Err(TechalysisError::DataNonFinite(format!(
-                "sample = {sample:?}",
-            )));
+            return Err(TechalibError::DataNonFinite(
+                format!("sample = {sample:?}",),
+            ));
         }
         if !self.fast_ema.is_finite() {
-            return Err(TechalysisError::DataNonFinite(format!(
+            return Err(TechalibError::DataNonFinite(format!(
                 "self.fast_ema = {:?}",
                 self.fast_ema
             )));
         }
         if !self.slow_ema.is_finite() {
-            return Err(TechalysisError::DataNonFinite(format!(
+            return Err(TechalibError::DataNonFinite(format!(
                 "self.slow_ema = {:?}",
                 self.slow_ema
             )));
         }
         if !self.signal.is_finite() {
-            return Err(TechalysisError::DataNonFinite(format!(
+            return Err(TechalibError::DataNonFinite(format!(
                 "self.signal = {:?}",
                 self.signal
             )));
         }
         if self.fast_period <= 1 {
-            return Err(TechalysisError::BadParam(
+            return Err(TechalibError::BadParam(
                 "Fast period must be greater than 1".to_string(),
             ));
         }
         if self.slow_period <= 1 {
-            return Err(TechalysisError::BadParam(
+            return Err(TechalibError::BadParam(
                 "Slow period must be greater than 1".to_string(),
             ));
         }
         if self.signal_period <= 1 {
-            return Err(TechalysisError::BadParam(
+            return Err(TechalibError::BadParam(
                 "Signal period must be greater than 1".to_string(),
             ));
         }
@@ -183,13 +183,13 @@ impl State<Float> for MacdState {
         );
 
         if !macd.is_finite() {
-            return Err(TechalysisError::Overflow(0, macd));
+            return Err(TechalibError::Overflow(0, macd));
         }
         if !signal.is_finite() {
-            return Err(TechalysisError::Overflow(0, signal));
+            return Err(TechalibError::Overflow(0, signal));
         }
         if !histogram.is_finite() {
-            return Err(TechalysisError::Overflow(0, histogram));
+            return Err(TechalibError::Overflow(0, histogram));
         }
 
         self.fast_ema = fast_ema;
@@ -216,13 +216,13 @@ impl State<Float> for MacdState {
 /// Returns
 /// ---
 /// A `Result` containing a [`MacdResult`],
-/// or a [`TechalysisError`] error if the calculation fails.
+/// or a [`TechalibError`] error if the calculation fails.
 pub fn macd(
     data: &[Float],
     fast_period: usize,
     slow_period: usize,
     signal_period: usize,
-) -> Result<MacdResult, TechalysisError> {
+) -> Result<MacdResult, TechalibError> {
     let size: usize = data.len();
 
     let mut output_macd = vec![0.0; size];
@@ -271,7 +271,7 @@ pub fn macd(
 /// Returns
 /// ---
 /// A `Result` containing a [`MacdState`],
-/// or a [`TechalysisError`] error if the calculation fails.
+/// or a [`TechalibError`] error if the calculation fails.
 pub fn macd_into(
     data: &[Float],
     fast_period: usize,
@@ -280,15 +280,15 @@ pub fn macd_into(
     output_macd: &mut [Float],
     output_signal: &mut [Float],
     output_histogram: &mut [Float],
-) -> Result<MacdState, TechalysisError> {
+) -> Result<MacdState, TechalibError> {
     if fast_period >= slow_period {
-        return Err(TechalysisError::BadParam(
+        return Err(TechalibError::BadParam(
             "Fast period must be less than slow period".to_string(),
         ));
     }
 
     if fast_period <= 1 || slow_period <= 1 || signal_period <= 1 {
-        return Err(TechalysisError::BadParam(
+        return Err(TechalibError::BadParam(
             "Periods must be greater than 1".to_string(),
         ));
     }
@@ -302,7 +302,7 @@ pub fn macd_into(
     let len: usize = data.len();
 
     if len < skip_period {
-        return Err(TechalysisError::InsufficientData);
+        return Err(TechalibError::InsufficientData);
     }
 
     output_macd[..macd_start_idx].fill(Float::NAN);
@@ -323,7 +323,7 @@ pub fn macd_into(
         .enumerate()
     {
         if !value.is_finite() {
-            return Err(TechalysisError::DataNonFinite(format!(
+            return Err(TechalibError::DataNonFinite(format!(
                 "data[{idx}] = {value:?}",
             )));
         }
@@ -337,7 +337,7 @@ pub fn macd_into(
         .enumerate()
     {
         if !value.is_finite() {
-            return Err(TechalysisError::DataNonFinite(format!(
+            return Err(TechalibError::DataNonFinite(format!(
                 "data[{idx}] = {value:?}"
             )));
         }
@@ -355,7 +355,7 @@ pub fn macd_into(
         .enumerate()
     {
         if !value.is_finite() {
-            return Err(TechalysisError::DataNonFinite(format!(
+            return Err(TechalibError::DataNonFinite(format!(
                 "data[{idx}] = {value:?}"
             )));
         }
@@ -374,7 +374,7 @@ pub fn macd_into(
     for idx in macd_start_idx + 1..len {
         let data = data[idx];
         if !data.is_finite() {
-            return Err(TechalysisError::DataNonFinite(format!(
+            return Err(TechalibError::DataNonFinite(format!(
                 "data[{idx}] = {data:?}"
             )));
         }
@@ -394,13 +394,13 @@ pub fn macd_into(
             signal_alpha,
         );
         if !output_macd[idx].is_finite() {
-            return Err(TechalysisError::Overflow(idx, output_macd[idx]));
+            return Err(TechalibError::Overflow(idx, output_macd[idx]));
         }
         if !output_signal[idx].is_finite() {
-            return Err(TechalysisError::Overflow(idx, output_signal[idx]));
+            return Err(TechalibError::Overflow(idx, output_signal[idx]));
         }
         if !output_histogram[idx].is_finite() {
-            return Err(TechalysisError::Overflow(idx, output_histogram[idx]));
+            return Err(TechalibError::Overflow(idx, output_histogram[idx]));
         }
     }
 

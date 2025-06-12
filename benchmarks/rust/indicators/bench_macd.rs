@@ -1,8 +1,8 @@
 use criterion::BenchmarkId;
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
-use techalysis::indicators::macd::macd;
-use techalysis::types::Float;
+use techalib::indicators::macd::macd;
+use techalib::types::Float;
 
 fn bench_macd(c: &mut criterion::Criterion) {
     let mut bench_group = c.benchmark_group("macd");

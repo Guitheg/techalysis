@@ -1,5 +1,5 @@
 use std::num::FpCategory;
-use techalysis::types::Float;
+use techalib::types::Float;
 
 pub fn approx_eq_float(a: Float, b: Float, eps_factor: Float) -> bool {
     let ulp_step = ulp_at(b);

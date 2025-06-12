@@ -40,7 +40,7 @@
 
 //! Weighted Moving Average (WMA) implementation
 
-use crate::errors::TechalysisError;
+use crate::errors::TechalibError;
 use crate::traits::State;
 use crate::types::Float;
 use std::collections::VecDeque;
@@ -109,25 +109,23 @@ impl State<Float> for WmaState {
     /// Input Arguments
     /// ---
     /// - `sample`: The new input to update the WMA state
-    fn update(&mut self, sample: Float) -> Result<(), TechalysisError> {
+    fn update(&mut self, sample: Float) -> Result<(), TechalibError> {
         if self.period <= 1 {
-            return Err(TechalysisError::BadParam(
+            return Err(TechalibError::BadParam(
                 "WMA period must be greater than 1".to_string(),
             ));
         }
         if !sample.is_finite() {
-            return Err(TechalysisError::DataNonFinite(format!(
-                "sample = {sample:?}"
-            )));
+            return Err(TechalibError::DataNonFinite(format!("sample = {sample:?}")));
         }
         if !self.wma.is_finite() {
-            return Err(TechalysisError::DataNonFinite(format!(
+            return Err(TechalibError::DataNonFinite(format!(
                 "self.wma = {:?}",
                 self.wma
             )));
         }
         if self.last_window.len() != self.period {
-            return Err(TechalysisError::BadParam(format!(
+            return Err(TechalibError::BadParam(format!(
                 "WMA state window length ({}) does not match period ({})",
                 self.last_window.len(),
                 self.period
@@ -136,7 +134,7 @@ impl State<Float> for WmaState {
 
         for (idx, &value) in self.last_window.iter().enumerate() {
             if !value.is_finite() {
-                return Err(TechalysisError::DataNonFinite(format!(
+                return Err(TechalibError::DataNonFinite(format!(
                     "window[{idx}] = {value:?}"
                 )));
             }
@@ -145,9 +143,7 @@ impl State<Float> for WmaState {
         let mut window = self.last_window.clone();
         let inv_weight_sum = inv_weight_sum_linear(self.period);
 
-        let old_value = window
-            .pop_front()
-            .ok_or(TechalysisError::InsufficientData)?;
+        let old_value = window.pop_front().ok_or(TechalibError::InsufficientData)?;
         window.push_back(sample);
 
         let (wma, new_period_sub, new_period_sum) = wma_next_unchecked(
@@ -160,7 +156,7 @@ impl State<Float> for WmaState {
         );
 
         if !wma.is_finite() {
-            return Err(TechalysisError::Overflow(0, wma));
+            return Err(TechalibError::Overflow(0, wma));
         }
 
         self.wma = wma;
@@ -184,8 +180,8 @@ impl State<Float> for WmaState {
 /// Returns
 /// ---
 /// A `Result` containing a [`WmaResult`],
-/// or a [`TechalysisError`] error if the calculation fails.
-pub fn wma(data: &[Float], period: usize) -> Result<WmaResult, TechalysisError> {
+/// or a [`TechalibError`] error if the calculation fails.
+pub fn wma(data: &[Float], period: usize) -> Result<WmaResult, TechalibError> {
     let len = data.len();
     let mut output = vec![0.0; len];
     let wma_state = wma_into(data, period, &mut output)?;
@@ -212,26 +208,26 @@ pub fn wma(data: &[Float], period: usize) -> Result<WmaResult, TechalysisError> 
 /// Returns
 /// ---
 /// A `Result` containing a [`WmaState`],
-/// or a [`TechalysisError`] error if the calculation fails.
+/// or a [`TechalibError`] error if the calculation fails.
 pub fn wma_into(
     data: &[Float],
     period: usize,
     output: &mut [Float],
-) -> Result<WmaState, TechalysisError> {
+) -> Result<WmaState, TechalibError> {
     let len = data.len();
     let inv_weight_sum = inv_weight_sum_linear(period);
     if period == 0 || period > len {
-        return Err(TechalysisError::InsufficientData);
+        return Err(TechalibError::InsufficientData);
     }
 
     if period == 1 {
-        return Err(TechalysisError::BadParam(
+        return Err(TechalibError::BadParam(
             "WMA period must be greater than 1".to_string(),
         ));
     }
 
     if output.len() < len {
-        return Err(TechalysisError::BadParam(
+        return Err(TechalibError::BadParam(
             "Output array must be at least as long as the input data array".to_string(),
         ));
     }
@@ -241,7 +237,7 @@ pub fn wma_into(
 
     for idx in period..len {
         if !data[idx].is_finite() {
-            return Err(TechalysisError::DataNonFinite(format!(
+            return Err(TechalibError::DataNonFinite(format!(
                 "data[{idx}] = {:?}",
                 data[idx]
             )));
@@ -255,7 +251,7 @@ pub fn wma_into(
             inv_weight_sum,
         );
         if !output[idx].is_finite() {
-            return Err(TechalysisError::Overflow(idx, output[idx]));
+            return Err(TechalibError::Overflow(idx, output[idx]));
         }
     }
     Ok(WmaState {
@@ -291,14 +287,14 @@ fn init_wma_unchecked(
     period: usize,
     inv_weight_sum: Float,
     output: &mut [Float],
-) -> Result<(Float, Float), TechalysisError> {
+) -> Result<(Float, Float), TechalibError> {
     let mut period_sub: Float = 0.0;
     let mut period_sum: Float = 0.0;
     for idx in 0..period {
         let weight = idx as Float;
         let value = &data[idx];
         if !value.is_finite() {
-            return Err(TechalysisError::DataNonFinite(format!(
+            return Err(TechalibError::DataNonFinite(format!(
                 "data_array[{idx}] = {value:?}"
             )));
         }
@@ -308,7 +304,7 @@ fn init_wma_unchecked(
     }
     output[period - 1] = (period_sum + period_sub) * inv_weight_sum;
     if !output[period - 1].is_finite() {
-        return Err(TechalysisError::Overflow(period - 1, output[period - 1]));
+        return Err(TechalibError::Overflow(period - 1, output[period - 1]));
     }
     Ok((period_sub, period_sum))
 }

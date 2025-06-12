@@ -40,7 +40,7 @@
 
 //! Triangular Moving Average (TRIMA) implementation
 
-use crate::errors::TechalysisError;
+use crate::errors::TechalibError;
 use crate::traits::State;
 use crate::types::Float;
 use std::collections::VecDeque;
@@ -119,32 +119,30 @@ impl State<Float> for TrimaState {
     /// Input Arguments
     /// ---
     /// - `sample`: The new input to update the TRIMA state
-    fn update(&mut self, sample: Float) -> Result<(), TechalysisError> {
+    fn update(&mut self, sample: Float) -> Result<(), TechalibError> {
         if self.period <= 1 {
-            return Err(TechalysisError::BadParam(
+            return Err(TechalibError::BadParam(
                 "TRIMA period must be greater than 1".to_string(),
             ));
         }
         if !sample.is_finite() {
-            return Err(TechalysisError::DataNonFinite(format!(
-                "sample = {sample:?}"
-            )));
+            return Err(TechalibError::DataNonFinite(format!("sample = {sample:?}")));
         }
         if !self.trima.is_finite() {
-            return Err(TechalysisError::DataNonFinite(format!(
+            return Err(TechalibError::DataNonFinite(format!(
                 "prev_trima = {:?}",
                 self.trima
             )));
         }
         if self.last_window.len() != self.period {
-            return Err(TechalysisError::BadParam(
+            return Err(TechalibError::BadParam(
                 "Window length must match the TRIMA period".to_string(),
             ));
         }
 
         for (idx, &value) in self.last_window.iter().enumerate() {
             if !value.is_finite() {
-                return Err(TechalysisError::DataNonFinite(format!(
+                return Err(TechalibError::DataNonFinite(format!(
                     "window[{idx}] = {value:?}"
                 )));
             }
@@ -153,9 +151,7 @@ impl State<Float> for TrimaState {
 
         let mut window = self.last_window.clone();
 
-        let old_value = window
-            .pop_front()
-            .ok_or(TechalysisError::InsufficientData)?;
+        let old_value = window.pop_front().ok_or(TechalibError::InsufficientData)?;
         window.push_back(sample);
         let vec = Vec::from(window.clone());
         let middle_idx = get_middle_idx(self.period);
@@ -184,7 +180,7 @@ impl State<Float> for TrimaState {
         };
 
         if !trima.is_finite() {
-            return Err(TechalysisError::Overflow(0, trima));
+            return Err(TechalibError::Overflow(0, trima));
         }
 
         self.trima = trima;
@@ -208,8 +204,8 @@ impl State<Float> for TrimaState {
 /// Returns
 /// ---
 /// A `Result` containing a [`TrimaResult`],
-/// or a [`TechalysisError`] error if the calculation fails.
-pub fn trima(data: &[Float], period: usize) -> Result<TrimaResult, TechalysisError> {
+/// or a [`TechalibError`] error if the calculation fails.
+pub fn trima(data: &[Float], period: usize) -> Result<TrimaResult, TechalibError> {
     let len = data.len();
     let mut output = vec![0.0; len];
     let trima_state = trima_into(data, period, &mut output)?;
@@ -236,26 +232,26 @@ pub fn trima(data: &[Float], period: usize) -> Result<TrimaResult, TechalysisErr
 /// Returns
 /// ---
 /// A `Result` containing a [`TrimaState`],
-/// or a [`TechalysisError`] error if the calculation fails.
+/// or a [`TechalibError`] error if the calculation fails.
 pub fn trima_into(
     data: &[Float],
     period: usize,
     output: &mut [Float],
-) -> Result<TrimaState, TechalysisError> {
+) -> Result<TrimaState, TechalibError> {
     let len = data.len();
     let is_odd = period % 2 != 0;
     if period == 0 || period > len {
-        return Err(TechalysisError::InsufficientData);
+        return Err(TechalibError::InsufficientData);
     }
 
     if period == 1 {
-        return Err(TechalysisError::BadParam(
+        return Err(TechalibError::BadParam(
             "TRIMA period must be greater than 1".to_string(),
         ));
     }
 
     if output.len() < len {
-        return Err(TechalysisError::BadParam(
+        return Err(TechalibError::BadParam(
             "Output array must be at least as long as the input data array".to_string(),
         ));
     }
@@ -265,14 +261,14 @@ pub fn trima_into(
 
     output[period - 1] = trima;
     if !output[period - 1].is_finite() {
-        return Err(TechalysisError::Overflow(period - 1, output[period - 1]));
+        return Err(TechalibError::Overflow(period - 1, output[period - 1]));
     }
     middle_idx += 1;
 
     if is_odd {
         for idx in period..len {
             if !data[idx].is_finite() {
-                return Err(TechalysisError::DataNonFinite(format!(
+                return Err(TechalibError::DataNonFinite(format!(
                     "data[{idx}] = {:?}",
                     data[idx]
                 )));
@@ -287,14 +283,14 @@ pub fn trima_into(
                 inv_weight_sum,
             );
             if !output[idx].is_finite() {
-                return Err(TechalysisError::Overflow(idx, output[idx]));
+                return Err(TechalibError::Overflow(idx, output[idx]));
             }
             middle_idx += 1;
         }
     } else {
         for idx in period..len {
             if !data[idx].is_finite() {
-                return Err(TechalysisError::DataNonFinite(format!(
+                return Err(TechalibError::DataNonFinite(format!(
                     "data[{idx}] = {:?}",
                     data[idx]
                 )));
@@ -309,7 +305,7 @@ pub fn trima_into(
                 inv_weight_sum,
             );
             if !output[idx].is_finite() {
-                return Err(TechalysisError::Overflow(idx, output[idx]));
+                return Err(TechalibError::Overflow(idx, output[idx]));
             }
             middle_idx += 1;
         }
@@ -373,7 +369,7 @@ fn init_trima_unchecked(
     data: &[Float],
     period: usize,
     output: &mut [Float],
-) -> Result<(Float, Float, Float, Float, Float, usize), TechalysisError> {
+) -> Result<(Float, Float, Float, Float, Float, usize), TechalibError> {
     let middle_idx = get_middle_idx(period);
     let mut trailing_sum: Float = 0.0;
     let mut heading_sum: Float = 0.0;
@@ -383,7 +379,7 @@ fn init_trima_unchecked(
         let weight = (idx + 1) as Float;
         let value = &data[idx];
         if !value.is_finite() {
-            return Err(TechalysisError::DataNonFinite(format!(
+            return Err(TechalibError::DataNonFinite(format!(
                 "data_array[{idx}] = {value:?}"
             )));
         }
@@ -395,7 +391,7 @@ fn init_trima_unchecked(
         let weight = (local_idx + 1) as Float;
         let value = &data[idx];
         if !value.is_finite() {
-            return Err(TechalysisError::DataNonFinite(format!(
+            return Err(TechalibError::DataNonFinite(format!(
                 "data_array[{idx}] = {value:?}"
             )));
         }
@@ -414,9 +410,9 @@ fn init_trima_unchecked(
     ))
 }
 
-fn trima_inv_weight_sum(period: usize) -> Result<Float, TechalysisError> {
+fn trima_inv_weight_sum(period: usize) -> Result<Float, TechalibError> {
     if period <= 1 {
-        return Err(TechalysisError::BadParam(
+        return Err(TechalibError::BadParam(
             "TRIMA period must be greater than 1".to_string(),
         ));
     }

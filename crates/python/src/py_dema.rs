@@ -35,9 +35,9 @@
 
 use numpy::{IntoPyArray, PyArray1, PyArrayMethods, PyReadonlyArray1, PyUntypedArrayMethods};
 use pyo3::{exceptions::PyValueError, pyclass, pyfunction, pymethods, Py, PyResult, Python};
-use techalysis::indicators::dema::{dema_into, DemaState};
-use techalysis::traits::State;
-use techalysis::types::Float;
+use techalib::indicators::dema::{dema_into, DemaState};
+use techalib::traits::State;
+use techalib::types::Float;
 
 #[pyclass(name = "DemaState")]
 #[derive(Debug, Clone)]

@@ -36,9 +36,9 @@
 use numpy::{IntoPyArray, PyArray1, PyArrayMethods, PyReadonlyArray1, PyUntypedArrayMethods};
 use pyo3::pymethods;
 use pyo3::{exceptions::PyValueError, pyclass, pyfunction, Py, PyResult, Python};
-use techalysis::indicators::trima::{trima_into, TrimaState};
-use techalysis::traits::State;
-use techalysis::types::Float;
+use techalib::indicators::trima::{trima_into, TrimaState};
+use techalib::traits::State;
+use techalib::types::Float;
 
 #[pyclass(name = "TrimaState")]
 #[derive(Debug, Clone)]

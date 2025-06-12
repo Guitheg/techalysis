@@ -1,8 +1,8 @@
 use criterion::BenchmarkId;
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
-use techalysis::indicators::wma::wma;
-use techalysis::types::Float;
+use techalib::indicators::wma::wma;
+use techalib::types::Float;
 
 fn bench_wma(c: &mut criterion::Criterion) {
     let mut bench_group = c.benchmark_group("wma");

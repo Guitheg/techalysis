@@ -1,8 +1,8 @@
 use criterion::BenchmarkId;
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
-use techalysis::indicators::trima::trima;
-use techalysis::types::Float;
+use techalib::indicators::trima::trima;
+use techalib::types::Float;
 
 fn bench_trima(c: &mut criterion::Criterion) {
     let mut bench_group = c.benchmark_group("trima");

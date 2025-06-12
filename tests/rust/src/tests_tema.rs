@@ -4,8 +4,8 @@ use crate::helper::{
 };
 
 use crate::expect_err_overflow_or_ok_with;
-use techalysis::{
-    errors::TechalysisError,
+use techalib::{
+    errors::TechalibError,
     indicators::tema::{tema, tema_skip_period_unchecked, TemaResult},
     traits::State,
     types::Float,
@@ -94,7 +94,7 @@ fn unexpected_nan_err() {
     let period = 3;
     let result = tema(&data, period, None);
     assert!(result.is_err());
-    assert!(matches!(result, Err(TechalysisError::DataNonFinite(_))));
+    assert!(matches!(result, Err(TechalibError::DataNonFinite(_))));
 }
 
 #[test]
@@ -120,7 +120,7 @@ fn non_finite_err() {
         "Expected an error for non-finite data, got: {:?}",
         result
     );
-    assert!(matches!(result, Err(TechalysisError::DataNonFinite(_))));
+    assert!(matches!(result, Err(TechalibError::DataNonFinite(_))));
 }
 
 #[test]
@@ -129,7 +129,7 @@ fn empty_input_err() {
     let period = 14;
     let result = tema(&data, period, None);
     assert!(result.is_err());
-    assert!(matches!(result, Err(TechalysisError::InsufficientData)));
+    assert!(matches!(result, Err(TechalibError::InsufficientData)));
 }
 
 #[test]
@@ -142,7 +142,7 @@ fn large_period_exceeding_data_length() {
         "Expected an error for period exceeding data length, got: {:?}",
         result
     );
-    assert!(matches!(result, Err(TechalysisError::InsufficientData)));
+    assert!(matches!(result, Err(TechalibError::InsufficientData)));
 }
 
 #[test]

@@ -40,7 +40,7 @@
 
 //! Triple Exponential Moving Average (TEMA) implementation
 
-use crate::errors::TechalysisError;
+use crate::errors::TechalibError;
 use crate::indicators::dema::{
     dema_next_unchecked, dema_skip_period_unchecked, init_dema_unchecked,
 };
@@ -118,42 +118,42 @@ impl State<Float> for TemaState {
     /// Input Arguments
     /// ---
     /// - `sample`: The new input to update the TEMA state
-    fn update(&mut self, sample: Float) -> Result<(), TechalysisError> {
+    fn update(&mut self, sample: Float) -> Result<(), TechalibError> {
         if self.period <= 1 {
-            return Err(TechalysisError::BadParam(
+            return Err(TechalibError::BadParam(
                 "Period must be greater than 1".to_string(),
             ));
         }
 
         if !sample.is_finite() {
-            return Err(TechalysisError::DataNonFinite(format!(
-                "sample = {sample:?}",
-            )));
+            return Err(TechalibError::DataNonFinite(
+                format!("sample = {sample:?}",),
+            ));
         }
 
         if !self.ema_1.is_finite() {
-            return Err(TechalysisError::DataNonFinite(format!(
+            return Err(TechalibError::DataNonFinite(format!(
                 "self.ema_1 = {:?}",
                 self.ema_1
             )));
         }
 
         if !self.ema_2.is_finite() {
-            return Err(TechalysisError::DataNonFinite(format!(
+            return Err(TechalibError::DataNonFinite(format!(
                 "self.ema_2 = {:?}",
                 self.ema_2
             )));
         }
 
         if !self.ema_3.is_finite() {
-            return Err(TechalysisError::DataNonFinite(format!(
+            return Err(TechalibError::DataNonFinite(format!(
                 "self.ema_3 = {:?}",
                 self.ema_3
             )));
         }
 
         if !self.alpha.is_finite() {
-            return Err(TechalysisError::BadParam(format!(
+            return Err(TechalibError::BadParam(format!(
                 "self.alpha = {:?}",
                 self.alpha
             )));
@@ -163,7 +163,7 @@ impl State<Float> for TemaState {
             tema_next_unchecked(sample, self.ema_1, self.ema_2, self.ema_3, self.alpha);
 
         if !tema.is_finite() {
-            return Err(TechalysisError::Overflow(0, tema));
+            return Err(TechalibError::Overflow(0, tema));
         }
 
         self.tema = tema;
@@ -186,12 +186,12 @@ impl State<Float> for TemaState {
 /// Returns
 /// ---
 /// A `Result` containing a [`TemaResult`],
-/// or a [`TechalysisError`] error if the calculation fails.
+/// or a [`TechalibError`] error if the calculation fails.
 pub fn tema(
     data: &[Float],
     period: usize,
     alpha: Option<Float>,
-) -> Result<TemaResult, TechalysisError> {
+) -> Result<TemaResult, TechalibError> {
     let mut output = vec![0.0; data.len()];
 
     let tema_state = tema_into(data, period, alpha, &mut output)?;
@@ -222,23 +222,23 @@ pub fn tema(
 /// Returns
 /// ---
 /// A `Result` containing a [`TemaState`],
-/// or a [`TechalysisError`] error if the calculation fails.
+/// or a [`TechalibError`] error if the calculation fails.
 pub fn tema_into(
     data: &[Float],
     period: usize,
     alpha: Option<Float>,
     output: &mut [Float],
-) -> Result<TemaState, TechalysisError> {
+) -> Result<TemaState, TechalibError> {
     let len = data.len();
     let inv_period = 1.0 / period as Float;
     let skip_period = tema_skip_period_unchecked(period);
 
     if period == 0 || len < skip_period + 1 {
-        return Err(TechalysisError::InsufficientData);
+        return Err(TechalibError::InsufficientData);
     }
 
     if period <= 1 {
-        return Err(TechalysisError::BadParam(
+        return Err(TechalibError::BadParam(
             "EMA period must be greater than 1".to_string(),
         ));
     }
@@ -248,12 +248,12 @@ pub fn tema_into(
         init_tema_unchecked(data, period, inv_period, skip_period, alpha, output)?;
     output[skip_period] = output_value;
     if !output[skip_period].is_finite() {
-        return Err(TechalysisError::Overflow(skip_period, output[skip_period]));
+        return Err(TechalibError::Overflow(skip_period, output[skip_period]));
     }
 
     for idx in skip_period + 1..len {
         if !data[idx].is_finite() {
-            return Err(TechalysisError::DataNonFinite(format!(
+            return Err(TechalibError::DataNonFinite(format!(
                 "data[{idx}] = {:?}",
                 data[idx]
             )));
@@ -263,7 +263,7 @@ pub fn tema_into(
             tema_next_unchecked(data[idx], ema_1, ema_2, ema_3, alpha);
 
         if !output[idx].is_finite() {
-            return Err(TechalysisError::Overflow(idx, output[idx]));
+            return Err(TechalibError::Overflow(idx, output[idx]));
         }
     }
 
@@ -299,7 +299,7 @@ pub(crate) fn init_tema_unchecked(
     skip_period: usize,
     alpha: Float,
     output: &mut [Float],
-) -> Result<(Float, Float, Float, Float), TechalysisError> {
+) -> Result<(Float, Float, Float, Float), TechalibError> {
     let dema_skip_period = dema_skip_period_unchecked(period);
     let (_, mut ema_1, mut ema_2) =
         init_dema_unchecked(data, period, inv_period, dema_skip_period, alpha, output)?;
@@ -308,7 +308,7 @@ pub(crate) fn init_tema_unchecked(
     let mut sum_ema_3 = ema_2;
     for idx in dema_skip_period + 1..skip_period {
         if !data[idx].is_finite() {
-            return Err(TechalysisError::DataNonFinite(format!(
+            return Err(TechalibError::DataNonFinite(format!(
                 "data[{idx}] = {:?}",
                 data[idx]
             )));

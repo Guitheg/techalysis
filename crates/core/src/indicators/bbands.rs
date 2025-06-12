@@ -40,7 +40,7 @@
 
 //! Bollinger Bands (BBANDS) implementation
 
-use crate::errors::TechalysisError;
+use crate::errors::TechalibError;
 use crate::indicators::ema::{ema_next_unchecked, period_to_alpha};
 use crate::indicators::sma::sma_next_unchecked;
 use crate::traits::State;
@@ -181,61 +181,59 @@ impl State<Float> for BBandsState {
     /// Input Arguments
     /// ---
     /// - `sample`: The new input value to update the Bollinger Bands state. Generally, it is the closing price.
-    fn update(&mut self, sample: Float) -> Result<(), TechalysisError> {
+    fn update(&mut self, sample: Float) -> Result<(), TechalibError> {
         if self.period <= 1 {
-            return Err(TechalysisError::BadParam(
+            return Err(TechalibError::BadParam(
                 "SMA period must be greater than 1".to_string(),
             ));
         }
         if !sample.is_finite() {
-            return Err(TechalysisError::DataNonFinite(format!(
-                "sample = {sample:?}"
-            )));
+            return Err(TechalibError::DataNonFinite(format!("sample = {sample:?}")));
         }
         if self.std_dev_mult.up <= 0.0 || self.std_dev_mult.down <= 0.0 {
-            return Err(TechalysisError::BadParam(
+            return Err(TechalibError::BadParam(
                 "Standard deviations must be greater than 0".to_string(),
             ));
         }
         if !self.moving_averages.sma.is_finite() {
-            return Err(TechalysisError::DataNonFinite(format!(
+            return Err(TechalibError::DataNonFinite(format!(
                 "self.moving_averages.sma = {:?}",
                 self.moving_averages.sma
             )));
         }
         if !self.middle.is_finite() {
-            return Err(TechalysisError::DataNonFinite(format!(
+            return Err(TechalibError::DataNonFinite(format!(
                 "self.middle = {:?}",
                 self.middle
             )));
         }
         if !self.moving_averages.ma_square.is_finite() {
-            return Err(TechalysisError::DataNonFinite(format!(
+            return Err(TechalibError::DataNonFinite(format!(
                 "self.moving_averages.ma_square = {:?}",
                 self.moving_averages.ma_square
             )));
         }
         if !self.std_dev_mult.up.is_finite() {
-            return Err(TechalysisError::DataNonFinite(format!(
+            return Err(TechalibError::DataNonFinite(format!(
                 "self.std_dev_mult.up = {:?}",
                 self.std_dev_mult.up
             )));
         }
         if !self.std_dev_mult.down.is_finite() {
-            return Err(TechalysisError::DataNonFinite(format!(
+            return Err(TechalibError::DataNonFinite(format!(
                 "self.std_dev_mult.down = {:?}",
                 self.std_dev_mult.down
             )));
         }
         if self.last_window.len() != self.period {
-            return Err(TechalysisError::BadParam(
+            return Err(TechalibError::BadParam(
                 "Window length must match the SMA period".to_string(),
             ));
         }
 
         for (idx, &value) in self.last_window.iter().enumerate() {
             if !value.is_finite() {
-                return Err(TechalysisError::DataNonFinite(format!(
+                return Err(TechalibError::DataNonFinite(format!(
                     "window[{idx}] = {value:?}"
                 )));
             }
@@ -243,9 +241,7 @@ impl State<Float> for BBandsState {
 
         let mut window = self.last_window.clone();
 
-        let old_value = window
-            .pop_front()
-            .ok_or(TechalysisError::InsufficientData)?;
+        let old_value = window.pop_front().ok_or(TechalibError::InsufficientData)?;
         window.push_back(sample);
 
         let (upper, middle, lower, ma_sq, sma) = match self.ma_type {
@@ -276,13 +272,13 @@ impl State<Float> for BBandsState {
         };
 
         if !upper.is_finite() {
-            return Err(TechalysisError::Overflow(0, upper));
+            return Err(TechalibError::Overflow(0, upper));
         }
         if !middle.is_finite() {
-            return Err(TechalysisError::Overflow(0, middle));
+            return Err(TechalibError::Overflow(0, middle));
         }
         if !lower.is_finite() {
-            return Err(TechalysisError::Overflow(0, lower));
+            return Err(TechalibError::Overflow(0, lower));
         }
 
         self.upper = upper;
@@ -313,7 +309,7 @@ pub fn bbands(
     period: usize,
     std_dev_mul: DeviationMulipliers,
     ma_type: BBandsMA,
-) -> Result<BBandsResult, TechalysisError> {
+) -> Result<BBandsResult, TechalibError> {
     let mut output_upper = vec![0.0; data.len()];
     let mut output_middle = vec![0.0; data.len()];
     let mut output_lower = vec![0.0; data.len()];
@@ -362,27 +358,27 @@ pub fn bbands_into(
     output_upper: &mut [Float],
     output_middle: &mut [Float],
     output_lower: &mut [Float],
-) -> Result<BBandsState, TechalysisError> {
+) -> Result<BBandsState, TechalibError> {
     let len = data.len();
     let inv_period = 1.0 / (period as Float);
     if period > len {
-        return Err(TechalysisError::InsufficientData);
+        return Err(TechalibError::InsufficientData);
     }
 
     if period <= 1 {
-        return Err(TechalysisError::BadParam(
+        return Err(TechalibError::BadParam(
             "SMA period must be greater than 1".to_string(),
         ));
     }
 
     if std_dev_mul.up <= 0.0 || std_dev_mul.down <= 0.0 {
-        return Err(TechalysisError::BadParam(
+        return Err(TechalibError::BadParam(
             "Standard deviations must be greater than 0".to_string(),
         ));
     }
 
     if output_upper.len() != len || output_middle.len() != len || output_lower.len() != len {
-        return Err(TechalysisError::BadParam(
+        return Err(TechalibError::BadParam(
             "Output arrays must have the same length as input data".to_string(),
         ));
     }
@@ -405,7 +401,7 @@ pub fn bbands_into(
         BBandsMA::SMA => {
             for idx in period..len {
                 if !data[idx].is_finite() {
-                    return Err(TechalysisError::DataNonFinite(format!(
+                    return Err(TechalibError::DataNonFinite(format!(
                         "data[{idx}] = {:?}",
                         data[idx]
                     )));
@@ -434,7 +430,7 @@ pub fn bbands_into(
             };
             for idx in period..len {
                 if !data[idx].is_finite() {
-                    return Err(TechalysisError::DataNonFinite(format!(
+                    return Err(TechalibError::DataNonFinite(format!(
                         "data[{idx}] = {:?}",
                         data[idx]
                     )));
@@ -455,13 +451,13 @@ pub fn bbands_into(
                     inv_period,
                 );
                 if !output_upper[idx].is_finite() {
-                    return Err(TechalysisError::Overflow(idx, output_upper[idx]));
+                    return Err(TechalibError::Overflow(idx, output_upper[idx]));
                 }
                 if !output_middle[idx].is_finite() {
-                    return Err(TechalysisError::Overflow(idx, output_middle[idx]));
+                    return Err(TechalibError::Overflow(idx, output_middle[idx]));
                 }
                 if !output_lower[idx].is_finite() {
-                    return Err(TechalysisError::Overflow(idx, output_lower[idx]));
+                    return Err(TechalibError::Overflow(idx, output_lower[idx]));
                 }
             }
         }
@@ -542,12 +538,12 @@ fn init_state_unchecked(
     output_upper: &mut [Float],
     output_middle: &mut [Float],
     output_lower: &mut [Float],
-) -> Result<Float, TechalysisError> {
+) -> Result<Float, TechalibError> {
     let (mut sum, mut sum_sq) = (0.0, 0.0);
     for idx in 0..period {
         let value = &data[idx];
         if !value.is_finite() {
-            return Err(TechalysisError::DataNonFinite(format!(
+            return Err(TechalibError::DataNonFinite(format!(
                 "data[{idx}] = {:?}",
                 value
             )));
@@ -569,19 +565,19 @@ fn init_state_unchecked(
         std.down,
     );
     if !output_middle[period - 1].is_finite() {
-        return Err(TechalysisError::Overflow(
+        return Err(TechalibError::Overflow(
             period - 1,
             output_middle[period - 1],
         ));
     }
     if !output_upper[period - 1].is_finite() {
-        return Err(TechalysisError::Overflow(
+        return Err(TechalibError::Overflow(
             period - 1,
             output_upper[period - 1],
         ));
     }
     if !output_lower[period - 1].is_finite() {
-        return Err(TechalysisError::Overflow(
+        return Err(TechalibError::Overflow(
             period - 1,
             output_lower[period - 1],
         ));

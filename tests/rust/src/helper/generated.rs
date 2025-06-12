@@ -1,6 +1,6 @@
 use std::{collections::HashMap, fs::File, path::Path};
 
-use techalysis::types::Float;
+use techalib::types::Float;
 
 use csv::ReaderBuilder;
 

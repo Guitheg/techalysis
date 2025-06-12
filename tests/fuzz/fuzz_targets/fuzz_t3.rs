@@ -1,7 +1,7 @@
 #![no_main]
 
 use libfuzzer_sys::fuzz_target;
-use techalysis::{indicators::t3::t3, types::Float};
+use techalib::{indicators::t3::t3, types::Float};
 
 fuzz_target!(|data: (Vec<Float>, u8, Float, Option<Float>)| {
     let (input, period, vfactor, alpha) = data;

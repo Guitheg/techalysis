@@ -1,8 +1,8 @@
 #![no_main]
 
 use libfuzzer_sys::fuzz_target;
-use techalysis::indicators::ema::ema;
-use techalysis::types::Float;
+use techalib::indicators::ema::ema;
+use techalib::types::Float;
 
 fuzz_target!(|data: (Vec<Float>, u8, Float)| {
     let (v, w, s) = data;

@@ -1,8 +1,8 @@
 use criterion::BenchmarkId;
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
-use techalysis::indicators::ema::ema;
-use techalysis::types::Float;
+use techalib::indicators::ema::ema;
+use techalib::types::Float;
 
 fn bench_ema(c: &mut criterion::Criterion) {
     let mut bench_group = c.benchmark_group("ema");

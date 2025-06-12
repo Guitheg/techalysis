@@ -20,9 +20,9 @@ debug = false
 panic = "unwind"
 
 [workspace.package]
-description = "TechAlysis: A Technical Analysis Library"
+description = "Techalib: A TECHnical Analysis LIBrary"
 version = "0.1.0"
-repository = "https://github.com/Guitheg/techalysis.git"
+repository = "https://github.com/Guitheg/techalib.git"
 
 license = "BSD-3-Clause"
 authors = ["Guillaume GOBIN <gthgobin@gmail.com>"]

@@ -1,5 +1,5 @@
 [package]
-name = "techalysis-python"
+name = "techalib-python"
 
 description.workspace = true
 version.workspace = true
@@ -12,7 +12,7 @@ rust-version.workspace = true
 edition.workspace = true
 
 [lib]
-name = "techalysis"
+name = "techalib"
 path = "src/lib.rs"
 crate-type = ["cdylib"]
 
@@ -22,7 +22,7 @@ pyo3 = { version = "0.25.0", optional = true, features = [
     "extension-module",
     "abi3-py38",
 ] }
-techalysis = { path = "../core" }
+techalib = { path = "../core" }
 
 [features]
 default = ["numpy", "pyo3"]

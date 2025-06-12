@@ -1,4 +1,4 @@
-use crate::errors::TechalysisError;
+use crate::errors::TechalibError;
 
 /// State trait
 /// ---
@@ -6,5 +6,5 @@ use crate::errors::TechalysisError;
 /// It is used to incrementally update the state with new data points.
 pub trait State<T> {
     /// Update the state with a new sample
-    fn update(&mut self, sample: T) -> Result<(), TechalysisError>;
+    fn update(&mut self, sample: T) -> Result<(), TechalibError>;
 }

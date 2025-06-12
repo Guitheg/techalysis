@@ -1,5 +1,5 @@
-use techalysis::{
-    errors::TechalysisError,
+use techalib::{
+    errors::TechalibError,
     indicators::macd::{macd, MacdResult},
     traits::State,
     types::Float,
@@ -93,7 +93,7 @@ fn empty_input() {
     let output = macd(&input, 12, 26, 9);
     assert!(output.is_err());
     assert!(
-        matches!(output, Err(TechalysisError::InsufficientData)),
+        matches!(output, Err(TechalibError::InsufficientData)),
         "Got: {output:?}"
     );
 }
@@ -118,7 +118,7 @@ fn insufficient_data() {
     let output = macd(&input, 12, 26, 9);
     assert!(output.is_err());
     assert!(
-        matches!(output, Err(TechalysisError::InsufficientData)),
+        matches!(output, Err(TechalibError::InsufficientData)),
         "Got: {output:?}",
     );
 }
@@ -128,7 +128,7 @@ fn fast_greater_than_slow() {
     let input: Vec<Float> = (1..=50).map(|x| x as Float).collect();
     let output = macd(&input, 30, 20, 9);
     assert!(output.is_err());
-    assert!(matches!(output, Err(TechalysisError::BadParam(_))));
+    assert!(matches!(output, Err(TechalibError::BadParam(_))));
 }
 
 #[test]
@@ -137,7 +137,7 @@ fn unexpected_nan_err() {
     input[10] = Float::NAN;
     let output = macd(&input, 12, 26, 9);
     assert!(output.is_err());
-    assert!(matches!(output, Err(TechalysisError::DataNonFinite(_))));
+    assert!(matches!(output, Err(TechalibError::DataNonFinite(_))));
 }
 
 #[test]
@@ -146,7 +146,7 @@ fn non_finite_err() {
     input[10] = Float::INFINITY;
     let output = macd(&input, 12, 26, 9);
     assert!(output.is_err());
-    assert!(matches!(output, Err(TechalysisError::DataNonFinite(_))));
+    assert!(matches!(output, Err(TechalibError::DataNonFinite(_))));
 }
 
 #[test]
