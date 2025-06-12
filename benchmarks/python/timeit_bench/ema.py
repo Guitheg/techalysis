@@ -19,7 +19,7 @@ def benchmark_ema():
     print_benchmark(iterations, {"length": len(data), "window size": window_size}, rust=average_time_rs, c=average_time_c)
 
     iterations = 50
-    data = np.random.random(3_000_000)
+    data = np.random.random(1_000_000)
     window_size = 100
 
     duration = timeit.timeit(lambda: tx.ema(data, window_size, 2), number=iterations)
