@@ -30,14 +30,14 @@ def __init__() -> list[str]:
             else:
                 return _pd_DataFrame(obj, index=index)
         return obj
-                    
+
 
     def wrapper(function):
         from functools import wraps
         from itertools import chain
         if _pd_Series is None or _pd_DataFrame is None:
             return function
-        
+
         @wraps(function)
         def inner_wrapper(*args, **kwargs):
             use_pd = any(isinstance(arg, _pd_Series) for arg in chain(args, kwargs.values()))

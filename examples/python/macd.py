@@ -19,4 +19,3 @@ if __name__ == "__main__":
     # show
     plt.title('Moving Average Convergence Divergence')
     plt.show()
-

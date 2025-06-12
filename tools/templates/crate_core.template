@@ -49,7 +49,7 @@ use crate::traits::State;
 /// ---
 /// This struct holds the result and the state ([`${IndicatorName}State`])
 /// of the calculation.
-/// 
+///
 /// Attributes
 /// ---
 /// TODO: ATTRIBUTES
@@ -67,15 +67,15 @@ pub struct ${IndicatorName}Result {
 /// ---
 /// This struct holds the state of the calculation.
 /// It is used to calculate the next values in a incremental way.
-/// 
+///
 /// Attributes
 /// ---
 /// **Last outputs values**
 /// TODO: OUTPUTS ATTRIBUTES
-/// 
+///
 /// **State values**
 /// TODO: STATE ATTRIBUTES
-/// 
+///
 /// **Parameters**
 /// TODO: PARAMETERS ATTRIBUTES
 #[derive(Debug, Clone, Copy)]
@@ -86,7 +86,7 @@ pub struct ${IndicatorName}State {
 
     // TODO: IMPLEMENTS STATE ATTRIBUTES
     // State values
-    
+
     // TODO: IMPLEMENTS PARAMETERS ATTRIBUTES
     // Parameters
     pub period: usize
@@ -94,7 +94,7 @@ pub struct ${IndicatorName}State {
 
 impl State<Float> for ${IndicatorName}State {
     /// Update the [`${IndicatorName}State`] with a new sample
-    /// 
+    ///
     /// Input Arguments
     /// ---
     /// - `sample`: The new input to update the ${INDICATORNAME} state
@@ -114,11 +114,11 @@ impl State<Float> for ${IndicatorName}State {
 /// ---
 /// It returns a [`${IndicatorName}Result`]
 /// TODO: DESCRIPTION
-/// 
+///
 /// Input Arguments
 /// ---
 /// TODO: INPUT ARGS DESCRIPTION
-/// 
+///
 /// Returns
 /// ---
 /// A `Result` containing a [`${IndicatorName}Result`],
@@ -130,7 +130,7 @@ pub fn ${indicator_name}(
 ) -> Result<${IndicatorName}Result, TechalysisError> {
     // TODO: INITIALIZE OUTPUTS
     let mut output = vec![0.0; data.len()];
-    
+
     let ${indicator_name}_state = ${indicator_name}_into(
         data,
         period,
@@ -154,11 +154,11 @@ pub fn ${indicator_name}(
 /// Input Arguments
 /// ---
 /// TODO: INPUT ARGS DESCRIPTIONS
-/// 
+///
 /// Output Arguments
 /// ---
 /// TODO: OUTPUT ARGS DESCRIPTIONS
-/// 
+///
 /// Returns
 /// ---
 /// A `Result` containing a [`${IndicatorName}State`],

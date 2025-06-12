@@ -10,7 +10,7 @@ class RsiState:
     avg_gain: float
     avg_loss: float
     period: int
-    
+
     def __repr__(self):
         return (f"RsiState(rsi={self.rsi:.4f}, "
                 f"avg_gain={self.avg_gain:.4f}, "

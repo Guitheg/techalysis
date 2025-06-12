@@ -9,3 +9,6 @@ termcolor
 # for testing
 numpy
 pandas
+
+# git
+pre-commit

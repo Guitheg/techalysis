@@ -18,7 +18,7 @@ def benchmark_t3():
 
     iterations = 50
     data = np.random.random(1_000_000)
-    
+
     duration = timeit.timeit(lambda: talib.T3(data, timeperiod=50, vfactor=0.7), number=iterations)
     average_time_c = duration / iterations
 

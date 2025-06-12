@@ -24,14 +24,32 @@ jobs:
         toolchain: stable
         override: true
 
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install pre-commit
+      run : pip install pre-commit
+
+    - name: check formatting
+      run: cargo fmt --all -- --check
+
+    - name: Run pre-commit
+      run: pre-commit run --all-files
+
     - name: Build
       run: cargo build --verbose
 
     - name: Clippy clippy
       run: cargo clippy --tests --no-deps -- -D warnings
-    
-    - name: Run unit & property tests
-      run: cargo test --verbose
+
+    - name: Run unit tests
+      run: |
+        cargo test -F f64 --benches --examples
+        cargo test -F f32 --benches --examples
+        cargo test --release -F f64 --examples
+        cargo test --release -F f32 --examples
 
     - name: Install nightly toolchain
       uses: actions-rs/toolchain@v1
@@ -40,7 +58,7 @@ jobs:
         toolchain: nightly
         components: llvm-tools-preview
         override: false
-  
+
     - name: Install cargo-fuzz
       run: cargo +nightly install cargo-fuzz
 
@@ -51,7 +69,7 @@ jobs:
         bash tests/fuzz/run_all.sh
 
     - name: Build & test (pytest)
-      run: | 
+      run: |
         python -m venv .venv
         source .venv/bin/activate
         pip install -r requirements-dev.txt

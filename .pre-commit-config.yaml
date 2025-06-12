@@ -1,0 +1,18 @@
+repos:
+  # Use the python hook from tools/rust_pre_commit.py in the repo
+  - repo: local
+    hooks:
+      - id: rust_pre_commit
+        name: rust_pre_commit
+        language: python
+        entry: python tools/rust_pre_commit.py
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+      - id: check-merge-conflict
+      - id: mixed-line-ending
+        args: ['--fix=lf']

@@ -59,7 +59,7 @@ def wma_next(
     ----------
     new_value : float
         The next data point to include in the WMA.
-    
+
     state : WmaState
         The current state of the Wma computation.
 

@@ -24,7 +24,7 @@ def ema(
     release_gil: bool = False
 ) -> EmaResult | Tuple[NDArray, EmaState]:
     """
-    EMA / EWMA: Exponential (Weighted) Moving Average 
+    EMA / EWMA: Exponential (Weighted) Moving Average
     ----------
 
     Parameters
@@ -62,7 +62,7 @@ def ema_next(
     ----------
     new_value : float
         The next data point to include in the EMA calculation.
-    
+
     state : EmaState
         The current state of the EMA computation.
 

@@ -101,7 +101,7 @@ pub(crate) fn ${indicator_name}(
     if release_gil {
         // TODO: DEFINE OUTPUTS
         let mut output = vec![0.0; len];
-        
+
         // TODO: IMPL WITH GIL RELEASE
         let state = py
              .allow_threads(|| ${indicator_name}_into(input_slice, period, output.as_mut_slice()))

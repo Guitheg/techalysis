@@ -14,7 +14,7 @@ def benchmark_sma():
     iterations = 50
     data = np.random.random(5_000_000)
     window_size = 100
-    
+
     duration = timeit.timeit(lambda: tx.sma(data, window_size), number=iterations)
     average_time_rs = duration / iterations
 
@@ -31,7 +31,7 @@ def benchmark_sma():
 
     duration = timeit.timeit(lambda: py_sma(data, window_size), number=iterations)
     average_time_py = duration / iterations
-    
+
     duration = timeit.timeit(lambda: tx.sma(data, window_size), number=iterations)
     average_time_rs = duration / iterations
 

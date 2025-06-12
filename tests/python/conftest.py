@@ -29,7 +29,7 @@ def thread_test() -> Callable[[Callable], None]:
             futures = [pool.submit(tx_lambda, data) for _ in range(n_threads)]
             _ = [future.result() for future in futures]
             conc_time = (time.perf_counter() - t0) / n_threads
-        
+
         print(f"Sequential time: {seq_time:.4f} seconds")
         print(f"Concurrent time: {conc_time:.4f} seconds")
         conc_compoare = (conc_time * n_threads) * tolerance

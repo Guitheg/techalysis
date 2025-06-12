@@ -74,7 +74,7 @@ def add_to_bench_timeit(indicator_name: str):
 
     with open(BENCH_PYTHON_TIMEIT, 'w') as f:
         f.writelines(lines)
-    
+
     logger.info(f"🔄 Updated {BENCH_PYTHON_TIMEIT}")
 
 def add_to_core(indicator_name: str):
@@ -87,13 +87,13 @@ def add_to_core(indicator_name: str):
 
     with open(CORE_LIB_PATH, 'w') as f:
         f.writelines(lines)
-    
+
     logger.info(f"🔄 Updated {CORE_LIB_PATH}")
 
 def add_to_pybindings(indicator_name: str, indicator_camel_case: str = None):
     with open(PYBINDING_LIB_PATH, 'r') as f:
         lines = f.readlines()
-    
+
     wrap_insertion = next((i for i, line in enumerate(lines) if line.startswith("Ok(())")), len(lines))
     with open(INSERT_TO_PYLIB, 'r') as template_f:
         template_content = Template(template_f.read())
@@ -101,13 +101,13 @@ def add_to_pybindings(indicator_name: str, indicator_camel_case: str = None):
         "indicator_name": indicator_name,
         "IndicatorName": indicator_name.capitalize() if (indicator_camel_case is None) else indicator_camel_case,
     }))
-    
+
     mod_insertion = next((i for i, line in enumerate(lines) if line.startswith("mod ")), len(lines))
     lines.insert(mod_insertion, f"mod py_{indicator_name};\n")
 
     with open(PYBINDING_LIB_PATH, 'w') as f:
         f.writelines(lines)
-    
+
     logger.info(f"🔄 Updated {PYBINDING_LIB_PATH}")
 
 def add_to_python_stub_init(indicator_name: str):
@@ -119,7 +119,7 @@ def add_to_python_stub_init(indicator_name: str):
 
     with open(PYTHON_STUB_INIT, 'w') as f:
         f.writelines(lines)
-    
+
     logger.info(f"🔄 Updated {PYTHON_STUB_INIT}")
 
 def add_to_fuzz_tests_cargo(indicator_name: str):
@@ -134,7 +134,7 @@ def add_to_fuzz_tests_cargo(indicator_name: str):
 
     with open(FUZZ_TESTS_CARGO, 'w') as f:
         f.writelines(lines)
-    
+
     logger.info(f"🔄 Updated {FUZZ_TESTS_CARGO}")
 
 def add_rust_test(indicator_name: str):
@@ -145,7 +145,7 @@ def add_rust_test(indicator_name: str):
 
     with open(RUST_TEST_LIB_PATH, 'w') as f:
         f.writelines(lines)
-    
+
     logger.info(f"🔄 Updated {RUST_TEST_LIB_PATH}")
 
 def add_maptypes(indicator_name: str):
@@ -157,7 +157,7 @@ def add_maptypes(indicator_name: str):
 
     with open(MAPTYPES_PYTHON, 'w') as f:
         f.writelines(lines)
-    
+
     logger.info(f"🔄 Updated {MAPTYPES_PYTHON}")
 
 def add_rust_benchmark(indicator_name: str):
@@ -168,7 +168,7 @@ def add_rust_benchmark(indicator_name: str):
 
     with open(BENCH_RUST, 'w') as f:
         f.writelines(lines)
-    
+
     logger.info(f"🔄 Updated {BENCH_RUST}")
 
 def add_rust_benchmark_to_mod(indicator_name: str):
@@ -178,7 +178,7 @@ def add_rust_benchmark_to_mod(indicator_name: str):
 
     with open(BENCH_RUST_MOD, 'w') as f:
         f.writelines(lines)
-    
+
     logger.info(f"🔄 Updated {BENCH_RUST_MOD}")
 
 def parse_args():

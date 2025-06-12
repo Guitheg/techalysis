@@ -63,7 +63,7 @@ def dema_next(
     ----------
     new_value : float
         The next data point to include in the Dema computation.
-    
+
     state : DemaState
         The current state of the Dema computation.
 
