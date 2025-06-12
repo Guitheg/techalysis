@@ -77,7 +77,7 @@ def t3_next(
     ----------
     new_value : float
         The next data point to include in the T3 computation.
-    
+
     state : T3State
         The current state of the T3 computation.
 

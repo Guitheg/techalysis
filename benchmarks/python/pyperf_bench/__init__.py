@@ -28,4 +28,3 @@ def print_benchmark(iteration: int, parameters: dict, **benchmarks):
                 print(colored(f"\t\t{name}: {time_as_str(time)} ({time_ratio:.2f}x slower)", "red"))
             else:
                 print(f"\t\t{name}: {time_as_str(time)}")
-            

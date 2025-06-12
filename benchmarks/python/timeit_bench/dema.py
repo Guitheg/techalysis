@@ -18,7 +18,7 @@ def benchmark_dema():
 
     iterations = 50
     data = np.random.random(1_000_000)
-    
+
     duration = timeit.timeit(lambda: talib.DEMA(data), number=iterations)
     average_time_c = duration / iterations
 

@@ -55,7 +55,7 @@ def bbands(
 
     std_down : float, default 2.0
         The multiplier of standard deviations for the lower band.
-    
+
     ma_type : BBandsMA, default BBandsMA.SMA
         The type of moving average to use for the middle band.
         Options:
@@ -88,7 +88,7 @@ def bbands_next(
     ----------
     new_value : float
         The new value to include in the BBands computation.
-    
+
     state : BBandsState
         The current state of the BBands computation.
 

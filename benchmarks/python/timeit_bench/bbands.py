@@ -7,7 +7,7 @@ import talib
 def benchmark_bbands():
     iterations = 50
     data = np.random.random(5_000_000)
-    
+
     duration = timeit.timeit(lambda: talib.BBANDS(data, 20), number=iterations)
     average_time_c = duration / iterations
 

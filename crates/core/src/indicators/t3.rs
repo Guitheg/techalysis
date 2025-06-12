@@ -131,16 +131,15 @@ impl T3Coefficients {
         let vfactor_cube = volume_factor.powi(3);
         T3Coefficients {
             c1: -vfactor_cube,
-            c2: 3.0*vfactor_square + 3.0 * vfactor_cube,
+            c2: 3.0 * vfactor_square + 3.0 * vfactor_cube,
             c3: -3.0 * volume_factor - 6.0 * vfactor_square - 3.0 * vfactor_cube,
             c4: 1.0 + 3.0 * volume_factor + 3.0 * vfactor_square + vfactor_cube,
         }
     }
 }
 
-
 /// Ema values used in the T3 calculation
-///     
+///
 /// These values are used to store the last calculated EMA values
 #[derive(Debug, Clone, Copy)]
 pub struct T3EmaValues {
@@ -219,8 +218,12 @@ impl State<Float> for T3State {
             )));
         }
 
-        
-        let t3 = t3_next_unchecked(sample, &mut self.ema_values, &self.t3_coefficients, self.alpha);
+        let t3 = t3_next_unchecked(
+            sample,
+            &mut self.ema_values,
+            &self.t3_coefficients,
+            self.alpha,
+        );
 
         if !t3.is_finite() {
             return Err(TechalysisError::Overflow(0, t3));
@@ -298,7 +301,7 @@ pub fn t3_into(
         return Err(TechalysisError::InsufficientData);
     }
 
-    if !period <= 1 {
+    if period <= 1 {
         return Err(TechalysisError::BadParam(format!(
             "Period must be greater than 1, got: {}",
             period
@@ -338,12 +341,7 @@ pub fn t3_into(
                 idx, data[idx]
             )));
         }
-        output[idx] = t3_next_unchecked(
-            data[idx],
-            &mut t3_ema_values,
-            &t3_coefficients,
-            alpha
-        );
+        output[idx] = t3_next_unchecked(data[idx], &mut t3_ema_values, &t3_coefficients, alpha);
         if !output[idx].is_finite() {
             return Err(TechalysisError::Overflow(idx, output[idx]));
         }

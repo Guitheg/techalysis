@@ -64,7 +64,7 @@ def trima_next(
     ----------
     new_value : float
         The new value to include in the Trima computation.
-    
+
     state : TrimaState
         The current state of the Trima computation.
 

@@ -8,7 +8,7 @@ import talib
 def benchmark_macd():
     iterations = 50
     data = np.random.random(5_000_000)
-    
+
     duration = timeit.timeit(lambda: tx.macd(data), number=iterations)
     average_time_rs = duration / iterations
 
@@ -19,7 +19,7 @@ def benchmark_macd():
 
     iterations = 50
     data = np.random.random(1_000_000)
-    
+
     duration = timeit.timeit(lambda: tx.macd(data), number=iterations)
     average_time_rs = duration / iterations
 

@@ -54,7 +54,7 @@ def ${indicator_name}_next(
     ----------
     TODO:ARG_NAME : TODO:ARG_TYPE
         TODO:DESCRIPTION
-    
+
     state : ${IndicatorName}State
         The current state of the ${IndicatorName} computation.
 

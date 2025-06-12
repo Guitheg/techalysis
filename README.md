@@ -6,31 +6,31 @@ Built for developers and quants who need the performance of Rust with the ease o
 
 ## 🚀 Features
 
-- ⚡ **High performance**  
+- ⚡ **High performance**
   Core engine written in Rust with optimized algorithms — at least as fast as TA-Lib
 
-- 🧠 **Ergonomic API**  
+- 🧠 **Ergonomic API**
   Designed for Python developers with a clean and intuitive interface and well documented.
 
-- 🔒 **Safe and reliable**  
+- 🔒 **Safe and reliable**
   Backed by a large test suite, consistency checks against TA-Lib and fuzz testing
 
-- 🧩 **Easy integration**  
+- 🧩 **Easy integration**
   Use seamlessly in both Python and Rust projects
 
-- ⏱️ **Real-time updates**  
+- ⏱️ **Real-time updates**
   Indicators support incremental computation via internal state objects and a next() method — ideal for streaming data or large datasets
 
-- 🐍 **Python friendly**  
+- 🐍 **Python friendly**
   Pythonic API with rich return types using NamedTuples, and optional GIL unlocking for true multithreaded performance
 
-- 🖥️ **Multi-platform**  
+- 🖥️ **Multi-platform**
   Supports macOS, Linux, and Windows
 
 - 📊 Supported Indicators
   | **Category**              | **Function name - Name**                                        | **Status** |
   | ----------------          | ---------------------------------------------                   | ---------- |
-  | **_Overlap_**             |||   
+  | **_Overlap_**             |||
   |                           | **ichimoku** - Ichimoku kinkō hyō                               | ⬜        |
   |                           | **bbands** - Bollinger Bands                                    | ✅        |
   |                           | **sar** - Parabolic SAR                                         | ⬜        |
@@ -44,11 +44,9 @@ Built for developers and quants who need the performance of Rust with the ease o
   |                           | **dema** - Double Exponential Moving Average                    | ✅        |
   |                           | **tema** - Triple Exponential Moving Average                    | ✅        |
   |                           | **trima** - Triangular Moving Average                           | ✅        |
-  |                           | **t3** - Tillson Moving Average                                 | ✅        |
-  |                           | **kama** - Kaufman Adaptive Moving Average                      | ⬜        |
-  |                           | **mama** - MESA Adaptive Moving Average                         | ⬜        |
-  |                           | **mavp** - Moving Average with Variable Period                  | ⬜        |
-  | **_Momentum_**            |||   
+  |                           | **t3** - Tillson Triple Moving Average                          | ✅        |
+  |                           | **kama** - Kaufman Adaptive Moving Average                      | ✅        |
+  | **_Momentum_**            |||
   |                           | **macd** - Moving Average Convergence Divergence                | ✅        |
   |                           | **adx** - Average Directional Movement Index                    | ⬜        |
   |                           | **adxr** - Average Directional Movement Index Rating            | ⬜        |
@@ -76,21 +74,21 @@ Built for developers and quants who need the performance of Rust with the ease o
   |                           | **ultosc** - Ultimate Oscillator                                | ⬜        |
   |                           | **willr** - Williams' %R                                        | ⬜        |
   |                           | **apo** - Absolute Price Oscillator                             | ⬜        |
-  | **_Volume_**              |||   
+  | **_Volume_**              |||
   |                           | **ad** - Chaikin A/D Line                                       | ⬜        |
   |                           | **adosc** - Chaikin A/D Oscillator                              | ⬜        |
   |                           | **obv** - On Balance Volume                                     | ⬜        |
-  | **_Cycle_**               |||   
+  | **_Cycle_**               |||
   |                           | _Work in progress..._                                           | ⬜        |
-  | **_Price Transform_**     |||   
+  | **_Price Transform_**     |||
   |                           | _Work in progress..._                                           | ⬜        |
-  | **_Volatility_**          |||   
+  | **_Volatility_**          |||
   |                           | **atr** - Average True Range                                    | ⬜        |
   |                           | **natr** - Normalized Average True Range                        | ⬜        |
   |                           | **trange** - True Range                                         | ⬜        |
-  | **_Pattern Recognition_** |||   
+  | **_Pattern Recognition_** |||
   |                           | _Work in progress..._                                           | ⬜        |
-  | **_Statistic_**           |||   
+  | **_Statistic_**           |||
   |                           | _Work in progress..._                                           | ⬜        |
 
 ## 📦 Installation
@@ -117,3 +115,17 @@ Install `cargo-fuzz` (more info [here](https://github.com/rust-fuzz/cargo-fuzz))
 ```
 cargo install cargo-fuzz
 ```
+
+### Pre-commit installation
+
+This project uses [pre-commit](https://pre-commit.com/) to enforce code quality checks. To set up the hooks, follow these steps:
+
+1. Install `pre-commit` if you don't already have it:
+ ```bash
+ pip install pre-commit
+ ```
+
+2. Install the hooks
+ ```
+ pre-commit install
+ ```

@@ -16,4 +16,3 @@ if __name__ == "__main__":
     # show
     plt.title('Exponential Moving Average')
     plt.show()
-

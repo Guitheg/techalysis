@@ -49,7 +49,7 @@ use crate::traits::State;
 /// ---
 /// This struct holds the result and the state ([`${IndicatorName}State`])
 /// of the calculation.
-/// 
+///
 /// Attributes
 /// ---
 /// TODO: ATTRIBUTES
@@ -67,15 +67,15 @@ pub struct ${IndicatorName}Result {
 /// ---
 /// This struct holds the state of the calculation.
 /// It is used to calculate the next values in a incremental way.
-/// 
+///
 /// Attributes
 /// ---
 /// **Last outputs values**
 /// TODO: OUTPUTS ATTRIBUTES
-/// 
+///
 /// **State values**
 /// TODO: STATE ATTRIBUTES
-/// 
+///
 /// **Parameters**
 /// TODO: PARAMETERS ATTRIBUTES
 #[derive(Debug, Clone, Copy)]
@@ -86,7 +86,7 @@ pub struct ${IndicatorName}State {
 
     // TODO: IMPLEMENTS STATE ATTRIBUTES
     // State values
-    
+
     // TODO: IMPLEMENTS PARAMETERS ATTRIBUTES
     // Parameters
     pub period: usize
@@ -94,7 +94,7 @@ pub struct ${IndicatorName}State {
 
 impl State<Float> for ${IndicatorName}State {
     /// Update the [`${IndicatorName}State`] with a new sample
-    /// 
+    ///
     /// Input Arguments
     /// ---
     /// - `sample`: The new input to update the ${INDICATORNAME} state
@@ -110,15 +110,27 @@ impl State<Float> for ${IndicatorName}State {
     }
 }
 
+/// Lookback period for ${INDICATORNAME} calculation
+/// ---
+/// With `n = lookback_from_period(period)`,
+/// the `n` first values that will be return will be `NaN`
+/// and the next values will be the KAMA values.
+#[inline(always)]
+pub fn lookback_from_period(period: usize) -> usize {
+    //TODO: DEFINE LOOKBACK
+    period
+}
+
+
 /// Calculation of the ${INDICATORNAME} function
 /// ---
 /// It returns a [`${IndicatorName}Result`]
 /// TODO: DESCRIPTION
-/// 
+///
 /// Input Arguments
 /// ---
 /// TODO: INPUT ARGS DESCRIPTION
-/// 
+///
 /// Returns
 /// ---
 /// A `Result` containing a [`${IndicatorName}Result`],
@@ -130,7 +142,7 @@ pub fn ${indicator_name}(
 ) -> Result<${IndicatorName}Result, TechalysisError> {
     // TODO: INITIALIZE OUTPUTS
     let mut output = vec![0.0; data.len()];
-    
+
     let ${indicator_name}_state = ${indicator_name}_into(
         data,
         period,
@@ -154,11 +166,11 @@ pub fn ${indicator_name}(
 /// Input Arguments
 /// ---
 /// TODO: INPUT ARGS DESCRIPTIONS
-/// 
+///
 /// Output Arguments
 /// ---
 /// TODO: OUTPUT ARGS DESCRIPTIONS
-/// 
+///
 /// Returns
 /// ---
 /// A `Result` containing a [`${IndicatorName}State`],
@@ -170,6 +182,18 @@ pub fn ${indicator_name}_into(
     // TODO: ARGUMENTS AND OUTPUTS ARGUMENTS
 ) -> Result<${IndicatorName}State, TechalysisError> {
     let len = data.len();
+    let lookback = lookback_from_period(period);
+
+    if len <= lookback {
+        return Err(TechalysisError::InsufficientData);
+    }
+
+    if period <= 1 {
+        return Err(TechalysisError::BadParam(format!(
+            "Period must be greater than 1, got: {}",
+            period
+        )));
+    }
 
     // TODO: IMPLEMENTS CORE FUNCTION LOGIC
 
@@ -180,17 +204,17 @@ pub fn ${indicator_name}_into(
 }
 
 #[inline(always)]
-fn ${indicator_name}_next_unchecked(
-    // TODO: CORE ARGUMENTS FOR INCREMENTAL
-) -> Float {
-    // TODO: IMPLEMENTS CORE INCREMENTAL LOGIC
-    0.0
-}
-
-#[inline(always)]
 fn init_${indicator_name}_unchecked(
     // TODO: DEFINIE INIT ARGUMENTS
 ) -> Result<Float, TechalysisError> {
     // TODO: IMPLEMENTS INIT
     Ok(0.0)
+}
+
+#[inline(always)]
+fn ${indicator_name}_next_unchecked(
+    // TODO: CORE ARGUMENTS FOR INCREMENTAL
+) -> Float {
+    // TODO: IMPLEMENTS CORE INCREMENTAL LOGIC
+    0.0
 }

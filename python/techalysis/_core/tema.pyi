@@ -64,7 +64,7 @@ def tema_next(
     ----------
     new_value : float
         The new value to include in the Tema computation.
-    
+
     state : TemaState
         The current state of the Tema computation.
 

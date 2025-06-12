@@ -1,5 +1,5 @@
 [package]
-name = "features"
+name = "examples"
 edition = "2021"
 version.workspace = true
 
@@ -16,4 +16,5 @@ name = "rsi"
 path = "bin/rsi.rs"
 
 [dependencies]
+rand = "0.9.1"
 techalysis = { path = "../../../crates/core" }
