@@ -1,6 +1,6 @@
-# Techalysis
+# Techalib
 
-**Techalysis** is a fast, reliable, and ergonomic technical analysis library written in Rust, with seamless Python bindings.
+**Techalib** is a fast, reliable, and ergonomic technical analysis library written in Rust, with seamless Python bindings.
 
 Built for developers and quants who need the performance of Rust with the ease of use of Python.
 

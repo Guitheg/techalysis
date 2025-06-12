@@ -243,7 +243,7 @@ name = "examples"
 version = "0.1.0"
 dependencies = [
  "rand 0.9.1",
- "techalysis",
+ "techalib",
 ]
 
 [[package]]
@@ -880,7 +880,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e502f78cdbb8ba4718f566c418c52bc729126ffd16baee5baa718cf25dd5a69a"
 
 [[package]]
-name = "techalysis"
+name = "techalib"
 version = "0.1.0"
 dependencies = [
  "criterion",
@@ -888,30 +888,30 @@ dependencies = [
 ]
 
 [[package]]
-name = "techalysis-fuzz"
+name = "techalib-fuzz"
 version = "0.1.0"
 dependencies = [
  "libfuzzer-sys",
- "techalysis",
+ "techalib",
 ]
 
 [[package]]
-name = "techalysis-python"
+name = "techalib-python"
 version = "0.1.0"
 dependencies = [
  "numpy",
  "pyo3",
- "techalysis",
+ "techalib",
 ]
 
 [[package]]
-name = "techalysis-tests"
+name = "techalib-tests"
 version = "0.1.0"
 dependencies = [
  "csv",
  "float-cmp",
  "proptest",
- "techalysis",
+ "techalib",
 ]
 
 [[package]]

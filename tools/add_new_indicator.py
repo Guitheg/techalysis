@@ -23,8 +23,8 @@ BENCH_RUST_MOD = ROOT / "benchmarks/rust/indicators/mod.rs"
 CORE_LIB_PATH =  ROOT / "crates/core/src/indicators/mod.rs"
 PYBINDING_LIB_PATH = ROOT / "crates/python/src/lib.rs"
 #   PYTHON
-PYTHON_STUB_INIT = ROOT / "python/techalysis/_core/__init__.pyi"
-MAPTYPES_PYTHON = ROOT / "python/techalysis/maptypes.py"
+PYTHON_STUB_INIT = ROOT / "python/techalib/_core/__init__.pyi"
+MAPTYPES_PYTHON = ROOT / "python/techalib/maptypes.py"
 #   TESTS
 FUZZ_TESTS_CARGO = ROOT / "tests/fuzz/Cargo.toml"
 RUST_TEST_LIB_PATH = ROOT / "tests/rust/src/lib.rs"
@@ -36,7 +36,7 @@ TEMPLATES_TO_FILE = {
     "bench_rust.template": "benchmarks/rust/indicators/bench_{name}.rs",
     "crate_core.template": "crates/core/src/indicators/{name}.rs",
     "crate_python.template": "crates/python/src/py_{name}.rs",
-    "python_stub.template": "python/techalysis/_core/{name}.pyi",
+    "python_stub.template": "python/techalib/_core/{name}.pyi",
     "tests_fuzz.template": "tests/fuzz/fuzz_targets/fuzz_{name}.rs",
     "tests_python.template": "tests/python/test_{name}.py",
     "tests_rust.template": "tests/rust/src/tests_{name}.rs",

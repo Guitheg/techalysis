@@ -1,8 +1,8 @@
 #![no_main]
 
 use libfuzzer_sys::fuzz_target;
-use techalysis::indicators::bbands::{bbands, BBandsMA, DeviationMulipliers};
-use techalysis::types::Float;
+use techalib::indicators::bbands::{bbands, BBandsMA, DeviationMulipliers};
+use techalib::types::Float;
 
 fuzz_target!(|data: (Vec<Float>, u8, Float, Float)| {
     let (data, period, std_up, std_down) = data;

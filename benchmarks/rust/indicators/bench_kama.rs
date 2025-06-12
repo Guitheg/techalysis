@@ -1,6 +1,6 @@
 use criterion::BenchmarkId;
 use rand::{rngs::StdRng, Rng, SeedableRng};
-use techalysis::{indicators::kama::kama, types::Float};
+use techalib::{indicators::kama::kama, types::Float};
 
 fn bench_kama(c: &mut criterion::Criterion) {
     let mut bench_group = c.benchmark_group("kama");

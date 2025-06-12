@@ -41,7 +41,7 @@
 
 //! (TODO: COMPLETE NAME) (${INDICATORNAME}) implementation
 
-use crate::errors::TechalysisError;
+use crate::errors::TechalibError;
 use crate::types::Float;
 use crate::traits::State;
 
@@ -98,9 +98,9 @@ impl State<Float> for ${IndicatorName}State {
     /// Input Arguments
     /// ---
     /// - `sample`: The new input to update the ${INDICATORNAME} state
-    fn update(&mut self, sample: Float) -> Result<(), TechalysisError> {
+    fn update(&mut self, sample: Float) -> Result<(), TechalibError> {
         if !sample.is_finite() {
-            return Err(TechalysisError::DataNonFinite(format!(
+            return Err(TechalibError::DataNonFinite(format!(
                 "sample = {sample:?}",
             )));
         }
@@ -134,12 +134,12 @@ pub fn lookback_from_period(period: usize) -> usize {
 /// Returns
 /// ---
 /// A `Result` containing a [`${IndicatorName}Result`],
-/// or a [`TechalysisError`] error if the calculation fails.
+/// or a [`TechalibError`] error if the calculation fails.
 pub fn ${indicator_name}(
     data: &[Float],
     period: usize
     // TODO: DEFINE ARGUMENTS OF INDICATOR FUNCTION
-) -> Result<${IndicatorName}Result, TechalysisError> {
+) -> Result<${IndicatorName}Result, TechalibError> {
     // TODO: INITIALIZE OUTPUTS
     let mut output = vec![0.0; data.len()];
 
@@ -174,22 +174,22 @@ pub fn ${indicator_name}(
 /// Returns
 /// ---
 /// A `Result` containing a [`${IndicatorName}State`],
-/// or a [`TechalysisError`] error if the calculation fails.
+/// or a [`TechalibError`] error if the calculation fails.
 pub fn ${indicator_name}_into(
     data: &[Float],
     period: usize,
     output: &mut [Float],
     // TODO: ARGUMENTS AND OUTPUTS ARGUMENTS
-) -> Result<${IndicatorName}State, TechalysisError> {
+) -> Result<${IndicatorName}State, TechalibError> {
     let len = data.len();
     let lookback = lookback_from_period(period);
 
     if len <= lookback {
-        return Err(TechalysisError::InsufficientData);
+        return Err(TechalibError::InsufficientData);
     }
 
     if period <= 1 {
-        return Err(TechalysisError::BadParam(format!(
+        return Err(TechalibError::BadParam(format!(
             "Period must be greater than 1, got: {}",
             period
         )));
@@ -206,7 +206,7 @@ pub fn ${indicator_name}_into(
 #[inline(always)]
 fn init_${indicator_name}_unchecked(
     // TODO: DEFINIE INIT ARGUMENTS
-) -> Result<Float, TechalysisError> {
+) -> Result<Float, TechalibError> {
     // TODO: IMPLEMENTS INIT
     Ok(0.0)
 }

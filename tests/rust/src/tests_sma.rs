@@ -5,8 +5,8 @@ use crate::helper::{
 
 use crate::expect_err_overflow_or_ok_with;
 use proptest::{collection::vec, prelude::*};
-use techalysis::{
-    errors::TechalysisError,
+use techalib::{
+    errors::TechalibError,
     indicators::sma::{sma, SmaResult},
     traits::State,
     types::Float,
@@ -86,7 +86,7 @@ fn invalid_period_lower_bound() {
     let data = vec![1.0, 2.0, 3.0];
     let result = sma(&data, 0);
     assert!(result.is_err());
-    if let Err(TechalysisError::BadParam(msg)) = result {
+    if let Err(TechalibError::BadParam(msg)) = result {
         assert!(msg.contains("between 2 and 100000"));
     }
 }
@@ -105,7 +105,7 @@ fn unexpected_nan_err() {
     let data = vec![1.0, 2.0, 3.0, Float::NAN, 1.0, 2.0, 3.0];
     let result = sma(&data, 3);
     assert!(result.is_err());
-    assert!(matches!(result, Err(TechalysisError::DataNonFinite(_))));
+    assert!(matches!(result, Err(TechalibError::DataNonFinite(_))));
 }
 
 #[test]
@@ -117,14 +117,14 @@ fn non_finite_err() {
         "Expected an error for non-finite data, got: {:?}",
         result
     );
-    assert!(matches!(result, Err(TechalysisError::DataNonFinite(_))));
+    assert!(matches!(result, Err(TechalibError::DataNonFinite(_))));
 }
 
 #[test]
 fn insufficient_data_err() {
     let data = vec![1.0, 2.0, 3.0];
     let result = sma(&data, 4);
-    assert!(matches!(result, Err(TechalysisError::InsufficientData)));
+    assert!(matches!(result, Err(TechalibError::InsufficientData)));
 }
 
 #[test]
@@ -133,7 +133,7 @@ fn period_1() {
     let period = 1;
     let result = sma(data, period);
     assert!(result.is_err());
-    assert!(matches!(result, Err(TechalysisError::BadParam(_))));
+    assert!(matches!(result, Err(TechalibError::BadParam(_))));
 }
 
 fn slow_sma(data: &[Float], window: usize) -> Vec<Float> {
@@ -161,7 +161,7 @@ proptest! {
 
         if has_nan {
             prop_assert!(out.is_err());
-            prop_assert!(matches!(out, Err(TechalysisError::DataNonFinite(_))));
+            prop_assert!(matches!(out, Err(TechalibError::DataNonFinite(_))));
         } else {
             let out = out.unwrap().values;
             prop_assert_eq!(out.len(), input.len());

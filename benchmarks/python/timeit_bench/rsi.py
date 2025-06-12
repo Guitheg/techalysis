@@ -1,7 +1,7 @@
 import numpy as np
 import timeit
 from . import print_benchmark, time_as_str
-import techalysis as tx
+import techalib as tx
 import talib
 
 def py_rsi(data, window_size):

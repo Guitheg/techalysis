@@ -1,6 +1,6 @@
 use criterion::BenchmarkId;
 use rand::{rngs::StdRng, Rng, SeedableRng};
-use techalysis::{indicators::t3::t3, types::Float};
+use techalib::{indicators::t3::t3, types::Float};
 
 fn bench_t3(c: &mut criterion::Criterion) {
     let mut bench_group = c.benchmark_group("t3");

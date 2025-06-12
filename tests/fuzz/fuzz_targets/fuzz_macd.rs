@@ -1,8 +1,8 @@
 #![no_main]
 
 use libfuzzer_sys::fuzz_target;
-use techalysis::indicators::macd::macd;
-use techalysis::types::Float;
+use techalib::indicators::macd::macd;
+use techalib::types::Float;
 
 fuzz_target!(|data: (Vec<Float>, u8, u8, u8)| {
     let (values, fastperiod, slowperiod, signalperiod) = data;

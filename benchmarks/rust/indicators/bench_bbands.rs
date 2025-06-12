@@ -1,7 +1,7 @@
 use criterion::BenchmarkId;
 use rand::{rngs::StdRng, Rng, SeedableRng};
-use techalysis::indicators::bbands::{bbands, BBandsMA, DeviationMulipliers};
-use techalysis::types::Float;
+use techalib::indicators::bbands::{bbands, BBandsMA, DeviationMulipliers};
+use techalib::types::Float;
 
 fn bench_bbands(c: &mut criterion::Criterion) {
     let mut bench_group = c.benchmark_group("bbands");

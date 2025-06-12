@@ -35,9 +35,9 @@
 
 use numpy::{IntoPyArray, PyArray1, PyArrayMethods, PyUntypedArrayMethods};
 use pyo3::{exceptions::PyValueError, pyclass, pyfunction, pymethods, Py, PyResult, Python};
-use techalysis::indicators::rsi::{rsi_into, RsiState};
-use techalysis::traits::State;
-use techalysis::types::Float;
+use techalib::indicators::rsi::{rsi_into, RsiState};
+use techalib::traits::State;
+use techalib::types::Float;
 
 #[pyclass(name = "RsiState")]
 #[derive(Debug, Clone)]

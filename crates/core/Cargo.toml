@@ -1,5 +1,5 @@
 [package]
-name = "techalysis"
+name = "techalib"
 
 description.workspace = true
 version.workspace = true

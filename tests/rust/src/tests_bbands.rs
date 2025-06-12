@@ -6,8 +6,8 @@ use crate::{
     },
 };
 
-use techalysis::{
-    errors::TechalysisError,
+use techalib::{
+    errors::TechalibError,
     indicators::bbands::{bbands, BBandsMA, BBandsResult, DeviationMulipliers},
     traits::State,
     types::Float,
@@ -144,7 +144,7 @@ fn nan_input_err() {
         BBandsMA::SMA,
     );
     assert!(output.is_err());
-    assert!(matches!(output, Err(TechalysisError::DataNonFinite(_))));
+    assert!(matches!(output, Err(TechalibError::DataNonFinite(_))));
 }
 
 #[test]
@@ -157,7 +157,7 @@ fn invalid_params_err() {
         BBandsMA::SMA,
     );
     assert!(output.is_err()); // length = 0
-    assert!(matches!(output, Err(TechalysisError::BadParam(_))));
+    assert!(matches!(output, Err(TechalibError::BadParam(_))));
 
     let output = bbands(
         &data,
@@ -169,7 +169,7 @@ fn invalid_params_err() {
         BBandsMA::SMA,
     );
     assert!(output.is_err()); // negative std_dev mult
-    assert!(matches!(output, Err(TechalysisError::BadParam(_))));
+    assert!(matches!(output, Err(TechalibError::BadParam(_))));
 
     let output = bbands(
         &data,
@@ -181,7 +181,7 @@ fn invalid_params_err() {
         BBandsMA::SMA,
     );
     assert!(output.is_err()); // negative lower mult
-    assert!(matches!(output, Err(TechalysisError::BadParam(_))));
+    assert!(matches!(output, Err(TechalibError::BadParam(_))));
 }
 
 #[test]
@@ -194,7 +194,7 @@ fn insufficient_data_err() {
         BBandsMA::SMA,
     );
     assert!(output.is_err());
-    assert!(matches!(output, Err(TechalysisError::InsufficientData)),);
+    assert!(matches!(output, Err(TechalibError::InsufficientData)),);
 }
 
 #[test]
@@ -207,7 +207,7 @@ fn unexpected_nan_err() {
         BBandsMA::SMA,
     );
     assert!(result.is_err());
-    assert!(matches!(result, Err(TechalysisError::DataNonFinite(_))));
+    assert!(matches!(result, Err(TechalibError::DataNonFinite(_))));
 }
 
 #[test]
@@ -220,7 +220,7 @@ fn non_finite_err() {
         BBandsMA::SMA,
     );
     assert!(result.is_err());
-    assert!(matches!(result, Err(TechalysisError::DataNonFinite(_))));
+    assert!(matches!(result, Err(TechalibError::DataNonFinite(_))));
 }
 
 #[test]

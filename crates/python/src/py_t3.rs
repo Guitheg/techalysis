@@ -35,9 +35,9 @@
 
 use numpy::{IntoPyArray, PyArray1, PyArrayMethods, PyReadonlyArray1, PyUntypedArrayMethods};
 use pyo3::{exceptions::PyValueError, pyclass, pyfunction, pymethods, Py, PyResult, Python};
-use techalysis::indicators::t3::{t3_into, T3Coefficients, T3EmaValues, T3State};
-use techalysis::traits::State;
-use techalysis::types::Float;
+use techalib::indicators::t3::{t3_into, T3Coefficients, T3EmaValues, T3State};
+use techalib::traits::State;
+use techalib::types::Float;
 
 #[pyclass(name = "T3State")]
 #[derive(Debug, Clone)]

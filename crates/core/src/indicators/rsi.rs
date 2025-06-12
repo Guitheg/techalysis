@@ -40,7 +40,7 @@
 
 //! Relative Strength Index (RSI) implementation
 
-use crate::errors::TechalysisError;
+use crate::errors::TechalibError;
 use crate::traits::State;
 use crate::types::Float;
 
@@ -105,32 +105,32 @@ impl State<Float> for RsiState {
     /// Input Arguments
     /// ---
     /// - `sample`: The new input to update the RSI state.
-    fn update(&mut self, sample: Float) -> Result<(), TechalysisError> {
+    fn update(&mut self, sample: Float) -> Result<(), TechalibError> {
         if self.period <= 1 {
-            return Err(TechalysisError::BadParam(
+            return Err(TechalibError::BadParam(
                 "RSI period must be greater than 1".to_string(),
             ));
         }
 
         if !sample.is_finite() {
-            return Err(TechalysisError::DataNonFinite(format!(
-                "sample = {sample:?}",
-            )));
+            return Err(TechalibError::DataNonFinite(
+                format!("sample = {sample:?}",),
+            ));
         }
         if !self.prev_value.is_finite() {
-            return Err(TechalysisError::DataNonFinite(format!(
+            return Err(TechalibError::DataNonFinite(format!(
                 "prev_value = {:?}",
                 self.prev_value
             )));
         }
         if !self.avg_gain.is_finite() {
-            return Err(TechalysisError::DataNonFinite(format!(
+            return Err(TechalibError::DataNonFinite(format!(
                 "self.avg_gain = {:?}",
                 self.avg_gain
             )));
         }
         if !self.avg_loss.is_finite() {
-            return Err(TechalysisError::DataNonFinite(format!(
+            return Err(TechalibError::DataNonFinite(format!(
                 "self.avg_loss = {:?}",
                 self.avg_loss
             )));
@@ -143,7 +143,7 @@ impl State<Float> for RsiState {
             self.period as Float,
         );
         if !rsi.is_finite() {
-            return Err(TechalysisError::Overflow(0, rsi));
+            return Err(TechalibError::Overflow(0, rsi));
         }
         self.rsi = rsi;
         self.prev_value = sample;
@@ -165,8 +165,8 @@ impl State<Float> for RsiState {
 /// Returns
 /// ---
 /// A `Result` containing a [`RsiResult`],
-/// or a [`TechalysisError`] error if the calculation fails.
-pub fn rsi(data: &[Float], period: usize) -> Result<RsiResult, TechalysisError> {
+/// or a [`TechalibError`] error if the calculation fails.
+pub fn rsi(data: &[Float], period: usize) -> Result<RsiResult, TechalibError> {
     let size: usize = data.len();
     let mut output = vec![0.0; size];
     let rsi_state = rsi_into(data, period, output.as_mut_slice())?;
@@ -193,26 +193,26 @@ pub fn rsi(data: &[Float], period: usize) -> Result<RsiResult, TechalysisError> 
 /// Returns
 /// ---
 /// A `Result` containing a [`RsiState`],
-/// or a [`TechalysisError`] error if the calculation fails.
+/// or a [`TechalibError`] error if the calculation fails.
 pub fn rsi_into(
     data: &[Float],
     period: usize,
     output: &mut [Float],
-) -> Result<RsiState, TechalysisError> {
+) -> Result<RsiState, TechalibError> {
     let len = data.len();
     let period_as_float = period as Float;
     if period == 0 || period + 1 > len {
-        return Err(TechalysisError::InsufficientData);
+        return Err(TechalibError::InsufficientData);
     }
 
     if period == 1 {
-        return Err(TechalysisError::BadParam(
+        return Err(TechalibError::BadParam(
             "RSI window size must be greater than 1".to_string(),
         ));
     }
 
     if output.len() != len {
-        return Err(TechalysisError::BadParam(
+        return Err(TechalibError::BadParam(
             "Output RSI length must match input data length".to_string(),
         ));
     }
@@ -223,7 +223,7 @@ pub fn rsi_into(
     for i in 1..=period {
         let delta = data[i] - data[i - 1];
         if !delta.is_finite() {
-            return Err(TechalysisError::DataNonFinite(format!(
+            return Err(TechalibError::DataNonFinite(format!(
                 "data[{}] = {:?}",
                 i, data[i]
             )));
@@ -239,13 +239,13 @@ pub fn rsi_into(
     avg_loss /= period_as_float;
     output[period] = calculate_rsi(avg_gain, avg_loss);
     if !output[period].is_finite() {
-        return Err(TechalysisError::Overflow(period, output[period]));
+        return Err(TechalibError::Overflow(period, output[period]));
     }
 
     for i in (period + 1)..len {
         let delta = data[i] - data[i - 1];
         if !delta.is_finite() {
-            return Err(TechalysisError::DataNonFinite(format!(
+            return Err(TechalibError::DataNonFinite(format!(
                 "data[{}] = {:?}",
                 i, data[i]
             )));
@@ -253,7 +253,7 @@ pub fn rsi_into(
         (output[i], avg_gain, avg_loss) =
             rsi_next_unchecked(data[i] - data[i - 1], avg_gain, avg_loss, period_as_float);
         if !output[i].is_finite() {
-            return Err(TechalysisError::Overflow(i, output[i]));
+            return Err(TechalibError::Overflow(i, output[i]));
         }
     }
     Ok(RsiState {

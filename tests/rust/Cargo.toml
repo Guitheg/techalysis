@@ -1,5 +1,5 @@
 [package]
-name = "techalysis-tests"
+name = "techalib-tests"
 
 description.workspace = true
 version.workspace = true
@@ -15,8 +15,8 @@ edition.workspace = true
 csv = "1.3.1"
 float-cmp = "0.10.0"
 proptest = "1.6.0"
-techalysis = { path = "../../crates/core" }
+techalib = { path = "../../crates/core" }
 
 [lib]
-name = "techalysissts"
+name = "techalibsts"
 path = "src/lib.rs"

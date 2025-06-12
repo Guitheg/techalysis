@@ -1,9 +1,9 @@
 use crate::types::Float;
 
-/// Techalysis error types
+/// Techalib error types
 /// ---
 /// This enum defines the various error types that can occur
-/// during the execution of the Techalysis library.
+/// during the execution of the Techalib library.
 ///
 /// Variants
 /// ---
@@ -13,7 +13,7 @@ use crate::types::Float;
 /// - `Overflow(usize, Float)`: Indicates that an overflow occurred at a specific index.
 /// - `NotImplementedYet`: Indicates that a feature or function is not yet implemented.
 #[derive(Debug)]
-pub enum TechalysisError {
+pub enum TechalibError {
     /// Indicates that a parameter passed to a function is invalid.
     BadParam(String),
     /// Indicates that there is not enough data to perform a calculation.

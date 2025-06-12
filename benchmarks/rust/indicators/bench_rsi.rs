@@ -1,8 +1,8 @@
 use criterion::BenchmarkId;
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
-use techalysis::indicators::rsi::rsi;
-use techalysis::types::Float;
+use techalib::indicators::rsi::rsi;
+use techalib::types::Float;
 
 fn bench_rsi(c: &mut criterion::Criterion) {
     let mut bench_group = c.benchmark_group("rsi");

@@ -35,9 +35,9 @@
 
 use numpy::{IntoPyArray, PyArray1, PyArrayMethods, PyReadonlyArray1, PyUntypedArrayMethods};
 use pyo3::{exceptions::PyValueError, pyclass, pyfunction, pymethods, Py, PyResult, Python};
-use techalysis::indicators::tema::{tema_into, TemaState};
-use techalysis::traits::State;
-use techalysis::types::Float;
+use techalib::indicators::tema::{tema_into, TemaState};
+use techalib::traits::State;
+use techalib::types::Float;
 
 #[pyclass(name = "TemaState")]
 #[derive(Debug, Clone)]

@@ -35,9 +35,9 @@
 
 use numpy::{IntoPyArray, PyArray1, PyArrayMethods, PyReadonlyArray1, PyUntypedArrayMethods};
 use pyo3::{exceptions::PyValueError, pyclass, pyfunction, pymethods, Py, PyResult, Python};
-use techalysis::indicators::kama::{kama_into, KamaState};
-use techalysis::traits::State;
-use techalysis::types::Float;
+use techalib::indicators::kama::{kama_into, KamaState};
+use techalib::traits::State;
+use techalib::types::Float;
 
 #[pyclass(name = "KamaState")]
 #[derive(Debug, Clone)]

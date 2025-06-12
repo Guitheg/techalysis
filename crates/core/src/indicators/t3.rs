@@ -40,7 +40,7 @@
 
 //! Tillson Triple Exponential Moving Average (T3) implementation
 
-use crate::errors::TechalysisError;
+use crate::errors::TechalibError;
 use crate::indicators::ema::{ema_next_unchecked, get_alpha_value};
 use crate::indicators::sma::init_sma_unchecked;
 use crate::traits::State;
@@ -163,14 +163,14 @@ impl State<Float> for T3State {
     /// Input Arguments
     /// ---
     /// - `sample`: The new input to update the T3 state
-    fn update(&mut self, sample: Float) -> Result<(), TechalysisError> {
+    fn update(&mut self, sample: Float) -> Result<(), TechalibError> {
         if !sample.is_finite() {
-            return Err(TechalysisError::DataNonFinite(format!(
-                "sample = {sample:?}",
-            )));
+            return Err(TechalibError::DataNonFinite(
+                format!("sample = {sample:?}",),
+            ));
         }
         if !self.t3.is_finite() {
-            return Err(TechalysisError::DataNonFinite(format!("t3 = {}", self.t3)));
+            return Err(TechalibError::DataNonFinite(format!("t3 = {}", self.t3)));
         }
         if !self.ema_values.ema1.is_finite()
             || !self.ema_values.ema2.is_finite()
@@ -179,7 +179,7 @@ impl State<Float> for T3State {
             || !self.ema_values.ema5.is_finite()
             || !self.ema_values.ema6.is_finite()
         {
-            return Err(TechalysisError::DataNonFinite(format!(
+            return Err(TechalibError::DataNonFinite(format!(
                 "ema1 = {}, ema2 = {}, ema3 = {}, ema4 = {}, ema5 = {}, ema6 = {}",
                 self.ema_values.ema1,
                 self.ema_values.ema2,
@@ -195,7 +195,7 @@ impl State<Float> for T3State {
             || !self.t3_coefficients.c3.is_finite()
             || !self.t3_coefficients.c4.is_finite()
         {
-            return Err(TechalysisError::BadParam(format!(
+            return Err(TechalibError::BadParam(format!(
                 "c1 = {}, c2 = {}, c3 = {}, c4 = {}",
                 self.t3_coefficients.c1,
                 self.t3_coefficients.c2,
@@ -205,14 +205,14 @@ impl State<Float> for T3State {
         }
 
         if !self.period <= 1 {
-            return Err(TechalysisError::BadParam(format!(
+            return Err(TechalibError::BadParam(format!(
                 "Period must be greater than 1, got: {}",
                 self.period
             )));
         }
 
         if !self.volume_factor.is_finite() || self.volume_factor < 0.0 || self.volume_factor > 1.0 {
-            return Err(TechalysisError::BadParam(format!(
+            return Err(TechalibError::BadParam(format!(
                 "Volume factor must be between 0.0 and 1.0, got: {}",
                 self.volume_factor
             )));
@@ -226,7 +226,7 @@ impl State<Float> for T3State {
         );
 
         if !t3.is_finite() {
-            return Err(TechalysisError::Overflow(0, t3));
+            return Err(TechalibError::Overflow(0, t3));
         }
 
         self.t3 = t3;
@@ -250,13 +250,13 @@ impl State<Float> for T3State {
 /// Returns
 /// ---
 /// A `Result` containing a [`T3Result`],
-/// or a [`TechalysisError`] error if the calculation fails.
+/// or a [`TechalibError`] error if the calculation fails.
 pub fn t3(
     data: &[Float],
     period: usize,
     volume_factor: Float,
     alpha: Option<Float>,
-) -> Result<T3Result, TechalysisError> {
+) -> Result<T3Result, TechalibError> {
     let mut output = vec![0.0; data.len()];
 
     let t3_state = t3_into(data, period, volume_factor, alpha, output.as_mut_slice())?;
@@ -286,30 +286,30 @@ pub fn t3(
 /// Returns
 /// ---
 /// A `Result` containing a [`T3State`],
-/// or a [`TechalysisError`] error if the calculation fails.
+/// or a [`TechalibError`] error if the calculation fails.
 pub fn t3_into(
     data: &[Float],
     period: usize,
     volume_factor: Float,
     alpha: Option<Float>,
     output: &mut [Float],
-) -> Result<T3State, TechalysisError> {
+) -> Result<T3State, TechalibError> {
     let len = data.len();
     let skip_period = t3_skip_period_unchecked(period);
 
     if len < skip_period + 1 {
-        return Err(TechalysisError::InsufficientData);
+        return Err(TechalibError::InsufficientData);
     }
 
     if period <= 1 {
-        return Err(TechalysisError::BadParam(format!(
+        return Err(TechalibError::BadParam(format!(
             "Period must be greater than 1, got: {}",
             period
         )));
     }
 
     if !volume_factor.is_finite() || !(0.0..=1.0).contains(&volume_factor) {
-        return Err(TechalysisError::BadParam(format!(
+        return Err(TechalibError::BadParam(format!(
             "Volume factor must be between 0.0 and 1.0, got: {}",
             volume_factor
         )));
@@ -331,19 +331,19 @@ pub fn t3_into(
 
     output[skip_period] = t3;
     if !output[skip_period].is_finite() {
-        return Err(TechalysisError::Overflow(skip_period, output[skip_period]));
+        return Err(TechalibError::Overflow(skip_period, output[skip_period]));
     }
 
     for idx in skip_period + 1..len {
         if !data[idx].is_finite() {
-            return Err(TechalysisError::DataNonFinite(format!(
+            return Err(TechalibError::DataNonFinite(format!(
                 "data[{}] = {}",
                 idx, data[idx]
             )));
         }
         output[idx] = t3_next_unchecked(data[idx], &mut t3_ema_values, &t3_coefficients, alpha);
         if !output[idx].is_finite() {
-            return Err(TechalysisError::Overflow(idx, output[idx]));
+            return Err(TechalibError::Overflow(idx, output[idx]));
         }
     }
 
@@ -391,7 +391,7 @@ fn init_t3_unchecked(
     skip_period: usize,
     alpha: Float,
     output: &mut [Float],
-) -> Result<(Float, T3EmaValues), TechalysisError> {
+) -> Result<(Float, T3EmaValues), TechalibError> {
     // Initialiaztion of ema1
     let mut ema1 = init_sma_unchecked(data, period, inv_period, output)?;
 
@@ -400,7 +400,7 @@ fn init_t3_unchecked(
     let mut sum_ema2 = ema1;
     for idx in period..=skip_period_2 {
         if !data[idx].is_finite() {
-            return Err(TechalysisError::DataNonFinite(format!(
+            return Err(TechalibError::DataNonFinite(format!(
                 "data[{idx}] = {:?}",
                 data[idx]
             )));
@@ -416,7 +416,7 @@ fn init_t3_unchecked(
     let mut sum_ema3 = ema2;
     for idx in skip_period_2 + 1..=skip_period_3 {
         if !data[idx].is_finite() {
-            return Err(TechalysisError::DataNonFinite(format!(
+            return Err(TechalibError::DataNonFinite(format!(
                 "data[{idx}] = {:?}",
                 data[idx]
             )));
@@ -433,7 +433,7 @@ fn init_t3_unchecked(
     let mut sum_ema4 = ema3;
     for idx in skip_period_3 + 1..=skip_period_4 {
         if !data[idx].is_finite() {
-            return Err(TechalysisError::DataNonFinite(format!(
+            return Err(TechalibError::DataNonFinite(format!(
                 "data[{idx}] = {:?}",
                 data[idx]
             )));
@@ -451,7 +451,7 @@ fn init_t3_unchecked(
     let mut sum_ema5 = ema4;
     for idx in skip_period_4 + 1..=skip_period_5 {
         if !data[idx].is_finite() {
-            return Err(TechalysisError::DataNonFinite(format!(
+            return Err(TechalibError::DataNonFinite(format!(
                 "data[{idx}] = {:?}",
                 data[idx]
             )));
@@ -469,7 +469,7 @@ fn init_t3_unchecked(
     let mut sum_ema6 = ema5;
     for idx in skip_period_5 + 1..skip_period {
         if !data[idx].is_finite() {
-            return Err(TechalysisError::DataNonFinite(format!(
+            return Err(TechalibError::DataNonFinite(format!(
                 "data[{idx}] = {:?}",
                 data[idx]
             )));

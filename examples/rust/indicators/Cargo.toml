@@ -17,4 +17,4 @@ path = "bin/rsi.rs"
 
 [dependencies]
 rand = "0.9.1"
-techalysis = { path = "../../../crates/core" }
+techalib = { path = "../../../crates/core" }

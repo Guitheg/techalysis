@@ -6,8 +6,8 @@ use crate::{
     },
 };
 use proptest::{collection::vec, prelude::*};
-use techalysis::{
-    errors::TechalysisError,
+use techalib::{
+    errors::TechalibError,
     indicators::ema::{ema, period_to_alpha, EmaResult},
     traits::State,
     types::Float,
@@ -57,7 +57,7 @@ fn invalid_period_lower_bound() {
     let data = vec![1.0, 2.0, 3.0];
     let result = ema(&data, 0, None);
     assert!(result.is_err());
-    if let Err(TechalysisError::BadParam(msg)) = result {
+    if let Err(TechalibError::BadParam(msg)) = result {
         assert!(msg.contains("between 2 and 100000"));
     }
 }
@@ -76,7 +76,7 @@ fn unexpected_nan_err() {
     let data = vec![1.0, 2.0, 3.0, Float::NAN];
     let result = ema(&data, 3, None);
     assert!(result.is_err());
-    assert!(matches!(result, Err(TechalysisError::DataNonFinite(_))));
+    assert!(matches!(result, Err(TechalibError::DataNonFinite(_))));
 }
 
 #[test]
@@ -84,14 +84,14 @@ fn non_finite_err() {
     let data = vec![1.0, 2.0, 3.0, Float::INFINITY, 5.0, 6.0, 7.0];
     let result = ema(&data, 3, None);
     assert!(result.is_err());
-    assert!(matches!(result, Err(TechalysisError::DataNonFinite(_))));
+    assert!(matches!(result, Err(TechalibError::DataNonFinite(_))));
 }
 
 #[test]
 fn insufficient_data_err() {
     let data = vec![1.0, 2.0, 3.0];
     let result = ema(&data, 4, None);
-    assert!(matches!(result, Err(TechalysisError::InsufficientData)));
+    assert!(matches!(result, Err(TechalibError::InsufficientData)));
 }
 
 #[test]
@@ -100,7 +100,7 @@ fn period_1() {
     let period = 1;
     let result = ema(data, period, None);
     assert!(result.is_err());
-    assert!(matches!(result, Err(TechalysisError::BadParam(_))));
+    assert!(matches!(result, Err(TechalibError::BadParam(_))));
 }
 
 #[test]
@@ -153,7 +153,7 @@ proptest! {
 
         if has_nan {
             prop_assert!(out.is_err());
-            prop_assert!(matches!(out, Err(TechalysisError::DataNonFinite(_))));
+            prop_assert!(matches!(out, Err(TechalibError::DataNonFinite(_))));
         } else {
             let out = out.unwrap().values;
 

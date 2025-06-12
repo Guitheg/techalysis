@@ -35,12 +35,12 @@
 
 use numpy::{IntoPyArray, PyArray1, PyArrayMethods, PyReadonlyArray1, PyUntypedArrayMethods};
 use pyo3::{exceptions::PyValueError, pyclass, pyfunction, pymethods, Py, PyResult, Python};
-use techalysis::indicators::ema::{ema_into, period_to_alpha, EmaState};
-use techalysis::traits::State;
-use techalysis::types::Float;
+use techalib::indicators::ema::{ema_into, period_to_alpha, EmaState};
+use techalib::traits::State;
+use techalib::types::Float;
 
 #[derive(Debug, Clone)]
-#[pyclass(name = "EmaState", module = "techalysis._core")]
+#[pyclass(name = "EmaState", module = "techalib._core")]
 pub struct PyEmaState {
     #[pyo3(get)]
     pub ema: Float,
