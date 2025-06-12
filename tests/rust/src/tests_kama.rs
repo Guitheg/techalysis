@@ -3,21 +3,15 @@ use crate::helper::{
     generated::{assert_vec_eq_gen_data, load_generated_csv},
 };
 
-use proptest::{collection::vec, prelude::*};
+use crate::expect_err_overflow_or_ok_with;
 use techalysis::{
     errors::TechalysisError,
-    indicators::${indicator_name}::{
-        ${indicator_name},
-        ${IndicatorName}Result,
-        ${IndicatorName}State
-    },
+    indicators::kama::{kama, KamaResult},
     traits::State,
     types::Float,
 };
-use crate::expect_err_overflow_or_ok_with;
 
-fn generated_and_no_lookahead_${indicator_name}(file_name: &str, period: usize) {
-    // TODO: IMPLEMENT TEST FUNCTION
+fn generated_and_no_lookahead_kama(file_name: &str, period: usize) {
     let columns = load_generated_csv(file_name).unwrap();
     let input = columns.get("close").unwrap();
 
@@ -29,8 +23,12 @@ fn generated_and_no_lookahead_${indicator_name}(file_name: &str, period: usize) 
 
     let input_prev = &input[0..last_idx];
 
-    let output = ${indicator_name}(input_prev, period);
-    assert!(output.is_ok(), "Failed to calculate ${INDICATORNAME}: {:?}", output.err());
+    let output = kama(input_prev, period);
+    assert!(
+        output.is_ok(),
+        "Failed to calculate KAMA: {:?}",
+        output.err()
+    );
     let result = output.unwrap();
 
     assert_vec_eq_gen_data(&expected[0..last_idx], &result.values);
@@ -39,28 +37,22 @@ fn generated_and_no_lookahead_${indicator_name}(file_name: &str, period: usize) 
     for i in 0..next_count {
         new_state.update(input[last_idx + i]).unwrap();
         assert!(
-            approx_eq_float(new_state.${indicator_name}, expected[last_idx + i], 1e-8),
-            "Next [{}] expected {}, but got {}",
+            approx_eq_float(new_state.kama, expected[last_idx + i], 1e-8),
+            "Next[{}] expected {}, but got {}",
             i,
             expected[last_idx + i],
-            new_state.${indicator_name}
+            new_state.kama
         );
     }
 }
 
 #[test]
 fn generated_with_no_lookahead_ok() {
-    generated_and_no_lookahead_${indicator_name}(
-        "${indicator_name}.csv",
-        30,
-        // TODO: ADD INPUT ARGUMENTS
-    )
+    generated_and_no_lookahead_kama("kama.csv", 30)
 }
 
-// TODO: IMPLEMENTS ERR TESTS
 #[test]
 fn finite_extreme_err_overflow_or_ok_all_finite() {
-    // TODO: DEFINE DATA INPUTS
     let data = vec![
         Float::MAX - 3.0,
         Float::MAX - 2.0,
@@ -70,44 +62,43 @@ fn finite_extreme_err_overflow_or_ok_all_finite() {
         Float::MAX - 1.0,
     ];
     let period = 3;
-    expect_err_overflow_or_ok_with!(
-        ${indicator_name}(&data, period),
-        |result: ${IndicatorName}Result| {
-            assert!(
-                result.values.iter().skip(period).all(|v| v.is_finite()),
-                "Expected all values to be finite"
-            );
-        }
-    );
+    expect_err_overflow_or_ok_with!(kama(&data, period), |result: KamaResult| {
+        assert!(
+            result.values.iter().skip(period).all(|v| v.is_finite()),
+            "Expected all values to be finite"
+        );
+    });
 }
 
 #[test]
 fn next_with_finite_neg_extreme_err_overflow_or_ok_all_finite() {
     let data = vec![5.0, 10.0, 30.0, 3.0, 5.0, 6.0, 8.0];
     let period = 3;
-    let result = ${indicator_name}(&data, period).unwrap();
+    let result = kama(&data, period).unwrap();
     let mut state = result.state;
     expect_err_overflow_or_ok_with!(state.update(Float::MIN + 5.0), |_| {
-        assert!(state.${indicator_name}.is_finite(), "Expected all values to be finite");
+        assert!(state.kama.is_finite(), "Expected all values to be finite");
     });
 }
 
 #[test]
 fn unexpected_nan_err() {
-    //TODO: COMPLETE DATA INPUT
     let data = vec![1.0, 2.0, 3.0, Float::NAN, 1.0, 2.0, 3.0];
     let period = 3;
-    let result = ${indicator_name}(&data, period);
+    let result = kama(&data, period);
     assert!(result.is_err());
-    assert!(matches!(result, Err(TechalysisError::DataNonFinite(_))));
+    assert!(
+        matches!(result, Err(TechalysisError::DataNonFinite(_))),
+        "Expected an error for NaN data, got: {:?}",
+        result
+    );
 }
 
 #[test]
 fn non_finite_err() {
-    //TODO: COMPLETE DATA INPUT
     let data = vec![1.0, 2.0, Float::INFINITY, 1.0, 2.0, 3.0];
     let period = 3;
-    let result =  ${indicator_name}(&data, period);
+    let result = kama(&data, period);
     assert!(
         result.is_err(),
         "Expected an error for non-finite data, got: {:?}",
@@ -118,22 +109,9 @@ fn non_finite_err() {
 
 #[test]
 fn empty_input_err() {
-    //TODO: COMPLETE DATA INPUT
     let data: [Float; 0] = [];
     let period = 14;
-    let result = ${indicator_name}(&data, period);
+    let result = kama(&data, period);
     assert!(result.is_err());
     assert!(matches!(result, Err(TechalysisError::InsufficientData)));
 }
-
-// TODO: IMPLEMENTS OTHER TESTS
-
-// TODO: IMPLEMENTS proptest
-// proptest! {
-//     #[test]
-//     fn proptest(
-//        // TODO: DEFINE ARGS
-//     ) {
-
-//     }
-// }

@@ -445,7 +445,7 @@ mod tests {
         let period = 5;
         let mut output = vec![0.0; data.len()];
         let expected_inv_weight_sum = 1.0 / 9.0; // (5//2) * (5//2 + 1) = 9, so inv_weight_sum = 1/9
-        let expected_sum: f64 = 27.0; // (1 + 2 + 2 + 3 + 3 + 3 + 4 + 4 + 5) = 27
+        let expected_sum = 27.0; // (1 + 2 + 2 + 3 + 3 + 3 + 4 + 4 + 5) = 27
         let expected_trailing_sum = 6.0; // (1 + 2 + 3) = 6, but we only take the first half
         let expected_heading_sum = 9.0; // (4 + 5) = 12, but we only take the second half
         let expected_middle_idx = 2; // middle index for period 5 is 2
@@ -498,7 +498,7 @@ mod tests {
         let period = 6;
         let mut output = vec![0.0; data.len()];
         let expected_inv_weight_sum = 1.0 / 12.0; // (6//2) * (6//2 + 1) = 12, so inv_weight_sum = 1/12
-        let expected_sum: f64 = 42.0; // (1 + 2 + 2 + 3 + 3 + 3 + 4 + 4 +4 + 5 + 5 + 6) = 42
+        let expected_sum = 42.0; // (1 + 2 + 2 + 3 + 3 + 3 + 4 + 4 +4 + 5 + 5 + 6) = 42
         let expected_trailing_sum = 6.0; // (1 + 2 + 3) = 6, but we only take the first half
         let expected_heading_sum = 15.0; // (4 + 5 + 6) = 15, but we only take the second half
         let expected_middle_idx = 2; // middle index for period 6 is 3

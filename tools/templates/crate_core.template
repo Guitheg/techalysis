@@ -110,6 +110,18 @@ impl State<Float> for ${IndicatorName}State {
     }
 }
 
+/// Lookback period for ${INDICATORNAME} calculation
+/// ---
+/// With `n = lookback_from_period(period)`,
+/// the `n` first values that will be return will be `NaN`
+/// and the next values will be the KAMA values.
+#[inline(always)]
+pub fn lookback_from_period(period: usize) -> usize {
+    //TODO: DEFINE LOOKBACK
+    period
+}
+
+
 /// Calculation of the ${INDICATORNAME} function
 /// ---
 /// It returns a [`${IndicatorName}Result`]
@@ -170,6 +182,18 @@ pub fn ${indicator_name}_into(
     // TODO: ARGUMENTS AND OUTPUTS ARGUMENTS
 ) -> Result<${IndicatorName}State, TechalysisError> {
     let len = data.len();
+    let lookback = lookback_from_period(period);
+
+    if len <= lookback {
+        return Err(TechalysisError::InsufficientData);
+    }
+
+    if period <= 1 {
+        return Err(TechalysisError::BadParam(format!(
+            "Period must be greater than 1, got: {}",
+            period
+        )));
+    }
 
     // TODO: IMPLEMENTS CORE FUNCTION LOGIC
 
@@ -180,17 +204,17 @@ pub fn ${indicator_name}_into(
 }
 
 #[inline(always)]
-fn ${indicator_name}_next_unchecked(
-    // TODO: CORE ARGUMENTS FOR INCREMENTAL
-) -> Float {
-    // TODO: IMPLEMENTS CORE INCREMENTAL LOGIC
-    0.0
-}
-
-#[inline(always)]
 fn init_${indicator_name}_unchecked(
     // TODO: DEFINIE INIT ARGUMENTS
 ) -> Result<Float, TechalysisError> {
     // TODO: IMPLEMENTS INIT
     Ok(0.0)
+}
+
+#[inline(always)]
+fn ${indicator_name}_next_unchecked(
+    // TODO: CORE ARGUMENTS FOR INCREMENTAL
+) -> Float {
+    // TODO: IMPLEMENTS CORE INCREMENTAL LOGIC
+    0.0
 }

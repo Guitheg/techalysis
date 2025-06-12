@@ -30,30 +30,45 @@
 */
 /*
     List of contributors:
-    - ${ContributorName}: Initial implementation
+    - Guitheg: Initial implementation
 */
 
 use numpy::{IntoPyArray, PyArray1, PyArrayMethods, PyReadonlyArray1, PyUntypedArrayMethods};
-use pyo3::{pymethods, exceptions::PyValueError, pyclass, pyfunction, Py, PyResult, Python};
-use techalysis::indicators::${indicator_name}::{${indicator_name}_into, ${IndicatorName}State};
+use pyo3::{exceptions::PyValueError, pyclass, pyfunction, pymethods, Py, PyResult, Python};
+use techalysis::indicators::kama::{kama_into, KamaState};
 use techalysis::traits::State;
 use techalysis::types::Float;
 
-#[pyclass(name = "${IndicatorName}State")]
+#[pyclass(name = "KamaState")]
 #[derive(Debug, Clone)]
-pub struct Py${IndicatorName}State {
-    // TODO: DEFINE ATTRIBUTES
-    // #[pyo3(get)]
-    // pub ...
+pub struct PyKamaState {
+    #[pyo3(get)]
+    pub kama: Float,
+    #[pyo3(get)]
+    pub roc_sum: Float,
+    #[pyo3(get)]
+    pub last_window: Vec<Float>,
+    #[pyo3(get)]
+    pub trailing_value: Float,
+    #[pyo3(get)]
+    pub period: usize,
 }
 #[pymethods]
-impl Py${IndicatorName}State {
+impl PyKamaState {
     #[new]
     pub fn new(
-        // TODO: DEFINE ARGUMENTS FOR NEW
+        kama: Float,
+        roc_sum: Float,
+        last_window: Vec<Float>,
+        trailing_value: Float,
+        period: usize,
     ) -> Self {
-        Py${IndicatorName}State {
-            // TODO: STATE ATTRIBUTES
+        PyKamaState {
+            kama,
+            roc_sum,
+            last_window,
+            trailing_value,
+            period,
         }
     }
     #[getter]
@@ -62,83 +77,68 @@ impl Py${IndicatorName}State {
     }
     #[getter]
     pub fn __repr__(&self) -> String {
-        // TODO: IMPLEMENTS TO_STRING
+        format!("{:?}", self)
     }
 }
-impl From<${IndicatorName}State> for Py${IndicatorName}State {
-    fn from(state: ${IndicatorName}State) -> Self {
-        Py${IndicatorName}State {
-            // TODO: STATE ATTRIBUTES
+impl From<KamaState> for PyKamaState {
+    fn from(state: KamaState) -> Self {
+        PyKamaState {
+            kama: state.kama,
+            roc_sum: state.roc_sum,
+            last_window: state.last_window.into(),
+            trailing_value: state.trailing_value,
+            period: state.period,
         }
     }
 }
 
-impl From<Py${IndicatorName}State> for ${IndicatorName}State {
-    fn from(py_state: Py${IndicatorName}State) -> Self {
-        ${IndicatorName}State {
-            // TODO: STATE ATTRIBUTES
+impl From<PyKamaState> for KamaState {
+    fn from(py_state: PyKamaState) -> Self {
+        KamaState {
+            kama: py_state.kama,
+            roc_sum: py_state.roc_sum,
+            last_window: py_state.last_window.into(),
+            trailing_value: py_state.trailing_value,
+            period: py_state.period,
         }
     }
 }
 
-// TODO: DEFINE SIGNATURE
-#[pyfunction(signature = (data, period = 14, release_gil = false))]
-pub(crate) fn ${indicator_name}(
+#[pyfunction(signature = (data, period = 30, release_gil = false))]
+pub(crate) fn kama(
     py: Python,
     data: PyReadonlyArray1<Float>,
     period: usize,
-    // TODO: DEFINE INPUT ARGUMENTS
     release_gil: bool,
-) -> PyResult<(
-    // TODO: DEFINE OUTPUTS
-    Py<PyArray1<Float>>,
-    Py${IndicatorName}State
-)> {
-    // TODO: GET INPUT DATA
+) -> PyResult<(Py<PyArray1<Float>>, PyKamaState)> {
     let len = data.len();
     let input_slice = data.as_slice()?;
 
     if release_gil {
-        // TODO: DEFINE OUTPUTS
         let mut output = vec![0.0; len];
 
-        // TODO: IMPL WITH GIL RELEASE
         let state = py
-             .allow_threads(|| ${indicator_name}_into(input_slice, period, output.as_mut_slice()))
-             .map_err(|e| PyValueError::new_err(format!("{:?}", e)))?;
+            .allow_threads(|| kama_into(input_slice, period, output.as_mut_slice()))
+            .map_err(|e| PyValueError::new_err(format!("{:?}", e)))?;
 
-        // TODO: RETURN OUTPUTS
-        Ok((
-            output.into_pyarray(py).into(),
-            state.into()
-        ))
+        Ok((output.into_pyarray(py).into(), state.into()))
     } else {
-        // TODO: DEFINE OUTPUTS (PYTHON HEAP)
         let py_array_out = PyArray1::<Float>::zeros(py, [len], false);
         let py_array_ptr = unsafe { py_array_out.as_slice_mut()? };
 
-        // TODO: IMPL WITHOUT GIL RELEASE
-        let state = ${indicator_name}_into(input_slice, period, py_array_ptr)
+        let state = kama_into(input_slice, period, py_array_ptr)
             .map_err(|e| PyValueError::new_err(format!("{:?}", e)))?;
 
-        // TODO: RETURN OUTPUTS
-        Ok((
-            py_array_out.into(),
-            state.into()
-        ))
+        Ok((py_array_out.into(), state.into()))
     }
 }
 
-// TODO: DEFINE SIGNATURE AND INPUT ARGUMENTS
-#[pyfunction(signature = (new_value, ${indicator_name}_state))]
-pub(crate) fn ${indicator_name}_next(
-    /*INPUT ARGUMENTS HERE*/
-    new_value: Float,
-    ${indicator_name}_state: Py${IndicatorName}State
-) -> PyResult<Py${IndicatorName}State> {
-    let mut ${indicator_name}_state: ${IndicatorName}State = ${indicator_name}_state.into();
-    ${indicator_name}_state.update(new_value)
+#[pyfunction(signature = (new_value, kama_state))]
+pub(crate) fn kama_next(new_value: Float, kama_state: PyKamaState) -> PyResult<PyKamaState> {
+    let mut kama_state: KamaState = kama_state.into();
+    kama_state
+        .update(new_value)
         .map_err(|e| PyValueError::new_err(format!("{:?}", e)))?;
 
-    Ok(${indicator_name}_state.into())
+    Ok(kama_state.into())
 }

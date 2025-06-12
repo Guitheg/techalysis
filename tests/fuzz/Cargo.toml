@@ -81,3 +81,10 @@ path = "fuzz_targets/fuzz_t3.rs"
 test = false
 doc = false
 bench = false
+
+[[bin]]
+name = "kama"
+path = "fuzz_targets/fuzz_kama.rs"
+test = false
+doc = false
+bench = false

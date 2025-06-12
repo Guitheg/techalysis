@@ -1,4 +1,5 @@
 import argparse
+from timeit_bench.kama import benchmark_kama
 from timeit_bench.t3 import benchmark_t3
 from timeit_bench.trima import benchmark_trima
 from timeit_bench.tema import benchmark_tema
@@ -11,6 +12,7 @@ from timeit_bench.ema import benchmark_ema
 from timeit_bench.macd import benchmark_macd
 
 BENCHMARKS = {
+    'kama': benchmark_kama,
     't3': benchmark_t3,
     'trima': benchmark_trima,
     'tema': benchmark_tema,

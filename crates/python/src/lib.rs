@@ -3,6 +3,7 @@ use pyo3::prelude::*;
 mod py_bbands;
 mod py_dema;
 mod py_ema;
+mod py_kama;
 mod py_macd;
 mod py_rsi;
 mod py_sma;
@@ -54,5 +55,8 @@ fn _core(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(py_t3::t3_next, m)?)?;
     m.add_class::<py_t3::PyT3State>()?;
 
+    m.add_function(wrap_pyfunction!(py_kama::kama, m)?)?;
+    m.add_function(wrap_pyfunction!(py_kama::kama_next, m)?)?;
+    m.add_class::<py_kama::PyKamaState>()?;
     Ok(())
 }
