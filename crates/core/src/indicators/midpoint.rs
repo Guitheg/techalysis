@@ -123,7 +123,7 @@ impl State<Float> for MidpointState {
         for (idx, &value) in self.last_window.iter().enumerate() {
             if !value.is_finite() {
                 return Err(TechalibError::DataNonFinite(format!(
-                    "window[{idx}] = {value:?}"
+                    "last_window[{idx}] = {value:?}"
                 )));
             }
         }
@@ -149,7 +149,7 @@ impl State<Float> for MidpointState {
 /// ---
 /// With `n = lookback_from_period(period)`,
 /// the `n` first values that will be return will be `NaN`
-/// and the next values will be the KAMA values.
+/// and the next values will be the values.
 #[inline(always)]
 pub fn lookback_from_period(period: usize) -> Result<usize, TechalibError> {
     if period <= 1 {
@@ -208,6 +208,7 @@ pub fn midpoint_into(
     period: usize,
     output: &mut [Float],
 ) -> Result<MidpointState, TechalibError> {
+    TechalibError::check_same_length(("output", output), ("data", data))?;
     let len = data.len();
     let lookback = lookback_from_period(period)?;
 
@@ -250,32 +251,16 @@ fn init_midpoint_unchecked(
     lookback: usize,
     output: &mut [Float],
 ) -> Result<Float, TechalibError> {
-    if !data[0].is_finite() {
-        return Err(TechalibError::DataNonFinite(format!(
-            "data[0] = {:?}",
-            data[0]
-        )));
-    }
+    TechalibError::check_finite_at(0, data)?;
     let mut maximum = data[0];
     let mut minimum = maximum;
     output[0] = f64::NAN;
     for idx in 1..lookback {
-        if !data[idx].is_finite() {
-            return Err(TechalibError::DataNonFinite(format!(
-                "data[{idx}] = {:?}",
-                data[idx]
-            )));
-        }
+        TechalibError::check_finite_at(idx, data)?;
         (maximum, minimum) = minmax(data[idx], maximum, minimum);
         output[idx] = f64::NAN;
     }
-
-    if !data[lookback].is_finite() {
-        return Err(TechalibError::DataNonFinite(format!(
-            "data[{lookback}] = {:?}",
-            data[lookback]
-        )));
-    }
+    TechalibError::check_finite_at(lookback, data)?;
     (maximum, minimum) = minmax(data[lookback], maximum, minimum);
 
     Ok(calculate_midpoint(maximum, minimum))

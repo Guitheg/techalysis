@@ -110,11 +110,11 @@ impl State<Float> for ${IndicatorName}State {
     }
 }
 
-/// Lookback period for MIDPOINT calculation
+/// Lookback period for ${INDICATORNAME} calculation
 /// ---
 /// With `n = lookback_from_period(period)`,
 /// the `n` first values that will be return will be `NaN`
-/// and the next values will be the KAMA values.
+/// and the next values will be the values.
 #[inline(always)]
 pub fn lookback_from_period(period: usize) -> Result<usize, TechalibError> {
     if period <= 1 {
@@ -191,8 +191,13 @@ pub fn ${indicator_name}_into(
     output: &mut [Float],
     // TODO: ARGUMENTS AND OUTPUTS ARGUMENTS
 ) -> Result<${IndicatorName}State, TechalibError> {
+    TechalibError::check_same_length(
+        ("output", output),
+        ("data", data)
+    )?;
+
     let len = data.len();
-    let lookback = lookback_from_period(period);
+    let lookback = lookback_from_period(period)?;
 
     if len <= lookback {
         return Err(TechalibError::InsufficientData);
@@ -207,7 +212,7 @@ pub fn ${indicator_name}_into(
 }
 
 #[inline(always)]
-fn init_midpoint_unchecked(
+fn init_${indicator_name}_unchecked(
     data: &[Float],
     lookback: usize,
     output: &mut [Float]
@@ -225,7 +230,7 @@ fn init_midpoint_unchecked(
 }
 
 #[inline(always)]
-fn midpoint_next_unchecked(
+fn ${indicator_name}_next_unchecked(
     new_value: Float,
     // TODO: CORE ARGUMENTS FOR INCREMENTAL
 ) -> Float {

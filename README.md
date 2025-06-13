@@ -47,7 +47,7 @@ The number of supported indicators is set to increase.
 | **_Overlap_**             |||
 |                           | **bbands** - Bollinger Bands                                    | ✅        |
 |                           | **midpoint** - MidPoint over period                             | ✅        |
-|                           | **midprice** - Midpoint Price over period                       | ⬜        |
+|                           | **midprice** - Midpoint Price over period                       | ✅        |
 | _Moving Average_          | **sma** - Simple Moving Average                                 | ✅        |
 |                           | **ema** - Exponential Moving Average                            | ✅        |
 |                           | **wma** - Weighted Moving Average                               | ✅        |

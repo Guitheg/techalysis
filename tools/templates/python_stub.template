@@ -8,15 +8,20 @@ from numpy.typing import NDArray
 class ${IndicatorName}State:
     """State for the ${IndicatorName} computation"""
     # TODO: DEFINE STATE ATTRIBUTES
+    ${indicator_name}: Float
+    period: int
     ...
 
 class ${IndicatorName}Result(NamedTuple):
     """Result of the ${IndicatorName} computation"""
     # TODO: DEFINE RESULTS OUTPUTS ATTRIBUTES
+    values: NDArray
     state: ${IndicatorName}State
 
 def ${indicator_name}(
     # TODO: DEFINE ARGUMENTS INPUTS
+    data: NDArray,
+    period: int = 14,
     release_gil: bool = False
 ) -> ${IndicatorName}Result | Tuple[NDArray, ${IndicatorName}State]:
     # TODO: FILL THE DOCUMENTATION
@@ -38,13 +43,15 @@ def ${indicator_name}(
     -------
     ${IndicatorName}Result
         A named tuple containing the result of the ${IndicatorName} computation.
-        - ... TODO:OUTPUTS
-        - state: **${IndicatorName}State** with (TODO:ATTRIBUTES)
+        - values: NDArray
+            The computed values.
+        - state: `${IndicatorName}State`
     """
     ...
 
 def ${indicator_name}_next(
     # TODO: DEFINE ARGUMENTS INPUTS
+    new_value: Float
     state: ${IndicatorName}State
 ) -> ${IndicatorName}State:
     """

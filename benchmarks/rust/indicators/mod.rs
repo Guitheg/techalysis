@@ -4,6 +4,7 @@ pub(crate) mod bench_ema;
 pub(crate) mod bench_kama;
 pub(crate) mod bench_macd;
 pub(crate) mod bench_midpoint;
+pub(crate) mod bench_midprice;
 pub(crate) mod bench_rsi;
 pub(crate) mod bench_sma;
 pub(crate) mod bench_t3;

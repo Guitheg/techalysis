@@ -1,4 +1,5 @@
 import argparse
+from timeit_bench.midprice import benchmark_midprice
 from timeit_bench.midpoint import benchmark_midpoint
 from timeit_bench.kama import benchmark_kama
 from timeit_bench.t3 import benchmark_t3
@@ -13,6 +14,7 @@ from timeit_bench.ema import benchmark_ema
 from timeit_bench.macd import benchmark_macd
 
 BENCHMARKS = {
+    'midprice': benchmark_midprice,
     'midpoint': benchmark_midpoint,
     'kama': benchmark_kama,
     't3': benchmark_t3,
