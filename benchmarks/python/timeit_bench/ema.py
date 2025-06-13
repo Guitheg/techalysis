@@ -1,7 +1,7 @@
 import numpy as np
 import timeit
 from . import print_benchmark
-import techalib as tx
+import techalib as tb
 import talib
 
 
@@ -10,7 +10,7 @@ def benchmark_ema():
     data = np.random.random(5_000_000)
     window_size = 100
 
-    duration = timeit.timeit(lambda: tx.ema(data, window_size, 2), number=iterations)
+    duration = timeit.timeit(lambda: tb.ema(data, window_size, 2), number=iterations)
     average_time_rs = duration / iterations
 
     duration = timeit.timeit(lambda: talib.EMA(data, window_size), number=iterations)
@@ -22,7 +22,7 @@ def benchmark_ema():
     data = np.random.random(1_000_000)
     window_size = 100
 
-    duration = timeit.timeit(lambda: tx.ema(data, window_size, 2), number=iterations)
+    duration = timeit.timeit(lambda: tb.ema(data, window_size, 2), number=iterations)
     average_time_rs = duration / iterations
 
     duration = timeit.timeit(lambda: talib.EMA(data, window_size), number=iterations)
@@ -34,7 +34,7 @@ def benchmark_ema():
     data = np.random.random(50_000)
     window_size = 30
 
-    duration = timeit.timeit(lambda: tx.ema(data, window_size, 2), number=iterations)
+    duration = timeit.timeit(lambda: tb.ema(data, window_size, 2), number=iterations)
     average_time_rs = duration / iterations
 
     duration = timeit.timeit(lambda: talib.EMA(data, window_size), number=iterations)

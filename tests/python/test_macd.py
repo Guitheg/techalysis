@@ -1,13 +1,13 @@
-import techalib as tx
+import techalib as tb
 from numpy import testing
 import numpy as np
 
 def test_macd_numpy_success(csv_loader):
     df = csv_loader("macd")
-    result = tx.macd(np.array(df["close"].iloc[:-1]))
-    final_result = tx.macd(np.array(df["close"]))
+    result = tb.macd(np.array(df["close"].iloc[:-1]))
+    final_result = tb.macd(np.array(df["close"]))
 
-    next_state = tx.macd_next(df["close"].iloc[-1], result.state)
+    next_state = tb.macd_next(df["close"].iloc[-1], result.state)
     testing.assert_allclose(result.macd, final_result.macd[:-1])
     testing.assert_allclose(result.signal, final_result.signal[:-1])
     testing.assert_allclose(result.histogram, final_result.histogram[:-1])
@@ -20,10 +20,10 @@ def test_macd_numpy_success(csv_loader):
 
 def test_macd_pandas_success(csv_loader):
     df = csv_loader("macd")
-    result = tx.macd(df["close"].iloc[:-1])
-    final_result = tx.macd(df["close"])
+    result = tb.macd(df["close"].iloc[:-1])
+    final_result = tb.macd(df["close"])
 
-    next_state = tx.macd_next(df["close"].iloc[-1], result.state)
+    next_state = tb.macd_next(df["close"].iloc[-1], result.state)
     testing.assert_allclose(result.macd, final_result.macd[:-1])
     testing.assert_allclose(result.signal, final_result.signal[:-1])
     testing.assert_allclose(result.histogram, final_result.histogram[:-1])
@@ -36,6 +36,6 @@ def test_macd_pandas_success(csv_loader):
 
 def test_thread_macd(thread_test):
    def macd_tx_lambda(data):
-      return tx.macd(data, release_gil = True)
+      return tb.macd(data, release_gil = True)
 
    thread_test(macd_tx_lambda, n_threads=4)

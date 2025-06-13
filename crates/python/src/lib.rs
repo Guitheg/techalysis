@@ -5,6 +5,7 @@ mod py_dema;
 mod py_ema;
 mod py_kama;
 mod py_macd;
+mod py_midpoint;
 mod py_rsi;
 mod py_sma;
 mod py_t3;
@@ -58,5 +59,8 @@ fn _core(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(py_kama::kama, m)?)?;
     m.add_function(wrap_pyfunction!(py_kama::kama_next, m)?)?;
     m.add_class::<py_kama::PyKamaState>()?;
+    m.add_function(wrap_pyfunction!(py_midpoint::midpoint, m)?)?;
+    m.add_function(wrap_pyfunction!(py_midpoint::midpoint_next, m)?)?;
+    m.add_class::<py_midpoint::PyMidpointState>()?;
     Ok(())
 }

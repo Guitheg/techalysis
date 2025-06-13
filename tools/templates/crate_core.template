@@ -110,15 +110,20 @@ impl State<Float> for ${IndicatorName}State {
     }
 }
 
-/// Lookback period for ${INDICATORNAME} calculation
+/// Lookback period for MIDPOINT calculation
 /// ---
 /// With `n = lookback_from_period(period)`,
 /// the `n` first values that will be return will be `NaN`
 /// and the next values will be the KAMA values.
 #[inline(always)]
-pub fn lookback_from_period(period: usize) -> usize {
-    //TODO: DEFINE LOOKBACK
-    period
+pub fn lookback_from_period(period: usize) -> Result<usize, TechalibError> {
+    if period <= 1 {
+        return Err(TechalibError::BadParam(format!(
+            "Period must be greater than 1, got: {}",
+            period
+        )));
+    }
+    Ok(period)
 }
 
 
@@ -130,6 +135,8 @@ pub fn lookback_from_period(period: usize) -> usize {
 /// Input Arguments
 /// ---
 /// TODO: INPUT ARGS DESCRIPTION
+/// - `data`: A slice of [`Float`] representing the input data.
+/// - `period`: The period for the calculation.
 ///
 /// Returns
 /// ---
@@ -166,10 +173,13 @@ pub fn ${indicator_name}(
 /// Input Arguments
 /// ---
 /// TODO: INPUT ARGS DESCRIPTIONS
+/// - `data`: A slice of [`Float`] representing the input data.
+/// - `period`: The period for the calculation.
 ///
 /// Output Arguments
 /// ---
 /// TODO: OUTPUT ARGS DESCRIPTIONS
+/// - `output`: A mutable slice of [`Float`] where the calculated values will be stored.
 ///
 /// Returns
 /// ---
@@ -188,13 +198,6 @@ pub fn ${indicator_name}_into(
         return Err(TechalibError::InsufficientData);
     }
 
-    if period <= 1 {
-        return Err(TechalibError::BadParam(format!(
-            "Period must be greater than 1, got: {}",
-            period
-        )));
-    }
-
     // TODO: IMPLEMENTS CORE FUNCTION LOGIC
 
     Ok(${IndicatorName}State {
@@ -204,15 +207,26 @@ pub fn ${indicator_name}_into(
 }
 
 #[inline(always)]
-fn init_${indicator_name}_unchecked(
+fn init_midpoint_unchecked(
+    data: &[Float],
+    lookback: usize,
+    output: &mut [Float]
     // TODO: DEFINIE INIT ARGUMENTS
 ) -> Result<Float, TechalibError> {
     // TODO: IMPLEMENTS INIT
+    for i in 0..lookback {
+        if !data[i].is_finite() {
+            return Err(TechalibError::DataNonFinite(format!(
+                "data[{i}] = {data:?}",
+            )));
+        }
+    }
     Ok(0.0)
 }
 
 #[inline(always)]
-fn ${indicator_name}_next_unchecked(
+fn midpoint_next_unchecked(
+    new_value: Float,
     // TODO: CORE ARGUMENTS FOR INCREMENTAL
 ) -> Float {
     // TODO: IMPLEMENTS CORE INCREMENTAL LOGIC

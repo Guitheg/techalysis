@@ -33,6 +33,7 @@ CONFIG_DICT = {
     "TRIMA": Configuration(talib, "TRIMA", ["close"], dict(timeperiod=30), ["out"]),
     "T3": Configuration(talib, "T3", ["close"], dict(timeperiod=20, vfactor=0.7), ["out"]),
     "KAMA": Configuration(talib, "KAMA", ["close"], dict(timeperiod=30), ["out"]),
+    "MIDPOINT": Configuration(talib, "MIDPOINT", ["close"], dict(timeperiod=14), ["out"]),
 }
 
 def generate_test_data(filename: str, configuration: Configuration, seed: int):

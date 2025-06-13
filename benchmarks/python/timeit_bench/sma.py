@@ -1,7 +1,7 @@
 import numpy as np
 import timeit
 from . import print_benchmark, time_as_str
-import techalib as tx
+import techalib as tb
 import talib
 
 def py_sma(data, window_size):
@@ -15,7 +15,7 @@ def benchmark_sma():
     data = np.random.random(5_000_000)
     window_size = 100
 
-    duration = timeit.timeit(lambda: tx.sma(data, window_size), number=iterations)
+    duration = timeit.timeit(lambda: tb.sma(data, window_size), number=iterations)
     average_time_rs = duration / iterations
 
     duration = timeit.timeit(lambda: talib.SMA(data, window_size), number=iterations)
@@ -32,7 +32,7 @@ def benchmark_sma():
     duration = timeit.timeit(lambda: py_sma(data, window_size), number=iterations)
     average_time_py = duration / iterations
 
-    duration = timeit.timeit(lambda: tx.sma(data, window_size), number=iterations)
+    duration = timeit.timeit(lambda: tb.sma(data, window_size), number=iterations)
     average_time_rs = duration / iterations
 
     duration = timeit.timeit(lambda: talib.SMA(data, window_size), number=iterations)
@@ -46,7 +46,7 @@ def benchmark_sma():
     duration = timeit.timeit(lambda: py_sma(data, window_size), number=iterations)
     average_time_py = duration / iterations
 
-    duration = timeit.timeit(lambda: tx.sma(data, window_size), number=iterations)
+    duration = timeit.timeit(lambda: tb.sma(data, window_size), number=iterations)
     average_time_rs = duration / iterations
 
     duration = timeit.timeit(lambda: talib.SMA(data, window_size), number=iterations)

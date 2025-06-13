@@ -1,7 +1,7 @@
 import numpy as np
 import timeit
 from . import print_benchmark
-import techalib as tx
+import techalib as tb
 import talib
 
 def benchmark_dema():
@@ -11,7 +11,7 @@ def benchmark_dema():
     duration = timeit.timeit(lambda: talib.DEMA(data), number=iterations)
     average_time_c = duration / iterations
 
-    duration = timeit.timeit(lambda: tx.dema(data), number=iterations)
+    duration = timeit.timeit(lambda: tb.dema(data), number=iterations)
     average_time_rs = duration / iterations
 
     print_benchmark(iterations, {"length": len(data)}, rust=average_time_rs, c=average_time_c)
@@ -22,7 +22,7 @@ def benchmark_dema():
     duration = timeit.timeit(lambda: talib.DEMA(data), number=iterations)
     average_time_c = duration / iterations
 
-    duration = timeit.timeit(lambda: tx.dema(data), number=iterations)
+    duration = timeit.timeit(lambda: tb.dema(data), number=iterations)
     average_time_rs = duration / iterations
 
     print_benchmark(iterations, {"length": len(data)}, rust=average_time_rs, c=average_time_c)
@@ -33,7 +33,7 @@ def benchmark_dema():
     duration = timeit.timeit(lambda: talib.DEMA(data), number=iterations)
     average_time_c = duration / iterations
 
-    duration = timeit.timeit(lambda: tx.dema(data), number=iterations)
+    duration = timeit.timeit(lambda: tb.dema(data), number=iterations)
     average_time_rs = duration / iterations
 
     print_benchmark(iterations, {"length": len(data)}, rust=average_time_rs, c=average_time_c)

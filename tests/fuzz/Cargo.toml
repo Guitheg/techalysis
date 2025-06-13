@@ -88,3 +88,10 @@ path = "fuzz_targets/fuzz_kama.rs"
 test = false
 doc = false
 bench = false
+
+[[bin]]
+name = "midpoint"
+path = "fuzz_targets/fuzz_midpoint.rs"
+test = false
+doc = false
+bench = false

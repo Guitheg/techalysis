@@ -25,7 +25,7 @@ def kama(
     release_gil: bool = False
 ) -> KamaResult | Tuple[NDArray, KamaState]:
     """
-    Kama: ...
+    Kama: Kaufman's Adaptive Moving Average (KAMA)
     ----------
 
     Parameters

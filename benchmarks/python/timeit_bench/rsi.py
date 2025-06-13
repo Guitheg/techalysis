@@ -1,7 +1,7 @@
 import numpy as np
 import timeit
 from . import print_benchmark, time_as_str
-import techalib as tx
+import techalib as tb
 import talib
 
 def py_rsi(data, window_size):
@@ -37,7 +37,7 @@ def benchmark_rsi():
     duration = timeit.timeit(lambda: talib.RSI(data, window_size), number=iterations)
     average_time_c = duration / iterations
 
-    duration = timeit.timeit(lambda: tx.rsi(data, window_size, release_gil = False), number=iterations)
+    duration = timeit.timeit(lambda: tb.rsi(data, window_size, release_gil = False), number=iterations)
     average_time_rs = duration / iterations
 
     print_benchmark(iterations, {"length": len(data), "window size": window_size}, rust=average_time_rs, c=average_time_c)
@@ -49,7 +49,7 @@ def benchmark_rsi():
     duration = timeit.timeit(lambda: talib.RSI(data, window_size), number=iterations)
     average_time_c = duration / iterations
 
-    duration = timeit.timeit(lambda: tx.rsi(data, window_size), number=iterations)
+    duration = timeit.timeit(lambda: tb.rsi(data, window_size), number=iterations)
     average_time_rs = duration / iterations
 
     print_benchmark(iterations, {"length": len(data), "window size": window_size}, rust=average_time_rs, c=average_time_c)
@@ -58,7 +58,7 @@ def benchmark_rsi():
     data = np.random.random(50_000)
     window_size = 14
 
-    duration = timeit.timeit(lambda: tx.rsi(data, window_size), number=iterations)
+    duration = timeit.timeit(lambda: tb.rsi(data, window_size), number=iterations)
     average_time_rs = duration / iterations
 
     duration = timeit.timeit(lambda: talib.RSI(data, window_size), number=iterations)

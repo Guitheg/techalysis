@@ -4,14 +4,14 @@ from . import print_benchmark
 import techalib as tb
 import talib
 
-def benchmark_kama():
+def benchmark_midpoint():
     iterations = 50
     data = np.random.random(5_000_000)
 
-    duration = timeit.timeit(lambda: talib.KAMA(data, 30), number=iterations)
+    duration = timeit.timeit(lambda: talib.MIDPOINT(data), number=iterations)
     average_time_c = duration / iterations
 
-    duration = timeit.timeit(lambda: tb.kama(data, 30), number=iterations)
+    duration = timeit.timeit(lambda: tb.midpoint(data), number=iterations)
     average_time_rs = duration / iterations
 
     print_benchmark(iterations, {"length": len(data)}, rust=average_time_rs, c=average_time_c)
@@ -19,10 +19,10 @@ def benchmark_kama():
     iterations = 50
     data = np.random.random(1_000_000)
 
-    duration = timeit.timeit(lambda: talib.KAMA(data, 30), number=iterations)
+    duration = timeit.timeit(lambda: talib.MIDPOINT(data), number=iterations)
     average_time_c = duration / iterations
 
-    duration = timeit.timeit(lambda: tb.kama(data, 30), number=iterations)
+    duration = timeit.timeit(lambda: tb.midpoint(data), number=iterations)
     average_time_rs = duration / iterations
 
     print_benchmark(iterations, {"length": len(data)}, rust=average_time_rs, c=average_time_c)
@@ -30,10 +30,10 @@ def benchmark_kama():
     iterations = 50
     data = np.random.random(50_000)
 
-    duration = timeit.timeit(lambda: talib.KAMA(data, 30), number=iterations)
+    duration = timeit.timeit(lambda: talib.MIDPOINT(data), number=iterations)
     average_time_c = duration / iterations
 
-    duration = timeit.timeit(lambda: tb.kama(data, 30), number=iterations)
+    duration = timeit.timeit(lambda: tb.midpoint(data), number=iterations)
     average_time_rs = duration / iterations
 
     print_benchmark(iterations, {"length": len(data)}, rust=average_time_rs, c=average_time_c)

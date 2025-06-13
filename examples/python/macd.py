@@ -1,5 +1,5 @@
 import numpy as np
-import techalib as tx
+import techalib as tb
 import matplotlib.pyplot as plt
 
 
@@ -7,7 +7,7 @@ if __name__ == "__main__":
     close = np.random.random(100)
     plt.plot(close)
 
-    out = tx.macd(close, fast_period=12, slow_period=26, signal_period=9)
+    out = tb.macd(close, fast_period=12, slow_period=26, signal_period=9)
     print(f"Input: {close}")
     print(f"Output MACD: {out[0]}")
     print(f"Output SIGNAL: {out[1]}")
