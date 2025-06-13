@@ -7,7 +7,7 @@ use crate::expect_err_overflow_or_ok_with;
 use proptest::{collection::vec, prelude::*};
 use techalib::{
     errors::TechalibError,
-    indicators::sma::{sma, SmaResult},
+    indicators::sma::{sma, sma_into, SmaResult},
     traits::State,
     types::Float,
 };
@@ -147,6 +147,16 @@ fn slow_sma(data: &[Float], window: usize) -> Vec<Float> {
         out[i] = slice.iter().sum::<Float>() / window as Float;
     }
     out
+}
+
+#[test]
+fn different_length_input_output_err() {
+    let input = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+    let mut output = vec![0.0; 3];
+    let period = 3;
+    let result = sma_into(&input, period, output.as_mut_slice());
+    assert!(result.is_err());
+    assert!(matches!(result, Err(TechalibError::BadParam(_))));
 }
 
 proptest! {

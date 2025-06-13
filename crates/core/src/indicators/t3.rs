@@ -294,6 +294,7 @@ pub fn t3_into(
     alpha: Option<Float>,
     output: &mut [Float],
 ) -> Result<T3State, TechalibError> {
+    TechalibError::check_same_length(("data", data), ("output", output))?;
     let len = data.len();
     let skip_period = t3_skip_period_unchecked(period);
 

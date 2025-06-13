@@ -8,7 +8,7 @@ use crate::{
 
 use techalib::{
     errors::TechalibError,
-    indicators::wma::{wma, WmaResult},
+    indicators::wma::{wma, wma_into, WmaResult},
     traits::State,
     types::Float,
 };
@@ -119,4 +119,14 @@ fn next_with_finite_neg_extreme_err_overflow_or_ok_all_finite() {
     expect_err_overflow_or_ok_with!(state.update(Float::MIN + 5.0), |_| {
         assert!(state.wma.is_finite(), "Expected all values to be finite");
     });
+}
+
+#[test]
+fn different_length_input_output_err() {
+    let input = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+    let mut output = vec![0.0; 3];
+    let period = 3;
+    let result = wma_into(&input, period, output.as_mut_slice());
+    assert!(result.is_err());
+    assert!(matches!(result, Err(TechalibError::BadParam(_))));
 }

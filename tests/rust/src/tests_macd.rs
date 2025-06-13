@@ -1,6 +1,6 @@
 use techalib::{
     errors::TechalibError,
-    indicators::macd::{macd, MacdResult},
+    indicators::macd::{macd, macd_into, MacdResult},
     traits::State,
     types::Float,
 };
@@ -213,4 +213,24 @@ fn next_with_finite_neg_extreme_err_overflow_or_ok_all_finite() {
             "Expected all values to be finite"
         );
     });
+}
+
+#[test]
+fn different_length_input_output_err() {
+    let input = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+    let mut output = vec![0.0; 3];
+    let mut output_signal = vec![0.0; 5];
+    let mut output_histogram = vec![0.0; 5];
+    let period = 3;
+    let result = macd_into(
+        &input,
+        period,
+        2,
+        2,
+        output.as_mut_slice(),
+        output_signal.as_mut_slice(),
+        output_histogram.as_mut_slice(),
+    );
+    assert!(result.is_err());
+    assert!(matches!(result, Err(TechalibError::BadParam(_))));
 }

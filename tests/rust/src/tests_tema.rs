@@ -6,7 +6,7 @@ use crate::helper::{
 use crate::expect_err_overflow_or_ok_with;
 use techalib::{
     errors::TechalibError,
-    indicators::tema::{tema, tema_skip_period_unchecked, TemaResult},
+    indicators::tema::{tema, tema_into, tema_skip_period_unchecked, TemaResult},
     traits::State,
     types::Float,
 };
@@ -160,4 +160,14 @@ fn constant_values() {
             .all(|v| *v == 5.0),
         "Expected all values to be equal to the constant input"
     );
+}
+
+#[test]
+fn different_length_input_output_err() {
+    let input = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+    let mut output = vec![0.0; 3];
+    let period = 3;
+    let result = tema_into(&input, period, None, output.as_mut_slice());
+    assert!(result.is_err());
+    assert!(matches!(result, Err(TechalibError::BadParam(_))));
 }

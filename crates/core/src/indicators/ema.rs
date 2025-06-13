@@ -188,6 +188,7 @@ pub fn ema_into(
     alpha: Option<Float>,
     output: &mut [Float],
 ) -> Result<EmaState, TechalibError> {
+    TechalibError::check_same_length(("data", data), ("output", output))?;
     let len = data.len();
     let inv_period = 1.0 / period as Float;
     if period == 0 || len < period {

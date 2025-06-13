@@ -6,7 +6,7 @@ use crate::helper::{
 use crate::expect_err_overflow_or_ok_with;
 use techalib::{
     errors::TechalibError,
-    indicators::kama::{kama, KamaResult},
+    indicators::kama::{kama, kama_into, KamaResult},
     traits::State,
     types::Float,
 };
@@ -114,4 +114,14 @@ fn empty_input_err() {
     let result = kama(&data, period);
     assert!(result.is_err());
     assert!(matches!(result, Err(TechalibError::InsufficientData)));
+}
+
+#[test]
+fn different_length_input_output_err() {
+    let input = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+    let mut output = vec![0.0; 3];
+    let period = 3;
+    let result = kama_into(&input, period, output.as_mut_slice());
+    assert!(result.is_err());
+    assert!(matches!(result, Err(TechalibError::BadParam(_))));
 }

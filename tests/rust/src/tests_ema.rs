@@ -8,7 +8,7 @@ use crate::{
 use proptest::{collection::vec, prelude::*};
 use techalib::{
     errors::TechalibError,
-    indicators::ema::{ema, period_to_alpha, EmaResult},
+    indicators::ema::{ema, ema_into, period_to_alpha, EmaResult},
     traits::State,
     types::Float,
 };
@@ -139,6 +139,16 @@ fn next_with_finite_neg_extreme_err_overflow_or_ok_all_finite() {
     expect_err_overflow_or_ok_with!(state.update(Float::MIN + 5.0), |_| {
         assert!(state.ema.is_finite(), "Expected all values to be finite");
     });
+}
+
+#[test]
+fn different_length_input_output_err() {
+    let input = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+    let mut output = vec![0.0; 3];
+    let period = 3;
+    let result = ema_into(&input, period, None, output.as_mut_slice());
+    assert!(result.is_err());
+    assert!(matches!(result, Err(TechalibError::BadParam(_))));
 }
 
 proptest! {

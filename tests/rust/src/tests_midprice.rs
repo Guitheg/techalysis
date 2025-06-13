@@ -6,7 +6,7 @@ use crate::helper::{
 use crate::expect_err_overflow_or_ok_with;
 use techalib::{
     errors::TechalibError,
-    indicators::midprice::{midprice, MidpriceResult, MidpriceSample},
+    indicators::midprice::{midprice, midprice_into, MidpriceResult, MidpriceSample},
     traits::State,
     types::Float,
 };
@@ -147,6 +147,17 @@ fn different_length_err() {
     let low_prices = vec![1.0, 2.0, 3.0, 4.0, 5.0];
     let period = 2;
     let result = midprice(&high_prices, &low_prices, period);
+    assert!(result.is_err());
+    assert!(matches!(result, Err(TechalibError::BadParam(_))));
+}
+
+#[test]
+fn different_length_input_output_err() {
+    let input = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+    let low_input = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+    let mut output = vec![0.0; 3];
+    let period = 3;
+    let result = midprice_into(&input, &low_input, period, output.as_mut_slice());
     assert!(result.is_err());
     assert!(matches!(result, Err(TechalibError::BadParam(_))));
 }

@@ -229,6 +229,7 @@ pub fn tema_into(
     alpha: Option<Float>,
     output: &mut [Float],
 ) -> Result<TemaState, TechalibError> {
+    TechalibError::check_same_length(("data", data), ("output", output))?;
     let len = data.len();
     let inv_period = 1.0 / period as Float;
     let skip_period = tema_skip_period_unchecked(period);

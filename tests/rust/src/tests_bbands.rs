@@ -8,7 +8,7 @@ use crate::{
 
 use techalib::{
     errors::TechalibError,
-    indicators::bbands::{bbands, BBandsMA, BBandsResult, DeviationMulipliers},
+    indicators::bbands::{bbands, bbands_into, BBandsMA, BBandsResult, DeviationMulipliers},
     traits::State,
     types::Float,
 };
@@ -277,4 +277,24 @@ fn finite_neg_extreme_err_overflow_or_ok_all_finite() {
             );
         }
     );
+}
+
+#[test]
+fn different_length_input_output_err() {
+    let input = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+    let mut output = vec![0.0; 3];
+    let mut output_upper = vec![0.0; 5];
+    let mut output_lower = vec![0.0; 5];
+    let period = 3;
+    let result = bbands_into(
+        &input,
+        period,
+        DeviationMulipliers { up: 2.0, down: 2.0 },
+        BBandsMA::SMA,
+        output_upper.as_mut_slice(),
+        output.as_mut_slice(),
+        output_lower.as_mut_slice(),
+    );
+    assert!(result.is_err());
+    assert!(matches!(result, Err(TechalibError::BadParam(_))));
 }

@@ -235,6 +235,7 @@ pub fn kama_into(
     period: usize,
     output: &mut [Float],
 ) -> Result<KamaState, TechalibError> {
+    TechalibError::check_same_length(("data", data), ("output", output))?;
     let len = data.len();
     let lookback = lookback_from_period(period);
 
