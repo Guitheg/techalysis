@@ -116,8 +116,8 @@ impl State<&MidpriceSample> for MidpriceState {
     /// - `sample`: The new input [`MidpriceSample`] to update the MIDPRICE state.
     ///   It contains the high and low prices of the sample.
     fn update(&mut self, sample: &MidpriceSample) -> Result<(), TechalibError> {
-        TechalibError::check_finite(sample.high)?;
-        TechalibError::check_finite(sample.low)?;
+        TechalibError::check_finite(sample.high, "high")?;
+        TechalibError::check_finite(sample.low, "low")?;
 
         if self.period <= 1 {
             return Err(TechalibError::BadParam(format!(

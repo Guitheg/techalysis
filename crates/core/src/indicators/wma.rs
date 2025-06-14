@@ -168,6 +168,17 @@ impl State<Float> for WmaState {
     }
 }
 
+/// Lookback period for WMA calculation
+/// ---
+/// With `n = lookback_from_period(period)`,
+/// the `n` first values that will be return will be `NaN`
+/// and the next values will be the values.
+#[inline(always)]
+pub fn lookback_from_period(period: usize) -> Result<usize, TechalibError> {
+    TechalibError::check_period(period)?;
+    Ok(period)
+}
+
 /// Calculation of the WMA function
 /// ---
 /// It returns a [`WmaResult`]
@@ -214,34 +225,19 @@ pub fn wma_into(
     period: usize,
     output: &mut [Float],
 ) -> Result<WmaState, TechalibError> {
+    TechalibError::check_same_length(("data", data), ("output", output))?;
+    TechalibError::check_period(period)?;
     let len = data.len();
     let inv_weight_sum = inv_weight_sum_linear(period);
-    if period == 0 || period > len {
+    if len <= period {
         return Err(TechalibError::InsufficientData);
-    }
-
-    if period == 1 {
-        return Err(TechalibError::BadParam(
-            "WMA period must be greater than 1".to_string(),
-        ));
-    }
-
-    if output.len() < len {
-        return Err(TechalibError::BadParam(
-            "Output array must be at least as long as the input data array".to_string(),
-        ));
     }
 
     let (mut period_sub, mut period_sum) =
         init_wma_unchecked(data, period, inv_weight_sum, output)?;
 
     for idx in period..len {
-        if !data[idx].is_finite() {
-            return Err(TechalibError::DataNonFinite(format!(
-                "data[{idx}] = {:?}",
-                data[idx]
-            )));
-        }
+        TechalibError::check_finite_at(idx, data)?;
         (output[idx], period_sub, period_sum) = wma_next_unchecked(
             data[idx],
             data[idx - period],
@@ -250,9 +246,7 @@ pub fn wma_into(
             period_sum,
             inv_weight_sum,
         );
-        if !output[idx].is_finite() {
-            return Err(TechalibError::Overflow(idx, output[idx]));
-        }
+        TechalibError::check_overflow_at(idx, output)?;
     }
     Ok(WmaState {
         wma: output[len - 1],

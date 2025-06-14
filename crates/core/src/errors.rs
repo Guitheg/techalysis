@@ -27,7 +27,17 @@ pub enum TechalibError {
 }
 
 impl TechalibError {
-    #[inline(always)]
+    pub(crate) fn check_period(period: usize) -> Result<(), TechalibError> {
+        if period < 2 {
+            Err(TechalibError::BadParam(format!(
+                "Period must be greater than 1, got {}",
+                period
+            )))
+        } else {
+            Ok(())
+        }
+    }
+
     pub(crate) fn check_same_length(
         data1: (&str, &[Float]),
         data2: (&str, &[Float]),
@@ -45,9 +55,8 @@ impl TechalibError {
         }
     }
 
-    #[inline(always)]
     pub(crate) fn check_finite_at(index: usize, data: &[Float]) -> Result<(), TechalibError> {
-        if !data[index].is_finite() {
+        if !(data[index].is_finite()) {
             Err(TechalibError::DataNonFinite(format!(
                 "data[{}] = {:?}",
                 index, data[index]
@@ -57,23 +66,23 @@ impl TechalibError {
         }
     }
 
-    #[inline(always)]
-    pub(crate) fn check_finite(value: Float) -> Result<(), TechalibError> {
-        if !value.is_finite() {
-            Err(TechalibError::DataNonFinite(format!("value = {:?}", value)))
+    pub(crate) fn check_finite(value: Float, name: &str) -> Result<(), TechalibError> {
+        if !(value.is_finite()) {
+            Err(TechalibError::DataNonFinite(format!(
+                "{} = {:?}",
+                name, value
+            )))
         } else {
             Ok(())
         }
     }
 
-    #[inline(always)]
-    pub(crate) fn check_overflow_at(index: usize, data: Float) -> Result<(), TechalibError> {
-        TechalibError::check_finite_at(index, &[data])
-            .map_err(|_| TechalibError::Overflow(index, data))
+    pub(crate) fn check_overflow_at(index: usize, data: &[Float]) -> Result<(), TechalibError> {
+        TechalibError::check_finite_at(index, data)
+            .map_err(|_| TechalibError::Overflow(index, data[index]))
     }
 
-    #[inline(always)]
     pub(crate) fn check_overflow(value: Float) -> Result<(), TechalibError> {
-        TechalibError::check_overflow_at(0, value)
+        TechalibError::check_overflow_at(0, &[value])
     }
 }

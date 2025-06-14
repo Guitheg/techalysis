@@ -57,9 +57,7 @@ fn invalid_period_lower_bound() {
     let data = vec![1.0, 2.0, 3.0];
     let result = ema(&data, 0, None);
     assert!(result.is_err());
-    if let Err(TechalibError::BadParam(msg)) = result {
-        assert!(msg.contains("between 2 and 100000"));
-    }
+    assert!(matches!(result, Err(TechalibError::BadParam(_))));
 }
 
 #[test]

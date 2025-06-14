@@ -123,6 +123,14 @@ impl State<Float> for MacdState {
     /// ---
     /// - `sample`: The new input to update the MACD state.
     fn update(&mut self, sample: Float) -> Result<(), TechalibError> {
+        TechalibError::check_finite(sample, "sample")?;
+        TechalibError::check_finite(self.signal, "signal")?;
+        TechalibError::check_finite(self.fast_ema, "fast_ema")?;
+        TechalibError::check_finite(self.slow_ema, "slow_ema")?;
+        TechalibError::check_period(self.fast_period)?;
+        TechalibError::check_period(self.slow_period)?;
+        TechalibError::check_period(self.signal_period)?;
+
         if self.fast_period >= self.slow_period {
             return Err(TechalibError::BadParam(
                 "Fast period must be less than slow period".to_string(),
@@ -132,45 +140,6 @@ impl State<Float> for MacdState {
         let fast_alpha = period_to_alpha(self.fast_period, None)?;
         let slow_alpha = period_to_alpha(self.slow_period, None)?;
         let signal_alpha = period_to_alpha(self.signal_period, None)?;
-
-        if !sample.is_finite() {
-            return Err(TechalibError::DataNonFinite(
-                format!("sample = {sample:?}",),
-            ));
-        }
-        if !self.fast_ema.is_finite() {
-            return Err(TechalibError::DataNonFinite(format!(
-                "self.fast_ema = {:?}",
-                self.fast_ema
-            )));
-        }
-        if !self.slow_ema.is_finite() {
-            return Err(TechalibError::DataNonFinite(format!(
-                "self.slow_ema = {:?}",
-                self.slow_ema
-            )));
-        }
-        if !self.signal.is_finite() {
-            return Err(TechalibError::DataNonFinite(format!(
-                "self.signal = {:?}",
-                self.signal
-            )));
-        }
-        if self.fast_period <= 1 {
-            return Err(TechalibError::BadParam(
-                "Fast period must be greater than 1".to_string(),
-            ));
-        }
-        if self.slow_period <= 1 {
-            return Err(TechalibError::BadParam(
-                "Slow period must be greater than 1".to_string(),
-            ));
-        }
-        if self.signal_period <= 1 {
-            return Err(TechalibError::BadParam(
-                "Signal period must be greater than 1".to_string(),
-            ));
-        }
 
         let (fast_ema, slow_ema, macd, signal, histogram) = macd_next_unchecked(
             sample,
@@ -182,15 +151,9 @@ impl State<Float> for MacdState {
             signal_alpha,
         );
 
-        if !macd.is_finite() {
-            return Err(TechalibError::Overflow(0, macd));
-        }
-        if !signal.is_finite() {
-            return Err(TechalibError::Overflow(0, signal));
-        }
-        if !histogram.is_finite() {
-            return Err(TechalibError::Overflow(0, histogram));
-        }
+        TechalibError::check_overflow(macd)?;
+        TechalibError::check_overflow(signal)?;
+        TechalibError::check_overflow(histogram)?;
 
         self.fast_ema = fast_ema;
         self.slow_ema = slow_ema;
@@ -200,6 +163,21 @@ impl State<Float> for MacdState {
 
         Ok(())
     }
+}
+
+/// Lookback period for MACD calculation
+/// ---
+/// With `n = lookback_from_period(period)`,
+/// the `n` first values that will be return will be `NaN`
+/// and the next values will be the values.
+#[inline(always)]
+pub fn lookback_from_period(
+    slow_period: usize,
+    signal_period: usize,
+) -> Result<usize, TechalibError> {
+    TechalibError::check_period(slow_period)?;
+    TechalibError::check_period(signal_period)?;
+    Ok(slow_period + signal_period)
 }
 
 /// Calculation of the MACD function
@@ -322,11 +300,7 @@ pub fn macd_into(
         .skip(slow_ema_start_idx)
         .enumerate()
     {
-        if !value.is_finite() {
-            return Err(TechalibError::DataNonFinite(format!(
-                "data[{idx}] = {value:?}",
-            )));
-        }
+        TechalibError::check_finite(*value, &format!("data[{idx}]"))?;
         slow_sum += value;
     }
 
@@ -336,11 +310,7 @@ pub fn macd_into(
         .skip(fast_ema_start_idx)
         .enumerate()
     {
-        if !value.is_finite() {
-            return Err(TechalibError::DataNonFinite(format!(
-                "data[{idx}] = {value:?}"
-            )));
-        }
+        TechalibError::check_finite(*value, &format!("data[{idx}]"))?;
         slow_sum += value;
         fast_sum += value;
     }
@@ -354,11 +324,7 @@ pub fn macd_into(
         .skip(signal_start_idx)
         .enumerate()
     {
-        if !value.is_finite() {
-            return Err(TechalibError::DataNonFinite(format!(
-                "data[{idx}] = {value:?}"
-            )));
-        }
+        TechalibError::check_finite(*value, &format!("data[{idx}]"))?;
         fast_ema = ema_next_unchecked(*value, fast_ema, fast_alpha);
         slow_ema = ema_next_unchecked(*value, slow_ema, slow_alpha);
         sum_macd += fast_ema - slow_ema;
@@ -371,13 +337,12 @@ pub fn macd_into(
     output_signal[macd_start_idx] = sum_macd / signal_period as Float;
     output_histogram[macd_start_idx] = output_macd[macd_start_idx] - output_signal[macd_start_idx];
 
+    TechalibError::check_overflow_at(macd_start_idx, output_macd)?;
+    TechalibError::check_overflow_at(macd_start_idx, output_signal)?;
+    TechalibError::check_overflow_at(macd_start_idx, output_histogram)?;
+
     for idx in macd_start_idx + 1..len {
-        let data = data[idx];
-        if !data.is_finite() {
-            return Err(TechalibError::DataNonFinite(format!(
-                "data[{idx}] = {data:?}"
-            )));
-        }
+        TechalibError::check_finite_at(idx, data)?;
         (
             fast_ema,
             slow_ema,
@@ -385,7 +350,7 @@ pub fn macd_into(
             output_signal[idx],
             output_histogram[idx],
         ) = macd_next_unchecked(
-            data,
+            data[idx],
             fast_ema,
             slow_ema,
             output_signal[idx - 1],
@@ -393,15 +358,9 @@ pub fn macd_into(
             slow_alpha,
             signal_alpha,
         );
-        if !output_macd[idx].is_finite() {
-            return Err(TechalibError::Overflow(idx, output_macd[idx]));
-        }
-        if !output_signal[idx].is_finite() {
-            return Err(TechalibError::Overflow(idx, output_signal[idx]));
-        }
-        if !output_histogram[idx].is_finite() {
-            return Err(TechalibError::Overflow(idx, output_histogram[idx]));
-        }
+        TechalibError::check_overflow_at(idx, output_macd)?;
+        TechalibError::check_overflow_at(idx, output_signal)?;
+        TechalibError::check_overflow_at(idx, output_histogram)?;
     }
 
     Ok(MacdState {

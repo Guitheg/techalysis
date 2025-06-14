@@ -164,14 +164,8 @@ impl State<Float> for T3State {
     /// ---
     /// - `sample`: The new input to update the T3 state
     fn update(&mut self, sample: Float) -> Result<(), TechalibError> {
-        if !sample.is_finite() {
-            return Err(TechalibError::DataNonFinite(
-                format!("sample = {sample:?}",),
-            ));
-        }
-        if !self.t3.is_finite() {
-            return Err(TechalibError::DataNonFinite(format!("t3 = {}", self.t3)));
-        }
+        TechalibError::check_finite(self.t3, "t3")?;
+        TechalibError::check_finite(sample, "sample")?;
         if !self.ema_values.ema1.is_finite()
             || !self.ema_values.ema2.is_finite()
             || !self.ema_values.ema3.is_finite()
@@ -225,15 +219,24 @@ impl State<Float> for T3State {
             self.alpha,
         );
 
-        if !t3.is_finite() {
-            return Err(TechalibError::Overflow(0, t3));
-        }
+        TechalibError::check_overflow(t3)?;
 
         self.t3 = t3;
         // ema values update in place (no need to reassign)
 
         Ok(())
     }
+}
+
+/// Lookback period for SMA calculation
+/// ---
+/// With `n = lookback_from_period(period)`,
+/// the `n` first values that will be return will be `NaN`
+/// and the next values will be the values.
+#[inline(always)]
+pub fn lookback_from_period(period: usize) -> Result<usize, TechalibError> {
+    TechalibError::check_period(period)?;
+    Ok(6 * (period - 1))
 }
 
 /// Calculation of the T3 function
@@ -296,17 +299,10 @@ pub fn t3_into(
 ) -> Result<T3State, TechalibError> {
     TechalibError::check_same_length(("data", data), ("output", output))?;
     let len = data.len();
-    let skip_period = t3_skip_period_unchecked(period);
+    let lookback = lookback_from_period(period)?;
 
-    if len < skip_period + 1 {
+    if len <= lookback {
         return Err(TechalibError::InsufficientData);
-    }
-
-    if period <= 1 {
-        return Err(TechalibError::BadParam(format!(
-            "Period must be greater than 1, got: {}",
-            period
-        )));
     }
 
     if !volume_factor.is_finite() || !(0.0..=1.0).contains(&volume_factor) {
@@ -325,27 +321,18 @@ pub fn t3_into(
         period,
         &t3_coefficients,
         1.0 / period as Float,
-        skip_period,
+        lookback,
         alpha,
         output,
     )?;
 
-    output[skip_period] = t3;
-    if !output[skip_period].is_finite() {
-        return Err(TechalibError::Overflow(skip_period, output[skip_period]));
-    }
+    output[lookback] = t3;
+    TechalibError::check_overflow_at(lookback, output)?;
 
-    for idx in skip_period + 1..len {
-        if !data[idx].is_finite() {
-            return Err(TechalibError::DataNonFinite(format!(
-                "data[{}] = {}",
-                idx, data[idx]
-            )));
-        }
+    for idx in lookback + 1..len {
+        TechalibError::check_finite_at(idx, data)?;
         output[idx] = t3_next_unchecked(data[idx], &mut t3_ema_values, &t3_coefficients, alpha);
-        if !output[idx].is_finite() {
-            return Err(TechalibError::Overflow(idx, output[idx]));
-        }
+        TechalibError::check_overflow_at(idx, output)?;
     }
 
     Ok(T3State {
@@ -513,14 +500,6 @@ fn init_t3_unchecked(
     ))
 }
 
-/// Calculate the period to skip for T3.
-///
-/// Also known as the "lookback period"
-#[inline(always)]
-pub fn t3_skip_period_unchecked(period: usize) -> usize {
-    6 * (period - 1)
-}
-
 #[inline(always)]
 #[allow(clippy::too_many_arguments)]
 fn t3_from_coefficients_unchecked(
@@ -559,7 +538,7 @@ mod tests {
             period,
             &t3_coefficients,
             1.0 / period as Float,
-            t3_skip_period_unchecked(period),
+            lookback_from_period(period).unwrap(),
             alpha,
             &mut output.clone(),
         )

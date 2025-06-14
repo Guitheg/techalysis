@@ -105,20 +105,10 @@ impl State<Float> for SmaState {
     /// ---
     /// - `sample`: The new input to update the SMA state
     fn update(&mut self, sample: Float) -> Result<(), TechalibError> {
-        if self.period <= 1 {
-            return Err(TechalibError::BadParam(
-                "SMA period must be greater than 1".to_string(),
-            ));
-        }
-        if !sample.is_finite() {
-            return Err(TechalibError::DataNonFinite(format!("sample = {sample:?}")));
-        }
-        if !self.sma.is_finite() {
-            return Err(TechalibError::DataNonFinite(format!(
-                "self.sma = {:?}",
-                self.sma
-            )));
-        }
+        TechalibError::check_period(self.period)?;
+        TechalibError::check_finite(self.sma, "sma")?;
+        TechalibError::check_finite(sample, "sample")?;
+
         if self.last_window.len() != self.period {
             return Err(TechalibError::BadParam(format!(
                 "SMA state last_window length ({}) does not match period ({})",
@@ -141,14 +131,23 @@ impl State<Float> for SmaState {
         window.push_back(sample);
 
         let sma = sma_next_unchecked(sample, old_value, self.sma, 1.0 / (self.period as Float));
-        if !sma.is_finite() {
-            return Err(TechalibError::Overflow(0, sma));
-        }
+        TechalibError::check_overflow(sma)?;
         self.sma = sma;
         self.last_window = window;
 
         Ok(())
     }
+}
+
+/// Lookback period for SMA calculation
+/// ---
+/// With `n = lookback_from_period(period)`,
+/// the `n` first values that will be return will be `NaN`
+/// and the next values will be the values.
+#[inline(always)]
+pub fn lookback_from_period(period: usize) -> Result<usize, TechalibError> {
+    TechalibError::check_period(period)?;
+    Ok(period - 1)
 }
 
 /// Calculation of the SMA function
@@ -197,41 +196,22 @@ pub fn sma_into(
     period: usize,
     output: &mut [Float],
 ) -> Result<SmaState, TechalibError> {
+    TechalibError::check_same_length(("data", data), ("output", output))?;
     let len = data.len();
     let inv_period = 1.0 / (period as Float);
-    if period == 0 || period > len {
+    let lookback = lookback_from_period(period)?;
+    if period > len {
         return Err(TechalibError::InsufficientData);
     }
 
-    if period == 1 {
-        return Err(TechalibError::BadParam(
-            "SMA period must be greater than 1".to_string(),
-        ));
-    }
-
-    if output.len() < len {
-        return Err(TechalibError::BadParam(
-            "Output array must be at least as long as the input data array".to_string(),
-        ));
-    }
-
-    output[period - 1] = init_sma_unchecked(data, period, inv_period, output)?;
-    if !output[period - 1].is_finite() {
-        return Err(TechalibError::Overflow(period - 1, output[period - 1]));
-    }
+    output[lookback] = init_sma_unchecked(data, period, inv_period, output)?;
+    TechalibError::check_overflow_at(lookback, output)?;
 
     for idx in period..len {
-        if !data[idx].is_finite() {
-            return Err(TechalibError::DataNonFinite(format!(
-                "data[{idx}] = {:?}",
-                data[idx]
-            )));
-        }
+        TechalibError::check_finite_at(idx, data)?;
         output[idx] =
             sma_next_unchecked(data[idx], data[idx - period], output[idx - 1], inv_period);
-        if !output[idx].is_finite() {
-            return Err(TechalibError::Overflow(idx, output[idx]));
-        }
+        TechalibError::check_overflow_at(idx, output)?;
     }
     Ok(SmaState {
         sma: output[len - 1],

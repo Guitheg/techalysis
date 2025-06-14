@@ -140,7 +140,7 @@ impl State<Float> for RsiState {
             sample - self.prev_value,
             self.avg_gain,
             self.avg_loss,
-            self.period as Float,
+            1.0 / self.period as Float,
         );
         if !rsi.is_finite() {
             return Err(TechalibError::Overflow(0, rsi));
@@ -151,6 +151,17 @@ impl State<Float> for RsiState {
         self.avg_loss = avg_loss;
         Ok(())
     }
+}
+
+/// Lookback period for RSI calculation
+/// ---
+/// With `n = lookback_from_period(period)`,
+/// the `n` first values that will be return will be `NaN`
+/// and the next values will be the values.
+#[inline(always)]
+pub fn lookback_from_period(period: usize) -> Result<usize, TechalibError> {
+    TechalibError::check_period(period)?;
+    Ok(period)
 }
 
 /// Calculation of the RSI function
@@ -199,35 +210,21 @@ pub fn rsi_into(
     period: usize,
     output: &mut [Float],
 ) -> Result<RsiState, TechalibError> {
+    TechalibError::check_same_length(("data", data), ("output", output))?;
+    TechalibError::check_period(period)?;
     let len = data.len();
-    let period_as_float = period as Float;
-    if period == 0 || period + 1 > len {
+    let inv_period = 1.0 / period as Float;
+    if len <= period {
         return Err(TechalibError::InsufficientData);
-    }
-
-    if period == 1 {
-        return Err(TechalibError::BadParam(
-            "RSI window size must be greater than 1".to_string(),
-        ));
-    }
-
-    if output.len() != len {
-        return Err(TechalibError::BadParam(
-            "Output RSI length must match input data length".to_string(),
-        ));
     }
 
     let mut avg_gain: Float = 0.0;
     let mut avg_loss: Float = 0.0;
     output[0] = Float::NAN;
+    TechalibError::check_finite_at(0, data)?;
     for i in 1..=period {
+        TechalibError::check_finite_at(i, data)?;
         let delta = data[i] - data[i - 1];
-        if !delta.is_finite() {
-            return Err(TechalibError::DataNonFinite(format!(
-                "data[{}] = {:?}",
-                i, data[i]
-            )));
-        }
         if delta > 0.0 {
             avg_gain += delta;
         } else {
@@ -235,26 +232,16 @@ pub fn rsi_into(
         }
         output[i] = Float::NAN;
     }
-    avg_gain /= period_as_float;
-    avg_loss /= period_as_float;
+    avg_gain *= inv_period;
+    avg_loss *= inv_period;
     output[period] = calculate_rsi(avg_gain, avg_loss);
-    if !output[period].is_finite() {
-        return Err(TechalibError::Overflow(period, output[period]));
-    }
+    TechalibError::check_overflow_at(period, output)?;
 
     for i in (period + 1)..len {
-        let delta = data[i] - data[i - 1];
-        if !delta.is_finite() {
-            return Err(TechalibError::DataNonFinite(format!(
-                "data[{}] = {:?}",
-                i, data[i]
-            )));
-        }
+        TechalibError::check_finite_at(i, data)?;
         (output[i], avg_gain, avg_loss) =
-            rsi_next_unchecked(data[i] - data[i - 1], avg_gain, avg_loss, period_as_float);
-        if !output[i].is_finite() {
-            return Err(TechalibError::Overflow(i, output[i]));
-        }
+            rsi_next_unchecked(data[i] - data[i - 1], avg_gain, avg_loss, inv_period);
+        TechalibError::check_overflow_at(i, output)?;
     }
     Ok(RsiState {
         rsi: output[len - 1],
@@ -270,19 +257,18 @@ fn rsi_next_unchecked(
     delta: Float,
     prev_avg_gain: Float,
     prev_avg_loss: Float,
-    period: Float,
+    inv_period: Float,
 ) -> (Float, Float, Float) {
-    let k = 1.0 / period;
-    let one_minus_k = 1.0 - k;
+    let one_minus_k = 1.0 - inv_period;
     let (avg_gain, avg_loss) = if delta > 0.0 {
         (
-            prev_avg_gain * one_minus_k + delta * k,
+            prev_avg_gain * one_minus_k + delta * inv_period,
             prev_avg_loss * one_minus_k,
         )
     } else if delta < 0.0 {
         (
             prev_avg_gain * one_minus_k,
-            prev_avg_loss * one_minus_k - delta * k,
+            prev_avg_loss * one_minus_k - delta * inv_period,
         )
     } else {
         (prev_avg_gain * one_minus_k, prev_avg_loss * one_minus_k)

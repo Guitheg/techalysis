@@ -41,7 +41,7 @@
 //! Bollinger Bands (BBANDS) implementation
 
 use crate::errors::TechalibError;
-use crate::indicators::ema::{ema_next_unchecked, period_to_alpha};
+use crate::indicators::ema::{ema_next_unchecked, get_alpha_value, period_to_alpha};
 use crate::indicators::sma::sma_next_unchecked;
 use crate::traits::State;
 use crate::types::Float;
@@ -182,49 +182,22 @@ impl State<Float> for BBandsState {
     /// ---
     /// - `sample`: The new input value to update the Bollinger Bands state. Generally, it is the closing price.
     fn update(&mut self, sample: Float) -> Result<(), TechalibError> {
-        if self.period <= 1 {
-            return Err(TechalibError::BadParam(
-                "SMA period must be greater than 1".to_string(),
-            ));
-        }
-        if !sample.is_finite() {
-            return Err(TechalibError::DataNonFinite(format!("sample = {sample:?}")));
-        }
+        TechalibError::check_period(self.period)?;
+        TechalibError::check_finite(sample, "sample")?;
+        TechalibError::check_finite(self.moving_averages.sma, "self.moving_averages.sma")?;
+        TechalibError::check_finite(
+            self.moving_averages.ma_square,
+            "self.moving_averages.ma_square",
+        )?;
+        TechalibError::check_finite(self.middle, "self.middle")?;
+        TechalibError::check_finite(self.std_dev_mult.up, "self.std_dev_mult.up")?;
+        TechalibError::check_finite(self.std_dev_mult.down, "self.std_dev_mult.down")?;
         if self.std_dev_mult.up <= 0.0 || self.std_dev_mult.down <= 0.0 {
             return Err(TechalibError::BadParam(
                 "Standard deviations must be greater than 0".to_string(),
             ));
         }
-        if !self.moving_averages.sma.is_finite() {
-            return Err(TechalibError::DataNonFinite(format!(
-                "self.moving_averages.sma = {:?}",
-                self.moving_averages.sma
-            )));
-        }
-        if !self.middle.is_finite() {
-            return Err(TechalibError::DataNonFinite(format!(
-                "self.middle = {:?}",
-                self.middle
-            )));
-        }
-        if !self.moving_averages.ma_square.is_finite() {
-            return Err(TechalibError::DataNonFinite(format!(
-                "self.moving_averages.ma_square = {:?}",
-                self.moving_averages.ma_square
-            )));
-        }
-        if !self.std_dev_mult.up.is_finite() {
-            return Err(TechalibError::DataNonFinite(format!(
-                "self.std_dev_mult.up = {:?}",
-                self.std_dev_mult.up
-            )));
-        }
-        if !self.std_dev_mult.down.is_finite() {
-            return Err(TechalibError::DataNonFinite(format!(
-                "self.std_dev_mult.down = {:?}",
-                self.std_dev_mult.down
-            )));
-        }
+
         if self.last_window.len() != self.period {
             return Err(TechalibError::BadParam(
                 "Window length must match the SMA period".to_string(),
@@ -271,15 +244,9 @@ impl State<Float> for BBandsState {
             }
         };
 
-        if !upper.is_finite() {
-            return Err(TechalibError::Overflow(0, upper));
-        }
-        if !middle.is_finite() {
-            return Err(TechalibError::Overflow(0, middle));
-        }
-        if !lower.is_finite() {
-            return Err(TechalibError::Overflow(0, lower));
-        }
+        TechalibError::check_overflow(upper)?;
+        TechalibError::check_overflow(middle)?;
+        TechalibError::check_overflow(lower)?;
 
         self.upper = upper;
         self.middle = middle;
@@ -287,8 +254,25 @@ impl State<Float> for BBandsState {
         self.moving_averages.sma = sma;
         self.moving_averages.ma_square = ma_sq;
         self.last_window = window;
+
         Ok(())
     }
+}
+
+/// Lookback period for BBANDS calculation
+/// ---
+/// With `n = lookback_from_period(period)`,
+/// the `n` first values that will be return will be `NaN`
+/// and the next values will be the values.
+#[inline(always)]
+pub fn lookback_from_period(period: usize) -> Result<usize, TechalibError> {
+    if period <= 1 {
+        return Err(TechalibError::BadParam(format!(
+            "Period must be greater than 1, got: {}",
+            period
+        )));
+    }
+    Ok(period - 1)
 }
 
 /// Calculate Bollinger Bands for a given data array and return the result.
@@ -365,11 +349,7 @@ pub fn bbands_into(
         return Err(TechalibError::InsufficientData);
     }
 
-    if period <= 1 {
-        return Err(TechalibError::BadParam(
-            "SMA period must be greater than 1".to_string(),
-        ));
-    }
+    let lookback = lookback_from_period(period)?;
 
     if std_dev_mul.up <= 0.0 || std_dev_mul.down <= 0.0 {
         return Err(TechalibError::BadParam(
@@ -394,18 +374,13 @@ pub fn bbands_into(
     )?;
 
     let mut ma = MovingAverageState {
-        sma: output_middle[period - 1],
+        sma: output_middle[lookback],
         ma_square: ma_sq,
     };
     match ma_type {
         BBandsMA::SMA => {
-            for idx in period..len {
-                if !data[idx].is_finite() {
-                    return Err(TechalibError::DataNonFinite(format!(
-                        "data[{idx}] = {:?}",
-                        data[idx]
-                    )));
-                }
+            for idx in lookback + 1..len {
+                TechalibError::check_finite_at(idx, data)?;
                 (
                     output_upper[idx],
                     output_middle[idx],
@@ -420,21 +395,15 @@ pub fn bbands_into(
                     std_dev_mul,
                     inv_period,
                 );
+                TechalibError::check_overflow_at(idx, output_upper)?;
+                TechalibError::check_overflow_at(idx, output_middle)?;
+                TechalibError::check_overflow_at(idx, output_lower)?;
             }
         }
         BBandsMA::EMA(alpha) => {
-            let alpha = if let Some(value) = alpha {
-                value
-            } else {
-                period_to_alpha(period, None)?
-            };
-            for idx in period..len {
-                if !data[idx].is_finite() {
-                    return Err(TechalibError::DataNonFinite(format!(
-                        "data[{idx}] = {:?}",
-                        data[idx]
-                    )));
-                }
+            let alpha = get_alpha_value(alpha, period)?;
+            for idx in lookback + 1..len {
+                TechalibError::check_finite_at(idx, data)?;
                 (
                     output_upper[idx],
                     output_middle[idx],
@@ -450,15 +419,9 @@ pub fn bbands_into(
                     std_dev_mul,
                     inv_period,
                 );
-                if !output_upper[idx].is_finite() {
-                    return Err(TechalibError::Overflow(idx, output_upper[idx]));
-                }
-                if !output_middle[idx].is_finite() {
-                    return Err(TechalibError::Overflow(idx, output_middle[idx]));
-                }
-                if !output_lower[idx].is_finite() {
-                    return Err(TechalibError::Overflow(idx, output_lower[idx]));
-                }
+                TechalibError::check_overflow_at(idx, output_upper)?;
+                TechalibError::check_overflow_at(idx, output_middle)?;
+                TechalibError::check_overflow_at(idx, output_lower)?;
             }
         }
     }

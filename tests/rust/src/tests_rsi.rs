@@ -170,7 +170,7 @@ fn period_zero() {
     let period = 0;
     let result = rsi(data, period);
     assert!(result.is_err());
-    assert!(matches!(result, Err(TechalibError::InsufficientData)));
+    assert!(matches!(result, Err(TechalibError::BadParam(_))));
 }
 
 #[test]

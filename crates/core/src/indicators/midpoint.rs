@@ -101,17 +101,8 @@ impl State<Float> for MidpointState {
     /// ---
     /// - `sample`: The new input to update the MIDPOINT state
     fn update(&mut self, sample: Float) -> Result<(), TechalibError> {
-        if !sample.is_finite() {
-            return Err(TechalibError::DataNonFinite(
-                format!("sample = {sample:?}",),
-            ));
-        }
-        if self.period <= 1 {
-            return Err(TechalibError::BadParam(format!(
-                "Period must be greater than 1, got: {}",
-                self.period
-            )));
-        }
+        TechalibError::check_finite(sample, "sample")?;
+        TechalibError::check_period(self.period)?;
         if self.last_window.len() != self.period {
             return Err(TechalibError::BadParam(format!(
                 "MIDPOINT state last_window length must be equal to period ({}), got: {}",
@@ -133,13 +124,11 @@ impl State<Float> for MidpointState {
         let _ = window.pop_front().ok_or(TechalibError::InsufficientData)?;
         window.push_back(sample);
 
-        let mid_point = midpoint_next_unchecked(window.make_contiguous());
+        let midpoint = midpoint_next_unchecked(window.make_contiguous());
 
-        if !mid_point.is_finite() {
-            return Err(TechalibError::Overflow(0, mid_point));
-        }
+        TechalibError::check_overflow(midpoint)?;
         self.last_window = window;
-        self.midpoint = mid_point;
+        self.midpoint = midpoint;
 
         Ok(())
     }
@@ -217,25 +206,13 @@ pub fn midpoint_into(
     }
 
     let midpoint = init_midpoint_unchecked(data, lookback, output)?;
-
-    if !midpoint.is_finite() {
-        return Err(TechalibError::Overflow(lookback, midpoint));
-    }
     output[lookback] = midpoint;
+    TechalibError::check_overflow_at(lookback, output)?;
 
     for idx in lookback + 1..len {
-        if !data[idx].is_finite() {
-            return Err(TechalibError::DataNonFinite(format!(
-                "data[{idx}] = {:?}",
-                data[idx]
-            )));
-        }
-
+        TechalibError::check_finite_at(idx, data)?;
         output[idx] = midpoint_next_unchecked(&data[idx - lookback..=idx]);
-
-        if !midpoint.is_finite() {
-            return Err(TechalibError::Overflow(idx, output[idx]));
-        }
+        TechalibError::check_overflow_at(idx, output)?;
     }
 
     Ok(MidpointState {

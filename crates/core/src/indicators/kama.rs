@@ -118,23 +118,12 @@ impl State<Float> for KamaState {
     /// ---
     /// - `sample`: The new input to update the KAMA state
     fn update(&mut self, sample: Float) -> Result<(), TechalibError> {
-        if !sample.is_finite() {
-            return Err(TechalibError::DataNonFinite(
-                format!("sample = {sample:?}",),
-            ));
-        }
+        TechalibError::check_finite(sample, "sample")?;
+        TechalibError::check_finite(self.kama, "kama")?;
+        TechalibError::check_finite(self.roc_sum, "roc_sum")?;
+        TechalibError::check_finite(self.trailing_value, "trailing_value")?;
+        TechalibError::check_period(self.period)?;
 
-        if self.period <= 1 {
-            return Err(TechalibError::BadParam(
-                "KAMA period must be greater than 1".to_string(),
-            ));
-        }
-        if !self.kama.is_finite() {
-            return Err(TechalibError::DataNonFinite(format!(
-                "kama = {kama:?}",
-                kama = self.kama
-            )));
-        }
         if self.last_window.len() != self.period {
             return Err(TechalibError::BadParam(format!(
                 "KAMA state last_window length must be equal to period ({}), got: {}",
@@ -165,10 +154,7 @@ impl State<Float> for KamaState {
             self.roc_sum,
             self.kama,
         );
-
-        if !kama.is_finite() {
-            return Err(TechalibError::Overflow(0, kama));
-        }
+        TechalibError::check_overflow(kama)?;
         self.kama = kama;
         self.roc_sum = roc_sum;
         self.last_window = window;
@@ -178,14 +164,15 @@ impl State<Float> for KamaState {
     }
 }
 
-/// Lookback period for ${INDICATORNAME} calculation
+/// Lookback period for KAMA calculation
 /// ---
 /// With `n = lookback_from_period(period)`,
 /// the `n` first values that will be return will be `NaN`
-/// and the next values will be the KAMA values.
+/// and the next values will be the values.
 #[inline(always)]
-pub fn lookback_from_period(period: usize) -> usize {
-    period
+pub fn lookback_from_period(period: usize) -> Result<usize, TechalibError> {
+    TechalibError::check_period(period)?;
+    Ok(period)
 }
 
 /// Calculation of the KAMA function
@@ -237,17 +224,10 @@ pub fn kama_into(
 ) -> Result<KamaState, TechalibError> {
     TechalibError::check_same_length(("data", data), ("output", output))?;
     let len = data.len();
-    let lookback = lookback_from_period(period);
+    let lookback = lookback_from_period(period)?;
 
     if len <= lookback {
         return Err(TechalibError::InsufficientData);
-    }
-
-    if period <= 1 {
-        return Err(TechalibError::BadParam(format!(
-            "Period must be greater than 1, got: {}",
-            period
-        )));
     }
 
     let (kama, mut roc_sum) = init_kama_unchecked(data, lookback, output)?;

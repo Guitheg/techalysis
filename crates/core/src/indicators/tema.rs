@@ -42,7 +42,7 @@
 
 use crate::errors::TechalibError;
 use crate::indicators::dema::{
-    dema_next_unchecked, dema_skip_period_unchecked, init_dema_unchecked,
+    dema_next_unchecked, init_dema_unchecked, lookback_from_period as dema_lookback_from_period,
 };
 use crate::indicators::ema::{ema_next_unchecked, get_alpha_value};
 
@@ -119,52 +119,17 @@ impl State<Float> for TemaState {
     /// ---
     /// - `sample`: The new input to update the TEMA state
     fn update(&mut self, sample: Float) -> Result<(), TechalibError> {
-        if self.period <= 1 {
-            return Err(TechalibError::BadParam(
-                "Period must be greater than 1".to_string(),
-            ));
-        }
-
-        if !sample.is_finite() {
-            return Err(TechalibError::DataNonFinite(
-                format!("sample = {sample:?}",),
-            ));
-        }
-
-        if !self.ema_1.is_finite() {
-            return Err(TechalibError::DataNonFinite(format!(
-                "self.ema_1 = {:?}",
-                self.ema_1
-            )));
-        }
-
-        if !self.ema_2.is_finite() {
-            return Err(TechalibError::DataNonFinite(format!(
-                "self.ema_2 = {:?}",
-                self.ema_2
-            )));
-        }
-
-        if !self.ema_3.is_finite() {
-            return Err(TechalibError::DataNonFinite(format!(
-                "self.ema_3 = {:?}",
-                self.ema_3
-            )));
-        }
-
-        if !self.alpha.is_finite() {
-            return Err(TechalibError::BadParam(format!(
-                "self.alpha = {:?}",
-                self.alpha
-            )));
-        }
+        TechalibError::check_period(self.period)?;
+        TechalibError::check_finite(sample, "sample")?;
+        TechalibError::check_finite(self.ema_1, "ema_1")?;
+        TechalibError::check_finite(self.ema_2, "ema_2")?;
+        TechalibError::check_finite(self.ema_3, "ema_3")?;
+        TechalibError::check_finite(self.alpha, "alpha")?;
 
         let (tema, ema_1, ema_2, ema_3) =
             tema_next_unchecked(sample, self.ema_1, self.ema_2, self.ema_3, self.alpha);
 
-        if !tema.is_finite() {
-            return Err(TechalibError::Overflow(0, tema));
-        }
+        TechalibError::check_overflow(tema)?;
 
         self.tema = tema;
         self.ema_1 = ema_1;
@@ -173,6 +138,17 @@ impl State<Float> for TemaState {
 
         Ok(())
     }
+}
+
+/// Lookback period for ${INDICATORNAME} calculation
+/// ---
+/// With `n = lookback_from_period(period)`,
+/// the `n` first values that will be return will be `NaN`
+/// and the next values will be the values.
+#[inline(always)]
+pub fn lookback_from_period(period: usize) -> Result<usize, TechalibError> {
+    TechalibError::check_period(period)?;
+    Ok(3 * (period - 1))
 }
 
 /// Calculation of the TEMA function
@@ -232,40 +208,25 @@ pub fn tema_into(
     TechalibError::check_same_length(("data", data), ("output", output))?;
     let len = data.len();
     let inv_period = 1.0 / period as Float;
-    let skip_period = tema_skip_period_unchecked(period);
+    let lookback = lookback_from_period(period)?;
 
-    if period == 0 || len < skip_period + 1 {
+    if len <= lookback {
         return Err(TechalibError::InsufficientData);
-    }
-
-    if period <= 1 {
-        return Err(TechalibError::BadParam(
-            "EMA period must be greater than 1".to_string(),
-        ));
     }
 
     let alpha = get_alpha_value(alpha, period)?;
     let (output_value, mut ema_1, mut ema_2, mut ema_3) =
-        init_tema_unchecked(data, period, inv_period, skip_period, alpha, output)?;
-    output[skip_period] = output_value;
-    if !output[skip_period].is_finite() {
-        return Err(TechalibError::Overflow(skip_period, output[skip_period]));
-    }
+        init_tema_unchecked(data, period, inv_period, lookback, alpha, output)?;
+    output[lookback] = output_value;
+    TechalibError::check_overflow_at(lookback, output)?;
 
-    for idx in skip_period + 1..len {
-        if !data[idx].is_finite() {
-            return Err(TechalibError::DataNonFinite(format!(
-                "data[{idx}] = {:?}",
-                data[idx]
-            )));
-        }
+    for idx in lookback + 1..len {
+        TechalibError::check_finite_at(idx, data)?;
 
         (output[idx], ema_1, ema_2, ema_3) =
             tema_next_unchecked(data[idx], ema_1, ema_2, ema_3, alpha);
 
-        if !output[idx].is_finite() {
-            return Err(TechalibError::Overflow(idx, output[idx]));
-        }
+        TechalibError::check_overflow_at(idx, output)?;
     }
 
     Ok(TemaState {
@@ -297,28 +258,24 @@ pub(crate) fn init_tema_unchecked(
     data: &[Float],
     period: usize,
     inv_period: Float,
-    skip_period: usize,
+    lookback: usize,
     alpha: Float,
     output: &mut [Float],
 ) -> Result<(Float, Float, Float, Float), TechalibError> {
-    let dema_skip_period = dema_skip_period_unchecked(period);
+    let dema_lookback = dema_lookback_from_period(period)?;
     let (_, mut ema_1, mut ema_2) =
-        init_dema_unchecked(data, period, inv_period, dema_skip_period, alpha, output)?;
-    output[dema_skip_period] = Float::NAN;
+        init_dema_unchecked(data, period, inv_period, dema_lookback, alpha, output)?;
+    output[dema_lookback] = Float::NAN;
 
     let mut sum_ema_3 = ema_2;
-    for idx in dema_skip_period + 1..skip_period {
-        if !data[idx].is_finite() {
-            return Err(TechalibError::DataNonFinite(format!(
-                "data[{idx}] = {:?}",
-                data[idx]
-            )));
-        }
+    for idx in dema_lookback + 1..lookback {
+        TechalibError::check_finite_at(idx, data)?;
         (_, ema_1, ema_2) = dema_next_unchecked(data[idx], ema_1, ema_2, alpha);
         sum_ema_3 += ema_2;
         output[idx] = Float::NAN;
     }
-    (_, ema_1, ema_2) = dema_next_unchecked(data[skip_period], ema_1, ema_2, alpha);
+    TechalibError::check_finite_at(lookback, data)?;
+    (_, ema_1, ema_2) = dema_next_unchecked(data[lookback], ema_1, ema_2, alpha);
     sum_ema_3 += ema_2;
     let ema_3 = sum_ema_3 * inv_period;
 
@@ -328,11 +285,4 @@ pub(crate) fn init_tema_unchecked(
 #[inline(always)]
 fn calculate_tema(ema_1: Float, ema_2: Float, ema_3: Float) -> Float {
     (3.0 * ema_1) - (3.0 * ema_2) + ema_3
-}
-
-/// Calculate the period to skip for TEMA.
-///
-/// Also known as the "lookback period"
-pub fn tema_skip_period_unchecked(period: usize) -> usize {
-    3 * (period - 1)
 }

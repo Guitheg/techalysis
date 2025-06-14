@@ -6,7 +6,7 @@ use crate::helper::{
 use crate::expect_err_overflow_or_ok_with;
 use techalib::{
     errors::TechalibError,
-    indicators::tema::{tema, tema_into, tema_skip_period_unchecked, TemaResult},
+    indicators::tema::{lookback_from_period, tema, tema_into, TemaResult},
     traits::State,
     types::Float,
 };
@@ -156,7 +156,7 @@ fn constant_values() {
         tema_result
             .values
             .iter()
-            .skip(tema_skip_period_unchecked(period))
+            .skip(lookback_from_period(period).unwrap())
             .all(|v| *v == 5.0),
         "Expected all values to be equal to the constant input"
     );

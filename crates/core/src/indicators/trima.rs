@@ -120,14 +120,8 @@ impl State<Float> for TrimaState {
     /// ---
     /// - `sample`: The new input to update the TRIMA state
     fn update(&mut self, sample: Float) -> Result<(), TechalibError> {
-        if self.period <= 1 {
-            return Err(TechalibError::BadParam(
-                "TRIMA period must be greater than 1".to_string(),
-            ));
-        }
-        if !sample.is_finite() {
-            return Err(TechalibError::DataNonFinite(format!("sample = {sample:?}")));
-        }
+        TechalibError::check_period(self.period)?;
+        TechalibError::check_finite(sample, "sample")?;
         if !self.trima.is_finite() {
             return Err(TechalibError::DataNonFinite(format!(
                 "prev_trima = {:?}",
@@ -179,9 +173,7 @@ impl State<Float> for TrimaState {
             )
         };
 
-        if !trima.is_finite() {
-            return Err(TechalibError::Overflow(0, trima));
-        }
+        TechalibError::check_overflow(trima)?;
 
         self.trima = trima;
         self.weighted_sum = new_weighted_sum;
@@ -190,6 +182,17 @@ impl State<Float> for TrimaState {
         self.last_window = window;
         Ok(())
     }
+}
+
+/// Lookback period for TRIMA calculation
+/// ---
+/// With `n = lookback_from_period(period)`,
+/// the `n` first values that will be return will be `NaN`
+/// and the next values will be the values.
+#[inline(always)]
+pub fn lookback_from_period(period: usize) -> Result<usize, TechalibError> {
+    TechalibError::check_period(period)?;
+    Ok(period - 1)
 }
 
 /// Calculation of the TRIMA function
@@ -238,41 +241,24 @@ pub fn trima_into(
     period: usize,
     output: &mut [Float],
 ) -> Result<TrimaState, TechalibError> {
+    TechalibError::check_same_length(("data", data), ("output", output))?;
     let len = data.len();
     let is_odd = period % 2 != 0;
-    if period == 0 || period > len {
+    let lookback = lookback_from_period(period)?;
+    if len <= lookback {
         return Err(TechalibError::InsufficientData);
-    }
-
-    if period == 1 {
-        return Err(TechalibError::BadParam(
-            "TRIMA period must be greater than 1".to_string(),
-        ));
-    }
-
-    if output.len() < len {
-        return Err(TechalibError::BadParam(
-            "Output array must be at least as long as the input data array".to_string(),
-        ));
     }
 
     let (trima, mut sum, mut trailing_sum, mut heading_sum, inv_weight_sum, mut middle_idx) =
         init_trima_unchecked(data, period, output)?;
 
-    output[period - 1] = trima;
-    if !output[period - 1].is_finite() {
-        return Err(TechalibError::Overflow(period - 1, output[period - 1]));
-    }
+    output[lookback] = trima;
+    TechalibError::check_overflow_at(lookback, output)?;
     middle_idx += 1;
 
     if is_odd {
         for idx in period..len {
-            if !data[idx].is_finite() {
-                return Err(TechalibError::DataNonFinite(format!(
-                    "data[{idx}] = {:?}",
-                    data[idx]
-                )));
-            }
+            TechalibError::check_finite_at(idx, data)?;
             (output[idx], sum, trailing_sum, heading_sum) = trima_next_odd_unchecked(
                 data[idx],
                 data[middle_idx],
@@ -282,19 +268,12 @@ pub fn trima_into(
                 heading_sum,
                 inv_weight_sum,
             );
-            if !output[idx].is_finite() {
-                return Err(TechalibError::Overflow(idx, output[idx]));
-            }
+            TechalibError::check_overflow_at(idx, output)?;
             middle_idx += 1;
         }
     } else {
         for idx in period..len {
-            if !data[idx].is_finite() {
-                return Err(TechalibError::DataNonFinite(format!(
-                    "data[{idx}] = {:?}",
-                    data[idx]
-                )));
-            }
+            TechalibError::check_finite_at(idx, data)?;
             (output[idx], sum, trailing_sum, heading_sum) = trima_next_even_unchecked(
                 data[idx],
                 data[middle_idx],
@@ -304,9 +283,7 @@ pub fn trima_into(
                 heading_sum,
                 inv_weight_sum,
             );
-            if !output[idx].is_finite() {
-                return Err(TechalibError::Overflow(idx, output[idx]));
-            }
+            TechalibError::check_overflow_at(idx, output)?;
             middle_idx += 1;
         }
     }

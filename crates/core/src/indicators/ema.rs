@@ -101,39 +101,26 @@ impl State<Float> for EmaState {
     /// ---
     /// - `sample`: The new input to update the EMA state.
     fn update(&mut self, sample: Float) -> Result<(), TechalibError> {
-        if self.period <= 1 {
-            return Err(TechalibError::BadParam(
-                "Period must be greater than 1".to_string(),
-            ));
-        }
-
-        if !sample.is_finite() {
-            return Err(TechalibError::DataNonFinite(
-                format!("sample = {sample:?}",),
-            ));
-        }
-
-        if !self.ema.is_finite() {
-            return Err(TechalibError::DataNonFinite(format!(
-                "self.ema = {:?}",
-                self.ema
-            )));
-        }
-
-        if !self.alpha.is_finite() {
-            return Err(TechalibError::DataNonFinite(format!(
-                "alpha = {:?}",
-                self.alpha
-            )));
-        }
-
+        TechalibError::check_period(self.period)?;
+        TechalibError::check_finite(self.ema, "ema")?;
+        TechalibError::check_finite(sample, "sample")?;
+        TechalibError::check_finite(self.alpha, "alpha")?;
         let ema = ema_next_unchecked(sample, self.ema, self.alpha);
-        if !ema.is_finite() {
-            return Err(TechalibError::Overflow(0, ema));
-        }
+        TechalibError::check_overflow(ema)?;
         self.ema = ema;
         Ok(())
     }
+}
+
+/// Lookback period for EMA calculation
+/// ---
+/// With `n = lookback_from_period(period)`,
+/// the `n` first values that will be return will be `NaN`
+/// and the next values will be the values.
+#[inline(always)]
+pub fn lookback_from_period(period: usize) -> Result<usize, TechalibError> {
+    TechalibError::check_period(period)?;
+    Ok(period - 1)
 }
 
 /// Calculation of the EMA function
@@ -189,36 +176,24 @@ pub fn ema_into(
     output: &mut [Float],
 ) -> Result<EmaState, TechalibError> {
     TechalibError::check_same_length(("data", data), ("output", output))?;
+
     let len = data.len();
     let inv_period = 1.0 / period as Float;
-    if period == 0 || len < period {
-        return Err(TechalibError::InsufficientData);
-    }
+    let lookback = lookback_from_period(period)?;
 
-    if period == 1 {
-        return Err(TechalibError::BadParam(
-            "EMA period must be greater than 1".to_string(),
-        ));
+    if len < period {
+        return Err(TechalibError::InsufficientData);
     }
 
     let alpha = get_alpha_value(alpha, period)?;
 
-    output[period - 1] = init_sma_unchecked(data, period, inv_period, output)?;
-    if !output[period - 1].is_finite() {
-        return Err(TechalibError::Overflow(period - 1, output[period - 1]));
-    }
+    output[lookback] = init_sma_unchecked(data, period, inv_period, output)?;
+    TechalibError::check_overflow_at(lookback, output)?; // Weird line
 
-    for idx in period..len {
-        if !data[idx].is_finite() {
-            return Err(TechalibError::DataNonFinite(format!(
-                "data[{idx}] = {:?}",
-                data[idx]
-            )));
-        }
+    for idx in lookback + 1..len {
+        TechalibError::check_finite_at(idx, data)?;
         output[idx] = ema_next_unchecked(data[idx], output[idx - 1], alpha);
-        if !output[idx].is_finite() {
-            return Err(TechalibError::Overflow(idx, output[idx]));
-        }
+        TechalibError::check_overflow_at(idx, output)?;
     }
 
     Ok(EmaState {
@@ -268,6 +243,7 @@ pub(crate) fn ema_next_unchecked(new_value: Float, prev_ema: Float, alpha: Float
     new_value * alpha + prev_ema * (1.0 - alpha)
 }
 
+#[inline(always)]
 pub(crate) fn get_alpha_value(alpha: Option<Float>, period: usize) -> Result<Float, TechalibError> {
     match alpha {
         Some(a) => Ok(a),

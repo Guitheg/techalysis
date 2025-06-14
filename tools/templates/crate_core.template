@@ -99,11 +99,8 @@ impl State<Float> for ${IndicatorName}State {
     /// ---
     /// - `sample`: The new input to update the ${INDICATORNAME} state
     fn update(&mut self, sample: Float) -> Result<(), TechalibError> {
-        if !sample.is_finite() {
-            return Err(TechalibError::DataNonFinite(format!(
-                "sample = {sample:?}",
-            )));
-        }
+        TechalibError::check_finite(sample, "sample")?;
+        TechalibError::check_finite(self.period, "self.period")?;
         // TODO: IMPLEMENTS UPDATE METHODS
 
         Ok(())
@@ -117,12 +114,7 @@ impl State<Float> for ${IndicatorName}State {
 /// and the next values will be the values.
 #[inline(always)]
 pub fn lookback_from_period(period: usize) -> Result<usize, TechalibError> {
-    if period <= 1 {
-        return Err(TechalibError::BadParam(format!(
-            "Period must be greater than 1, got: {}",
-            period
-        )));
-    }
+    TechalibError::check_period(period)?;
     Ok(period)
 }
 
@@ -205,6 +197,19 @@ pub fn ${indicator_name}_into(
 
     // TODO: IMPLEMENTS CORE FUNCTION LOGIC
 
+    let output_value =
+        init_${indicator_name}_unchecked(data, lookback, output)?;
+    output[lookback] = output_value;
+    TechalibError::check_overflow_at(lookback, output)?;
+
+    for idx in lookback + 1..len {
+        TechalibError::check_finite_at(idx, data)?;
+
+        output[idx] = ${indicator_name}_next_unchecked(data[idx]);
+
+        TechalibError::check_overflow_at(idx, output)?;
+    }
+
     Ok(${IndicatorName}State {
         ${indicator_name}: output[len-1],
         period
@@ -219,12 +224,10 @@ fn init_${indicator_name}_unchecked(
     // TODO: DEFINIE INIT ARGUMENTS
 ) -> Result<Float, TechalibError> {
     // TODO: IMPLEMENTS INIT
-    for i in 0..lookback {
-        if !data[i].is_finite() {
-            return Err(TechalibError::DataNonFinite(format!(
-                "data[{i}] = {data:?}",
-            )));
-        }
+    for idx in 0..lookback {
+        TechalibError::check_finite_at(idx, data)?;
+
+        output[idx] = Float::NAN;
     }
     Ok(0.0)
 }
