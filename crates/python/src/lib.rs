@@ -7,6 +7,7 @@ mod py_kama;
 mod py_macd;
 mod py_midpoint;
 mod py_midprice;
+mod py_roc;
 mod py_rsi;
 mod py_sma;
 mod py_t3;
@@ -66,5 +67,8 @@ fn _core(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(py_midprice::midprice, m)?)?;
     m.add_function(wrap_pyfunction!(py_midprice::midprice_next, m)?)?;
     m.add_class::<py_midprice::PyMidpriceState>()?;
+    m.add_function(wrap_pyfunction!(py_roc::roc, m)?)?;
+    m.add_function(wrap_pyfunction!(py_roc::roc_next, m)?)?;
+    m.add_class::<py_roc::PyRocState>()?;
     Ok(())
 }

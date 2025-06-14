@@ -115,8 +115,8 @@ impl State<Float> for EmaState {
 /// Lookback period for EMA calculation
 /// ---
 /// With `n = lookback_from_period(period)`,
-/// the `n` first values that will be return will be `NaN`
-/// and the next values will be the values.
+/// the `n-1` first values that will be return will be `NaN`
+/// The n-th value will be the first valid value,
 #[inline(always)]
 pub fn lookback_from_period(period: usize) -> Result<usize, TechalibError> {
     TechalibError::check_period(period)?;

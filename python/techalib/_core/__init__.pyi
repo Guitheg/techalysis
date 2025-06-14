@@ -3,6 +3,7 @@ from typing import NamedTuple, Optional
 from numpy.typing import NDArray
 from typing import Tuple
 
+from .roc import *
 from .midprice import *
 from .midpoint import *
 from .kama import *

@@ -16,6 +16,8 @@ pub(crate) mod tests_midpoint;
 #[cfg(test)]
 pub(crate) mod tests_midprice;
 #[cfg(test)]
+pub(crate) mod tests_roc;
+#[cfg(test)]
 pub(crate) mod tests_rsi;
 #[cfg(test)]
 pub(crate) mod tests_sma;

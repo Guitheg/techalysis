@@ -53,8 +53,9 @@ use crate::traits::State;
 /// Attributes
 /// ---
 /// TODO: ATTRIBUTES
+/// - `values`: A vector of [`Float`] representing the calculated values.
 /// - `state`: A [`${IndicatorName}State`], which can be used to calculate
-/// the next values incrementally.
+///   the next values incrementally.
 #[derive(Debug)]
 pub struct ${IndicatorName}Result {
     // TODO: IMPLEMENTS RESULT ATTRIBUTES
@@ -71,7 +72,7 @@ pub struct ${IndicatorName}Result {
 /// Attributes
 /// ---
 /// **Last outputs values**
-/// TODO: OUTPUTS ATTRIBUTES
+/// - `${indicator_name}`: The last calculated value.
 ///
 /// **State values**
 /// TODO: STATE ATTRIBUTES
@@ -82,6 +83,7 @@ pub struct ${IndicatorName}Result {
 pub struct ${IndicatorName}State {
     // TODO: IMPLEMENTS OUTPUTS ATTRIBUTES
     // Outputs
+    /// The last calculated value.
     pub ${indicator_name}: Float,
 
     // TODO: IMPLEMENTS STATE ATTRIBUTES
@@ -89,6 +91,7 @@ pub struct ${IndicatorName}State {
 
     // TODO: IMPLEMENTS PARAMETERS ATTRIBUTES
     // Parameters
+    /// The period used for the calculation.
     pub period: usize
 }
 
@@ -100,7 +103,7 @@ impl State<Float> for ${IndicatorName}State {
     /// - `sample`: The new input to update the ${INDICATORNAME} state
     fn update(&mut self, sample: Float) -> Result<(), TechalibError> {
         TechalibError::check_finite(sample, "sample")?;
-        TechalibError::check_finite(self.period, "self.period")?;
+        TechalibError::check_period(self.period)?;
         // TODO: IMPLEMENTS UPDATE METHODS
 
         Ok(())
@@ -110,8 +113,8 @@ impl State<Float> for ${IndicatorName}State {
 /// Lookback period for ${INDICATORNAME} calculation
 /// ---
 /// With `n = lookback_from_period(period)`,
-/// the `n` first values that will be return will be `NaN`
-/// and the next values will be the values.
+/// the `n-1` first values that will be return will be `NaN`
+/// The n-th value will be the first valid value,
 #[inline(always)]
 pub fn lookback_from_period(period: usize) -> Result<usize, TechalibError> {
     TechalibError::check_period(period)?;

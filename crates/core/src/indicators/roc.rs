@@ -35,36 +35,36 @@
 */
 
 /*
-    Inspired by TA-LIB SMA implementation
+    Inspired by TA-LIB ROC implementation
 */
 
-//! Simple Moving Average (SMA) implementation
+//! Rate Of Change (ROC) implementation
+
+use std::collections::VecDeque;
 
 use crate::errors::TechalibError;
 use crate::traits::State;
 use crate::types::Float;
-use std::collections::VecDeque;
 
-/// SMA calculation result
+/// ROC calculation result
 /// ---
-/// This struct holds the result and the state ([`SmaState`])
+/// This struct holds the result and the state ([`RocState`])
 /// of the calculation.
 ///
 /// Attributes
 /// ---
-/// - `values`: A vector of [`Float`] representing the calculated SMA values.
-/// - `state`: A [`SmaState`], which can be used to calculate
+/// - `values`: A vector of [`Float`] representing the calculated values.
+/// - `state`: A [`RocState`], which can be used to calculate
 ///   the next values incrementally.
 #[derive(Debug)]
-pub struct SmaResult {
-    /// The calculated SMA values.
+pub struct RocResult {
+    /// The calculated ROC values.
     pub values: Vec<Float>,
-    /// A [`SmaState`], which can be used to calculate
-    /// the next values incrementally.
-    pub state: SmaState,
+    /// The [`RocState`] state of the ROC calculation.
+    pub state: RocState,
 }
 
-/// SMA calculation state
+/// ROC calculation state
 /// ---
 /// This struct holds the state of the calculation.
 /// It is used to calculate the next values in a incremental way.
@@ -72,42 +72,42 @@ pub struct SmaResult {
 /// Attributes
 /// ---
 /// **Last outputs values**
-/// - `sma`: The last calculated Simple Moving Average (SMA) value.
+/// - `roc`: The last calculated ROC value.
 ///
 /// **State values**
-/// - `last_window`: A deque containing the last `period` values used for
-///   the SMA calculation.
+/// - `last_window`: The last value of the window used for the ROC calculation.
 ///
 /// **Parameters**
-/// - `period`: The period used for the SMA calculation, which determines
-///   how many values are averaged to compute the SMA.
+/// - `period`: The period for the ROC calculation.
 #[derive(Debug, Clone)]
-pub struct SmaState {
+pub struct RocState {
     // Outputs
-    /// The last calculated Simple Moving Average (SMA) value.
-    pub sma: Float,
+    /// The last calculated ROC value.
+    pub roc: Float,
 
     // State values
-    /// A deque containing the last `period` values used for
-    /// the SMA calculation.
+    /// The last value of the window used for the ROC calculation.
     pub last_window: VecDeque<Float>,
 
     // Parameters
-    /// The period used for the SMA calculation, which determines
-    /// how many values are averaged to compute the SMA.
+    /// The period used for the ROC calculation.
     pub period: usize,
 }
 
-impl State<Float> for SmaState {
-    /// Update the [`SmaState`] with a new sample
+impl State<Float> for RocState {
+    /// Update the [`RocState`] with a new sample
     ///
     /// Input Arguments
     /// ---
-    /// - `sample`: The new input to update the SMA state
+    /// - `sample`: The new input to update the ROC state
     fn update(&mut self, sample: Float) -> Result<(), TechalibError> {
-        TechalibError::check_period(self.period)?;
-        TechalibError::check_finite(self.sma, "sma")?;
         TechalibError::check_finite(sample, "sample")?;
+        if self.period < 1 {
+            return Err(TechalibError::BadParam(format!(
+                "Period must be greater than 0, got {}",
+                self.period
+            )));
+        }
 
         if self.last_window.len() != self.period {
             return Err(TechalibError::BadParam(format!(
@@ -130,124 +130,121 @@ impl State<Float> for SmaState {
         let old_value = window.pop_front().ok_or(TechalibError::InsufficientData)?;
         window.push_back(sample);
 
-        let sma = sma_next_unchecked(sample, old_value, self.sma, 1.0 / (self.period as Float));
-        TechalibError::check_overflow(sma)?;
-        self.sma = sma;
-        self.last_window = window;
+        let new_roc = roc_next_unchecked(sample, old_value);
 
+        TechalibError::check_overflow(new_roc)?;
+        self.roc = new_roc;
+        self.last_window = window;
         Ok(())
     }
 }
 
-/// Lookback period for SMA calculation
+/// Lookback period for ROC calculation
 /// ---
 /// With `n = lookback_from_period(period)`,
 /// the `n-1` first values that will be return will be `NaN`
 /// The n-th value will be the first valid value,
 #[inline(always)]
 pub fn lookback_from_period(period: usize) -> Result<usize, TechalibError> {
-    TechalibError::check_period(period)?;
-    Ok(period - 1)
+    if period < 1 {
+        return Err(TechalibError::BadParam(format!(
+            "Period must be greater than 0, got {}",
+            period
+        )));
+    }
+    Ok(period)
 }
 
-/// Calculation of the SMA function
+/// Calculation of the ROC function
 /// ---
-/// It returns a [`SmaResult`]
+/// It returns a [`RocResult`]
 ///
 /// Input Arguments
 /// ---
 /// - `data`: A slice of [`Float`] representing the input data.
+/// - `period`: The period for the calculation.
 ///
 /// Returns
 /// ---
-/// A `Result` containing a [`SmaResult`],
+/// A `Result` containing a [`RocResult`],
 /// or a [`TechalibError`] error if the calculation fails.
-pub fn sma(data: &[Float], period: usize) -> Result<SmaResult, TechalibError> {
-    let len = data.len();
-    let mut output = vec![0.0; len];
-    let sma_state = sma_into(data, period, &mut output)?;
-    Ok(SmaResult {
+pub fn roc(data: &[Float], period: usize) -> Result<RocResult, TechalibError> {
+    let mut output = vec![0.0; data.len()];
+
+    let roc_state = roc_into(data, period, output.as_mut_slice())?;
+
+    Ok(RocResult {
         values: output,
-        state: sma_state,
+        state: roc_state,
     })
 }
 
-/// Calculation of the SMA function
+/// Calculation of the ROC function
 /// ---
 /// It stores the results in the provided output arrays and
-/// return the state [`SmaState`].
+/// return the state [`RocState`].
 ///
 /// Input Arguments
 /// ---
 /// - `data`: A slice of [`Float`] representing the input data.
-/// - `period`: The period for the SMA calculation.
+/// - `period`: The period for the calculation.
 ///
 /// Output Arguments
 /// ---
-/// - `output`: A mutable slice of [`Float`] where the calculated SMA values
-///   will be stored.
+/// - `output`: A mutable slice of [`Float`] where the calculated values will be stored.
 ///
 /// Returns
 /// ---
-/// A `Result` containing a [`SmaState`],
+/// A `Result` containing a [`RocState`],
 /// or a [`TechalibError`] error if the calculation fails.
-pub fn sma_into(
+pub fn roc_into(
     data: &[Float],
     period: usize,
     output: &mut [Float],
-) -> Result<SmaState, TechalibError> {
-    TechalibError::check_same_length(("data", data), ("output", output))?;
+) -> Result<RocState, TechalibError> {
+    TechalibError::check_same_length(("output", output), ("data", data))?;
+
     let len = data.len();
-    let inv_period = 1.0 / (period as Float);
     let lookback = lookback_from_period(period)?;
-    if period > len {
+
+    if len <= lookback {
         return Err(TechalibError::InsufficientData);
     }
 
-    output[lookback] = init_sma_unchecked(data, period, inv_period, output)?;
+    let output_value = init_roc_unchecked(data, lookback, output)?;
+    output[lookback] = output_value;
     TechalibError::check_overflow_at(lookback, output)?;
 
-    for idx in period..len {
+    for idx in lookback + 1..len {
         TechalibError::check_finite_at(idx, data)?;
-        output[idx] =
-            sma_next_unchecked(data[idx], data[idx - period], output[idx - 1], inv_period);
+
+        output[idx] = roc_next_unchecked(data[idx], data[idx - period]);
+
         TechalibError::check_overflow_at(idx, output)?;
     }
-    Ok(SmaState {
-        sma: output[len - 1],
-        period,
+
+    Ok(RocState {
+        roc: output[len - 1],
         last_window: VecDeque::from(data[len - period..len].to_vec()),
+        period,
     })
 }
 
 #[inline(always)]
-pub(crate) fn sma_next_unchecked(
-    new_value: Float,
-    old_value: Float,
-    prev_sma: Float,
-    inv_period: Float,
-) -> Float {
-    prev_sma + (new_value - old_value) * inv_period
+fn init_roc_unchecked(
+    data: &[Float],
+    lookback: usize,
+    output: &mut [Float],
+) -> Result<Float, TechalibError> {
+    for (idx, item) in output.iter_mut().enumerate().take(lookback) {
+        TechalibError::check_finite_at(idx, data)?;
+        *item = Float::NAN;
+    }
+    TechalibError::check_finite_at(lookback, data)?;
+    Ok(roc_next_unchecked(data[lookback], data[0]))
 }
 
 #[inline(always)]
-pub(crate) fn init_sma_unchecked(
-    data: &[Float],
-    period: usize,
-    inv_period: Float,
-    output: &mut [Float],
-) -> Result<Float, TechalibError> {
-    let mut sum: Float = 0.0;
-    for idx in 0..period {
-        let value = &data[idx];
-        if !value.is_finite() {
-            return Err(TechalibError::DataNonFinite(format!(
-                "data_array[{idx}] = {value:?}"
-            )));
-        } else {
-            sum += value;
-        }
-        output[idx] = Float::NAN;
-    }
-    Ok(sum * inv_period)
+fn roc_next_unchecked(new_value: Float, last_value: Float) -> Float {
+    ((new_value / last_value) - 1.0) * 100.0
 }

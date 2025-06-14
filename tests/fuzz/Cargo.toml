@@ -102,3 +102,10 @@ path = "fuzz_targets/fuzz_midprice.rs"
 test = false
 doc = false
 bench = false
+
+[[bin]]
+name = "roc"
+path = "fuzz_targets/fuzz_roc.rs"
+test = false
+doc = false
+bench = false

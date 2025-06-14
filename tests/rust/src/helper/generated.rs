@@ -14,6 +14,11 @@ pub fn assert_vec_eq_gen_data(expected: &[Float], got: &[Float]) {
     assert_vec_float_eq!(expected, got, GENERATED_PRECISION);
 }
 
+pub fn assert_vec_eq_gen_data_eps(expected: &[Float], got: &[Float], eps: Float) {
+    assert_eq!(expected.len(), got.len());
+    assert_vec_float_eq!(expected, got, eps);
+}
+
 pub fn load_generated_csv(file_name: &str) -> Result<HashMap<String, Vec<Float>>, csv::Error> {
     let mut rdr =
         ReaderBuilder::new().from_reader(File::open(Path::new(GENERATED_CSV_DIR).join(file_name))?);

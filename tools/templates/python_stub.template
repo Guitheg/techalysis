@@ -8,7 +8,7 @@ from numpy.typing import NDArray
 class ${IndicatorName}State:
     """State for the ${IndicatorName} computation"""
     # TODO: DEFINE STATE ATTRIBUTES
-    ${indicator_name}: Float
+    ${indicator_name}: float
     period: int
     ...
 
@@ -51,7 +51,7 @@ def ${indicator_name}(
 
 def ${indicator_name}_next(
     # TODO: DEFINE ARGUMENTS INPUTS
-    new_value: Float
+    new_value: float
     state: ${IndicatorName}State
 ) -> ${IndicatorName}State:
     """

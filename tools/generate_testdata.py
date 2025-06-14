@@ -35,6 +35,7 @@ CONFIG_DICT = {
     "KAMA": Configuration(talib, "KAMA", ["close"], dict(timeperiod=30), ["out"]),
     "MIDPOINT": Configuration(talib, "MIDPOINT", ["close"], dict(timeperiod=14), ["out"]),
     "MIDPRICE": Configuration(talib, "MIDPRICE", ["high", "low"], dict(timeperiod=14), ["out"]),
+    "ROC": Configuration(talib, "ROC", ["close"], dict(timeperiod=10), ["out"]),
 }
 
 def generate_test_data(filename: str, configuration: Configuration, seed: int):

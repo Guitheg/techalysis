@@ -19,7 +19,7 @@ def csv_loader() -> Callable[[str], pd.DataFrame] :
 @pytest.fixture
 def thread_test() -> Callable[[Callable], None]:
     def _thread_test(tx_lambda: Callable, n_threads: int = 4, tolerance: float = 0.5) -> None:
-        data = np.array([float(i) for i in range(5_000_000)])
+        data = np.random.rand(5_000_000).astype(np.float64)
         t0 = time.perf_counter()
         for _ in range(n_threads):
             _ = tx_lambda(data)
